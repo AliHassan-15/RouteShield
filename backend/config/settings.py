@@ -56,7 +56,7 @@ PROVIDER_CONFIG = {
     "weather": os.environ.get("WEATHER_PROVIDER", "open_meteo"),
     "tomtom_api_key": os.environ.get("TOMTOM_API_KEY", ""),
     "connect_timeout_seconds": number(os.environ, "PROVIDER_CONNECT_TIMEOUT_SECONDS", 3),
-    "routing_timeout_seconds": number(os.environ, "ROUTING_READ_TIMEOUT_SECONDS", 12),
+    "routing_timeout_seconds": number(os.environ, "ROUTING_READ_TIMEOUT_SECONDS", 25),
     "weather_timeout_seconds": number(os.environ, "WEATHER_READ_TIMEOUT_SECONDS", 8),
     "geocode_timeout_seconds": number(os.environ, "GEOCODE_READ_TIMEOUT_SECONDS", 8),
     "analysis_deadline_seconds": number(os.environ, "ANALYSIS_DEADLINE_SECONDS", 35),
@@ -64,6 +64,9 @@ PROVIDER_CONFIG = {
     "batch_size": integer(os.environ, "WEATHER_BATCH_SIZE", 50),
     "concurrency": integer(os.environ, "WEATHER_BATCH_CONCURRENCY", 2),
     "max_retries": integer(os.environ, "PROVIDER_ATTEMPTS", 2) - 1,
+    "requests_per_second": integer(os.environ, "PROVIDER_REQUESTS_PER_SECOND", 5),
+    "call_concurrency": integer(os.environ, "PROVIDER_CALL_CONCURRENCY", 2),
+    "retry_backoff_seconds": number(os.environ, "PROVIDER_RETRY_BACKOFF_SECONDS", 0.5),
 }
 # Configuration is prepared now; provider work/throttling belongs to later tasks.
 ANALYSIS_RATE_LIMIT = integer(os.environ, "ANALYSIS_RATE_LIMIT", 10)

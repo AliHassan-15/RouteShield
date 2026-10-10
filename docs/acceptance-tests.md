@@ -498,3 +498,99 @@ IDs link to docs/architecture.md, requirements-traceability.md and plan.md; they
 Only AGENTS.md/docs were edited. Document contract/reference/scope checks and staged-file review are the applicable verification; application tests/lint/types/build, browser/provider calls, installs, audits, Linux CI and deployment are skipped in this task. No network access or code changes are authorized. The final report records actual check output, the single local commit and clean-tree result; no elapsed working time is inferred.
 
 Executed local document checks:38 frozen physical lines (<45);24 decision status/date/reason records (18 APPROVED/6 CHANGED);3 user-owned OPEN RELEASE GATES;136 defined acceptance IDs and all136 referenced IDs/range members resolve (including four E2E IDs), with21 new provider IDs mapped in architecture/plan/traceability. AST inspection confirms5 exact implemented status messages,16 explanation codes and all18 approved structural names. All14 local Markdown links resolve. The13 budget allocations total16.00 planned hours with matching cumulatives. Scope review finds exactly seven authorized documentation files and git diff --check passes. These are document checks, not new application-test results.
+
+## Routing/geocoding adapter execution — 2026-10-10
+
+This current implementation record supersedes earlier PLANNED adapter statements
+in dated records above. Those records retain their historical measurements.
+See [adapters.md](adapters.md) for interfaces, exact request parameters, safe
+error messages, waypoint conventions and setting-by-setting scope.
+
+| Existing acceptance IDs | Executed test group | Status and remaining boundary |
+|---|---|---|
+| ROUTE-01 | test_provider_contracts.py reusable classes against TomTom/injected HTTP and trivial fakes; test_provider_routing.py exact truck/alternatives request, three fixture routes, attribution | EXECUTED/PASS normalized interfaces and synthetic primary request; three distinct live/demo corridor requirement remains separate |
+| ROUTE-02, ROUTE-06, ROUTE-08 | test_provider_routing.py sparse progress, bad index/order/start/end/totals/fields, guidance recovery/unmappable point, domain source/warnings, lon/lat/meters/seconds | EXECUTED/PASS TomTom parsing; no even-spread fallback. ORS adapter remains conditional/PLANNED |
+| ROUTE-03 | test_provider_distinctness.py identical/different-density/contained routes, exact .8999/.90/.9001 owned overlap, 99.99/100.01m and inclusive computed cutoff, canonical permutations, midpoint/final weights, polar/antimeridian, dense2,800mi | EXECUTED/PASS spherical metric; independent ellipsoidal survey at100m not claimed |
+| ROUTE-04..05, API-05 | test_provider_routing.py two real-request-shaped waypoint calls, duration exactly1.5/above, mismatched/duplicate/no-route/error discard, one/two partial count, short deadline, zero NO_ROUTE | EXECUTED/PASS adapter boundary; API response/UI and conditional ORS100km constraint remain PLANNED |
+| ROUTE-09..10, API-03 | test_provider_routing.py UTC offset normalization, traffic=false/cargo omitted, rejected-within-grace correction, no blind recovery, naive/past/future rejection | EXECUTED/PASS adapter timestamps/validation. Submitted departure retained; downstream ETA orchestration/DST/weight serializer validation PLANNED |
+| ROUTE-06, API-06, ERROR-01..03 | test_provider_transport.py every closed status/message mapping, JSON/XML/empty/misleading bodies, body-size cap/redirect refusal, missing key, malformed JSON, secret-bearing exceptions/echoed errors/logging/reprs/serialized details | EXECUTED/PASS internal errors; public HTTP envelope/status mapping and simulation identity PLANNED |
+| TIME-01..02, WX-09 | test_provider_transport.py phase caps/remaining time, only one geo connection/502/503/504 retry, no routing/429/auth/invalid/timeout retry, capped backoff/Retry-After, slow/blocking transport/cancel/concurrency | EXECUTED/PASS routing/geocoding/shared transport. WX-09 weather behavior and integrated weather/global deadline remain PLANNED |
+| API-02, API-07 | test_provider_geocoding.py label/lookup sanitization limits, missing/malformed candidates, lon/lat/score, stable IDs/order/ties/bounded list, empty results/country restriction | EXECUTED/PASS adapter boundary. API field errors, candidate UI/debounce/stale-response handling remain PLANNED |
+| API-08..09 | test_provider_transport.py <=5 starts/rolling second, <=2 outstanding calls, invalid bounds | EXECUTED/PASS provider limiter only; per-IP API throttles/global daily weather reservation remain PLANNED |
+| CACHE-01..02 | identical geocode and routing operations each perform new calls; synthetic-only helpers/fixture provenance; no persistence/result-cache implementation | EXECUTED/PASS adapter no-cache boundary. Later service/analysis caches must respect it; weather/client caches PLANNED |
+| ATTR-01 | test_provider_geocoding.py provider/flagged pending text, no Copyright API request | EXECUTED/PASS pending metadata only; exact text/display authorization stays user-owned OPEN RELEASE GATE. ATTR-02..03 UI weather/basemap credit PLANNED |
+| BUDGET-01..02, CP-03 | test_checkpoints.py approved default200, exact200 allowed/201 coarsens, existing overrides/larger counts | EXECUTED/PASS default/single-route boundary only; unique pooling/dedup, mandatory prioritization and weather setting300→200 remain PLANNED |
+| ROUTE-07, TIME-03 | test_live_tomtom.py optional once-only probe; see outcome below | ROUTE-07 full repeatable three-route short/long-corridor demo and TIME-03 integrated long-trip latency remain PLANNED; this two-request probe is narrower |
+
+All new offline cases are SYNTHETIC. The autouse fixture prevents socket
+construction, connection/DNS and datagram entry points, with one explicit live
+smoke exception. Existing historical real Open-Meteo files are untouched and
+not used in these new tests. No dependency added: HTTPX0.28.1 already pinned;
+dependency audit is therefore skipped in this task.
+
+Inspected offline output:
+
+```text
+Full backend: 999 passed, 1 skipped (optional live smoke)
+New provider-only cases: 210 passed; new checkpoint-cap cases: 2 passed
+Total new offline cases: 212 (prior committed suite: 787)
+2,800-mile synthetic comparison/index measurement: 0.801s; test bound 5s
+Repository-root backend Ruff: All checks passed!
+Ruff format check: 61 files already formatted (backend/dev.py/tools)
+Strict mypy domain/providers: Success: no issues found in 21 source files
+Backend-wide strict mypy: Success: no issues found in 59 source files
+Domain boundary: 13 files checked; no forbidden imports.
+Backend build: System check identified no issues (0 silenced).
+Static collection: 0 copied, 27 unmodified, 49 post-processed.
+Package compilation: completed, exit0.
+```
+
+Corrected initial verification findings: formatting/import grouping and immutable
+default construction; HTTPX Sequence/tuple parameter typing; one missing import
+in newly added TransportConfig tests; loop-bound test closure; settings/test
+datetime annotations under the full backend strict check. The missing import
+caused11 initial new-test failures; fixed before the passing full run. Review also
+found/corrected a detour cap based only on retained near-clones; a regression test
+proves discarded faster native paths cannot increase that cap. No remaining
+offline failure/regression was observed. Root lint matches CI; lint from backend
+alone has different inferred import grouping and is not the canonical command.
+A direct root invocation of package-only mypy could not initialize its Django
+plugin. The documented backend-cwd strict command passed for21 files, and the
+root dev.py runner passed for59; use those verified commands/import contexts.
+
+Live smoke outcome is recorded below after the authorized once-only invocation.
+A recognized past-departure rejection is a
+valid negative probe outcome, not evidence of normalized live routes; auth,
+quota, transport or malformed responses fail the smoke. No fallback/current-time
+correction/retry is allowed within its two-call budget.
+
+Skipped: frontend/browser tests/build, dependency audit, Linux CI execution,
+deployment and integrated weather/API testing (unchanged or unimplemented layers).
+No elapsed working time is estimated. No user-owned release gate is resolved.
+
+### Once-only live smoke: EXECUTED/PASS
+
+Inspected output, exactly one invocation and two TomTom requests, no real
+response recordings, URLs, credentials or upstream bodies printed:
+
+```text
+LIVE routing: success; distinct_routes=2; profile=truck; traffic=false;
+past_departAt=accepted; seconds=1.833
+LIVE geocoding: success; candidates=5; attribution_confirmed=False; seconds=0.334
+LIVE request count=2; maximum=2; retries=0; waypoint calls=0;
+past-time recovery=disabled; routing_read_cap=12.0s
+1 passed
+```
+
+This probe used a public Los Angeles–Santa Monica corridor and departAt60s in
+the past. Two distinct routes is a truthful partial result, not proof of full
+three-route demo acceptance. Geocoding used Santa Monica California. The current
+local real `.env` overrides routing read timeout to12s; defaults/example are now25s.
+No real `.env` was changed. The user may update their own override when using
+the new25s policy; this successful short probe did not exercise a25s wait.
+Connect3/geocoding8/global35 defaults remain unchanged. No further live invocation
+or fallback was made. Long-trip integrated35s and repeatable three-route demo
+remain unverified; all three legal/eligibility release gates remain OPEN.
+
+Final staged-file/secret review, single local commit and clean-tree confirmation
+are reported in the final task response. No remote or push operation is authorized.

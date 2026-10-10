@@ -1,6 +1,7 @@
 """D04/D21 defaults and explicit numerical reconciliation parameters.
 
-The 300 budget remains frozen; the provider spike's proposed 100 is not applied.
+The approved default is 200. Trip selection currently counts points before
+pooling; dedupe-aware budgeting belongs to the later corridor integration task.
 Geometry uses a mean-radius sphere, whose WGS84 distance error can approach
 0.56%. The configurable 1% plus 5 m reconciliation allowance covers that model
 and road-polyline rounding; it is an implementation tolerance, not a guarantee.
@@ -17,7 +18,7 @@ class RoutePolicy:
 
     offered_intervals_miles: tuple[int, ...] = (10, 25, 50)
     adaptive_thresholds_miles: tuple[Fraction, ...] = (Fraction(100), Fraction(500))
-    checkpoint_budget: int = 300
+    checkpoint_budget: int = 200
     meters_per_mile: Fraction = Fraction("1609.344")
     earth_radius_m: Fraction = Fraction("6371008.8")
     geometry_absolute_tolerance_m: Fraction = Fraction(5)

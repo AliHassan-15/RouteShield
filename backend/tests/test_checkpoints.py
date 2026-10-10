@@ -107,7 +107,7 @@ def test_user_selection_and_common_trip_interval(choice: int) -> None:
 @pytest.mark.parametrize(
     "length,new_interval,steps,count",
     [
-        (1000, 25, ((10, 25),), 123),  # 3*101=303 >300, then3*41=123
+        (1000, 25, ((10, 25),), 123),  # 3*101=303 >200, then3*41=123
         (2500, 50, ((10, 25), (25, 50)), 153),  # 753 ->303 ->153
     ],
 )
@@ -130,8 +130,17 @@ def test_budget_counts_each_route_before_later_weather_deduplication() -> None:
     assert select_interval((route, route, route), 10).interval_miles == 25
 
 
+@pytest.mark.parametrize("miles,count", [(1990, 200), (2000, 201)])
+def test_approved_200_default_boundary_on_one_route(miles: int, count: int) -> None:
+    route = straight_route(miles)
+    assert checkpoint_count(route, 10) == count
+    plan = select_interval((route,), 10)
+    assert plan.interval_miles == (10 if count == 200 else 25)
+    assert bool(plan.warnings) is (count == 201)
+
+
 def test_trip_too_large_at_largest_offered_interval() -> None:
-    """Three5000mi routes need 3*101=303 at50mi, beyond the frozen300 budget."""
+    """Three5000mi routes need 3*101=303 at50mi, beyond the default200 budget."""
     route = straight_route(5000)
     for selected in (None, 10, 25, 50):
         with pytest.raises(RouteError) as error:
@@ -160,7 +169,7 @@ def test_configurable_budget_retains_frozen_default() -> None:
     policy = replace(DEFAULT_ROUTE_POLICY, checkpoint_budget=100)
     route = straight_route(1000, policy=policy)
     assert select_interval((route, route, route), 10).interval_miles == 50
-    assert DEFAULT_ROUTE_POLICY.checkpoint_budget == 300
+    assert DEFAULT_ROUTE_POLICY.checkpoint_budget == 200
 
 
 @pytest.mark.parametrize("interval", [-1, 0, 15, 100, True, 10.0])
