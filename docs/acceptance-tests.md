@@ -92,7 +92,7 @@ RECOMMENDATION | Construct complete route-summary fixtures directly for ordering
 | ID | Given/action | Expected |
 |---|---|---|
 | ROUTE-01 | Recorded valid truck response with primary +2 alternatives | Three normalized provider fixture routes, profile/geometry/timing/summary/attribution preserved; request includes truck/alternatives and extended distance/time values; no cargo passed as gross weight |
-| ROUTE-02 | TomTom lat/lon plus vertex cumulative distance/time; valid guidance fallback; ORS GeoJSON/steps in separate adapter fixtures | Canonical [lon,lat], meters, seconds; vertex timing alignment and monotonic guidance mapping; missing both fails safely; no swapped hemisphere |
+| ROUTE-02 | TomTom lat/lon plus normalized vertex cumulative distance/time or geometry-indexed sparse progress; valid guidance fallback; ORS GeoJSON/steps in separate adapter fixtures | Canonical [lon,lat], meters, seconds; validated sparse progress expands onto vertices using traveled geometric chainage, with timing source exposed; monotonic guidance fallback is announced; missing/invalid timing fails safely; no swapped hemisphere. JSON/request parsing and ORS integration remain adapter work |
 | ROUTE-03 | Same path with different vertex densities or directionally asymmetric overlap | Length-weighted comparison stable; reversed/contained near-clone rejected using max directional coverage; distinct roads outside tolerance accepted |
 | ROUTE-03 | Overlap exactly .90 and just above .90; 100m tolerance edge; unequal final samples | .90 allowed, >.90 rejected; tolerance inclusive; weighted sample ownership handles final length |
 | ROUTE-04 | Provider returns 1/2 routes; allowed fallback returns new real routes or duplicate/no-route | <=2 extra calls, same endpoints/profile, bounded deadline/detour search; never clone offset geometry; return truthful count/warning if still <3 |
@@ -254,3 +254,87 @@ Verified commands from the repository root in PowerShell (explicit project inter
 - Corrected during verification: a test incorrectly relied on the older float sum() algorithm; it now uses explicit sequential addition. The full suite exposed the existing production fixture's inherited DEBUG value, corrected above. Test import formatting and deliberate invalid-comparison type annotations were also fixed before the passing runs. No outstanding failure in the performed checks.
 - Skipped: frontend tests/lint/types/build and browser checks (no frontend change); HTTP/live-provider checks, dependency audit (no dependency change), Linux CI and deployment. RISK-06's optional-gust adapter/UI journey, provider component parsing, checkpoints/ETA/mile attribution, aggregation/ranking and integration remain later tasks. This record does not claim those specifications pass.
 - Documentation follow-up: AGENTS.md section4 still describes the domain as having no feature logic. That foundation-status sentence needs a later update because AGENTS.md is outside this task's authorized edit paths; this execution record states the implemented domain status.
+
+## Geometry, checkpoints and aggregation execution record (2026-10-10)
+
+IMPLEMENTATION | This task authorizes pure geometry/checkpoint/aggregation code and representation of the observed provider shape; it does not authorize provider parsing, network work, ranking, changes to AGENTS.md or the frozen contract. The provider spike's proposed lower cap is not applied: the default remains 300. No dependency was added; Fraction, dataclasses and zoneinfo are standard-library modules, using the foundation's existing timezone data.
+
+### Distance, timing and interpolation contract
+
+- Provider summary distance is authoritative for route length, checkpoint spacing and exact owned/category mileage. Validated provider cumulative distance/time anchors are authoritative for ETA on that same calibrated chainage. Geometric traveled chainage locates and interpolates coordinates within each segment. Coordinates are canonical WGS84 longitude/latitude; meters and seconds remain internal units.
+- build_route accepts aligned vertex distance/time arrays or normalized sparse point-index/distance/time anchors matching the synthetic progress fixtures and provider-findings.md. Sparse anchors expand by geometric distance within each supplied anchor span. The output vertex arrays align to collapsed geometry. Input arrays must align to original geometry before duplicate collapse.
+- Both the whole route and every timing-anchor span must satisfy abs(provider_distance - geometric_distance) <= geometry_absolute_tolerance_m + geometry_relative_tolerance * geometric_distance. A mismatch is a typed failure; the two distance sources are never silently substituted. Reconciliation tolerances below are explicit implementation defaults, not additional frozen decisions or measurements of a provider guarantee.
+- Timing indexes/distances/times must be finite, valid, non-decreasing, start at vertex0/distance0/time0, and reach the final vertex and summary totals. Endpoint discrepancies within the configured meter/second tolerances are snapped to summary totals with TIMING_ENDPOINT_RECONCILED. Original monotonicity is checked before snapping. Invalid primary timing uses validated guidance only, exposing GUIDANCE_TIMING_FALLBACK and the rejected code; neither valid means NO_VALID_TIMING. Supplied endpoint-only anchors are an explicit interpolation span; absent timing never manufactures a speed estimate.
+- Coordinates use spherical minor-great-circle interpolation on the actual selected polyline segment, with mean Earth radius below. Antimeridian and polar arcs are handled by 3D vectors. Near-antipodal segments are rejected as AMBIGUOUS_SEGMENT. Road-scale accuracy depends on the provider polyline's vertex quality: the method follows each supplied arc and does not reconstruct unsampled road curvature. Synthetic equatorial/meridian/polar/antimeridian controls pass at 1e-9 degrees or better; independent ellipsoidal geodesic accuracy has not been measured. The sphere's distance approximation motivates the configurable 1% plus 5m reconciliation allowance.
+- Consecutive geometric spans within duplicate_point_tolerance_m collapse to zero, with point-index remapping and all timing/wait anchors retained. Exact interior checkpoint chainage uses first arrival; interpolation beyond it includes the provider's subsequent stationary wait. Origin elapsed remains0 and destination elapsed remains total duration. A positive distance on stationary geometry, or moving geometry with zero provider chainage, is unmappable and fails. Coordinate reversals and loops are valid traveled paths; latitude/longitude are not sorted.
+- Departure must be timezone-aware and is normalized to UTC; nonexistent ZoneInfo wall times fail. Each checkpoint can attach its own IANA zone; missing/invalid names explicitly yield UTC with a warning. Exact elapsed seconds remain Fraction; datetime ETAs use native microsecond resolution (nearest microsecond, ties to even), including any sub-microsecond interpolation. Driver breaks are not invented.
+
+### Interval, ownership and summary contract
+
+- One common interval applies to all accepted routes. The adaptive default uses the longest route: <=100mi ->10, <=500mi ->25, otherwise50. A valid user choice takes precedence. Mandatory count is ceil(route_miles / interval_miles)+1 per route, summed before allocation. This is a conservative upper bound; the later weather task owns cross-route coordinate deduplication within100m.
+- If the count exceeds the budget, select_interval moves only to the next offered interval and returns CHECKPOINT_INTERVAL_INCREASED with old_interval_miles and new_interval_miles for each step. If the largest interval still fails, TRIP_TOO_LARGE is returned. generate_trip_checkpoints applies that plan to every route. Direct single-route generation is also bounded and requires an already suitable interval.
+- Fraction arithmetic preserves input Decimal/Fraction values exactly; floats use their canonical decimal text. Ownership boundaries are0, adjacent checkpoint-distance midpoints andL, converted using the exact meter/mile scale. Every interval is disjoint and their lengths telescope exactly toL, including short routes and short final segments. No display rounding enters mileage or averages.
+- Aggregation accepts generated checkpoints and existing risk-engine results. Final LOW/MODERATE/HIGH/SEVERE/NO_TRAVEL categories and unknown_miles form one exact partition. average_risk is the exact mile-weighted ordinal mean only with complete data; otherwise null. known_only_average_risk_diagnostic uses complete final observations only and never supplies a missing full average or ranking input; no ranking is implemented here.
+- maximum_known_level and known_risk_floor both expose the highest proven level, including an UNKNOWN checkpoint's floor, or none without evidence. no_travel_checkpoint_count/no_travel_miles count final NO_TRAVEL only. known_blocked_checkpoint_count and known_blocked_miles_diagnostic retain proof overlapping UNKNOWN as separate diagnostics, never extra category miles. Any known block yields BLOCKED; otherwise missing data yields INCOMPLETE; otherwise ASSESSED. known_blocked=false is absence of proven block, not a claim that an incomplete route is unblocked. Coverage is exact known-final mileage divided by route mileage.
+
+### Complete RoutePolicy parameters and defaults
+
+| Parameter | Default | Authority/purpose |
+|---|---|---|
+| offered_intervals_miles | (10,25,50) | D04 required offered choices |
+| adaptive_thresholds_miles | (100,500) | D04 longest-route thresholds, inclusive |
+| checkpoint_budget | 300 | Frozen D21; per-route mandatory count upper bound |
+| meters_per_mile | 1609.344 exactly (201168/125) | D04 exact conversion |
+| earth_radius_m | 6371008.8 | Mean-radius spherical geometry implementation |
+| geometry_absolute_tolerance_m | 5 | Absolute reconciliation allowance |
+| geometry_relative_tolerance | 0.01 | Geometric-distance-relative reconciliation allowance |
+| distance_endpoint_tolerance_m | 1 | Maximum summary/anchor distance endpoint discrepancy |
+| time_endpoint_tolerance_s | 1 | Maximum summary/anchor elapsed endpoint discrepancy |
+| duplicate_point_tolerance_m | 0.001 | Consecutive coincident-point collapse tolerance |
+| antipodal_tolerance_radians | 1e-9 | Reject minor-arc ambiguity near pi radians |
+
+Policies are immutable and validated, and every route in a trip must share one policy. Tests supply changed intervals, adaptive thresholds, budget, conversion, geometry tolerances, radius, endpoint tolerances, duplicate tolerance and antipodal tolerance to verify these are parameters rather than buried logic. WGS84 bounds, midpoint division by2 and microseconds/second are mathematical/unit definitions rather than adjustable product limits.
+
+### Executed versus planned acceptance coverage
+
+| Existing ID | Test group/file | Current status |
+|---|---|---|
+| CP-01,CP-02 | test_checkpoints.py: short/exact/final segments, all offered intervals, endpoint coordinates | EXECUTED/PASS at pure domain boundary |
+| CP-03 | Same file: longest-route thresholds, explicit choice, common trip plan, one/double budget bump and largest-interval failure | EXECUTED/PASS; weather coordinate pooling remains PLANNED |
+| CP-04 | test_geometry.py: unequal speeds, sparse progress expansion, endpoint values | EXECUTED/PASS with supplied provider timing |
+| CP-05 | Same file: full/per-span reconciliation, duplicate/wait preservation, loops, invalid arrays/indexes/coordinates/totals/geometry, guidance fallback | EXECUTED/PASS; provider JSON validation remains PLANNED |
+| CP-06 | test_checkpoints.py: UTC/local midnight, different checkpoint zones, DST spring/repeat/gap, UTC fallback, naive input errors | EXECUTED/PASS; API input offset/name consistency validation and provider timezone metadata remain PLANNED |
+| MET-01 | Same file: golden100/105mi cases, [0,10,20,23], short routes, generated rational/Decimal conservation | EXECUTED/PASS with exact equality |
+| MET-02 | test_route_aggregation.py: owned [5,10,6.5,1.5], category totals, exact66/23 mean | EXECUTED/PASS |
+| MET-03 | Same file: unknown6.5mi, coverage16.5/23, null full mean, diagnostic46.5/16.5, UNKNOWN known block and all-UNKNOWN | EXECUTED/PASS; recommendation exclusion is later RANK work |
+| MET-04 | Same file: five disjoint final levels, unknown partition, all offered intervals, uniform routes, immutable summaries | EXECUTED/PASS |
+| ROUTE-01 | test_geometry.py synthetic fixture helper preserves canonical geometry/summary/progress shape | PARTIAL/EXECUTED; outgoing requests, truck profile preservation, attribution and provider parsing PLANNED |
+| ROUTE-02 | Same file: aligned/sparse timing, guidance recovery, missing both, canonical coordinate fixture helper | PARTIAL/EXECUTED normalized model; TomTom/ORS adapters and provider JSON parsing PLANNED |
+| ROUTE-06 | Same file: malformed normalized geometry/summary/timing and typed errors | PARTIAL/EXECUTED domain validation; HTTP failures/retries/cache/API mapping PLANNED |
+| ROUTE-03..05,ROUTE-07 | Distinctness, bounded real alternatives/no-route, live truck access | PLANNED application work; historical spike evidence is not a domain/adapter test |
+
+Verified PowerShell commands from the repository root, with the existing explicit project interpreter and quoted paths:
+
+```powershell
+& "./backend/.venv/Scripts/python.exe" "./dev.py" test --only backend
+& "./backend/.venv/Scripts/python.exe" -m pytest "./backend/tests/test_geometry.py" "./backend/tests/test_checkpoints.py" "./backend/tests/test_route_aggregation.py"
+& "./backend/.venv/Scripts/python.exe" "./dev.py" lint --only backend
+& "./backend/.venv/Scripts/python.exe" "./dev.py" typecheck --only backend
+& "./backend/.venv/Scripts/python.exe" "./dev.py" build --only backend
+```
+
+Inspected final output excerpts (all commands exit0):
+
+```text
+Full backend suite: 630 passed
+New geometry/checkpoint/aggregation cases: 192 passed
+Ruff: All checks passed!
+Ruff format: 38 files already formatted
+Domain boundary: 9 files checked; no forbidden imports.
+Strict mypy: Success: no issues found in 36 source files
+Backend build: System check identified no issues (0 silenced).
+```
+
+Static collection and package compilation also completed successfully. No application test failed during this task; initial formatting findings and six test-only type-check errors were corrected (Fraction expectations and deliberately invalid policy arguments). No outstanding failure or regression was found in the performed checks.
+
+Skipped: frontend tests/lint/types/build, browser checks, HTTP/live-provider checks, dependency audit, Linux CI execution and deployment. These layers/dependencies were not changed; ROUTE adapter, RANK recommendation, weather pooling and application integration acceptance remain planned as mapped above. AGENTS.md and docs/decisions.md were not edited, as explicitly required by this task. The local staged-file/secret review and final commit/clean-tree result are reported with the task.
