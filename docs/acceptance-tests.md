@@ -594,3 +594,124 @@ remain unverified; all three legal/eligibility release gates remain OPEN.
 
 Final staged-file/secret review, single local commit and clean-tree confirmation
 are reported in the final task response. No remote or push operation is authorized.
+
+## Weather adapter execution — 2026-10-11
+
+IMPLEMENTED | This record supersedes earlier PLANNED weather-adapter, pooling,
+weather-cache and daily-ledger statements, while preserving dated historical
+results. Scope: backend/providers, backend/tests, weather-only settings/example
+and docs/adapters.md. Domain, AGENTS.md, frozen decisions, API and frontend are
+unchanged. No dependency/install was needed. Every new offline case is SYNTHETIC;
+the existing socket blocker stays active with one explicit flag/test-name weather
+smoke exception. New offline tests never use live measurement evidence as weather.
+
+| Existing acceptance IDs | Test group / evidence | Status and boundary |
+|---|---|---|
+| WX-01/02/06/12, API-03, HEAT-05 | test_weather_normalization.py:156 cases; each unit conversion/alias, exact rain+showers, depth not water-equivalent, independent context, arrays/metadata/nulls/nonfinite/booleans/error parsing, immutable values | EXECUTED/PASS adapter validation; API serialization and visible UNKNOWN handling still PLANNED |
+| WX-03/04/05/10, HEAT-03/05, TIME-01 | test_weather_forecast.py:25 cases; exact enclosing-hour, minutes/long-trip window, past/interior/first-last/horizon, IANA DST repeated hour, UTC fallback, age/stale | EXECUTED/PASS pure helpers;49-frame heatmap payload and checkpoint UI local-time labeling PLANNED |
+| WX-07/11, HEAT-01/06, API-08, BUDGET-01/02 | test_weather_pooling.py:14 cases; mandatory first/stable100m representatives, full mapping, exact cap, uniform optional stride/density,177→173 long-trip synthetic shape, TRIP_TOO_LARGE | EXECUTED/PASS pooling; caller interval escalation/density UI PLANNED |
+| WX-08/11, API-08, QUOTA-01/02/03 | test_weather_quota_cache.py:28 cases; published300-unit example and multipliers, exact fractional/concurrent reservations, pre-send refund/day-rollover/restart, exact cache key/TTL/capacity, partial/failure exclusion | EXECUTED/PASS process ledger/cache; HTTP429 public shape, per-IP/global orchestration and actual provider-counter equality unverified/PLANNED |
+| WX-09, API-03/08, TIME-01/02, QUOTA-01/02 | test_weather_transport.py:55 cases; connect/read caps/remaining deadline, hard blocking caller bound, one transient retry/backoff/Retry-After, no400/429/auth/timeout retry, JSON/XML/empty errors, log/chain secrecy, quota refusal/pre-send refund | EXECUTED/PASS transport; integrated routing+weather35s M5 gate/TIME-03 PLANNED |
+| WX-01/06/07/08/09, API-03/08, HEAT-01/05/06, ATTR-02 | test_weather_adapter.py:26 cases; 1/50/51/100/200 batching, <=2 actual in-flight calls, mandatory tier starts first, unique-value route/checkpoint mapping, failed batch/location isolation, cache ages, quota/horizon/deadline failures, fake protocol, environment wiring/data attribution | EXECUTED/PASS provider result boundary; frontend attribution/heatmap/API PLANNED |
+| WX-13 | weather_model_measurement.json and table in adapters.md: automatic,ICON-global,GFS at3 public cities;50-row ordinary/98-row days7-11 checks | EXECUTED/PASS coverage measurement; best_match default selected; future model/location coverage not guaranteed |
+| WX-10/13, TIME-03 | test_live_weather.py; explicit optional flag,50+100 disjoint coordinates/three calls/retries0 | Once-only outcome recorded below; this weather-only latency does not satisfy integrated TIME-03 |
+
+Unavailable-never-calm property cases cover all15 nonempty combinations of missing
+required fields, each as null/absent/unknown-unit. Every incomplete row is explicit
+Unavailable; the affected normalized hazard has no value. Frozen D08 still requires
+retaining OTHER known hazard values through Unavailable.known_values, including
+wind55 with missing rain/showers. No complete HourlyWeather, fabricated calm value
+or cached success is produced. This is the D08-consistent interpretation of that
+property, not an erasure of known blocks. Domain classification remains separate.
+
+Inspected offline output after fixes:
+
+```text
+Full backend: 1303 passed, 2 skipped in9.26s
+New offline weather cases:304 (prior committed suite:999)
+Optional skips: existing TomTom smoke, new Open-Meteo smoke
+Repository-root Ruff lint: All checks passed!
+Ruff format:76 files already formatted
+Backend-wide strict mypy: Success: no issues found in74 source files
+Strict domain/providers mypy: Success: no issues found in28 source files
+Domain boundary:13 files checked; no forbidden imports
+Backend build: System check identified no issues (0 silenced)
+Static collection:0 copied,27 unmodified,49 post-processed
+Package compilation:exit0
+```
+
+Corrected initial findings: conditional-unpack syntax, mypy variable inference,
+test Decimal/float approximate comparisons, a Retry-After expectation shorter
+than the base backoff, formatter/import ordering, immutable default construction,
+and the local legacy coordinate-cap override. Reviewed and corrected ambient
+Decimal rounding dependence, raw-component retention with unknown units, expired
+cache success and queued/late work after a hard deadline. The effective cap is
+min(configured,200); the real .env is unchanged. No offline failure/regression
+remains in the passing run. The root command matches CI's Ruff import context.
+
+Executed commands (PowerShell, paths quoted):
+
+```powershell
+& "./backend/.venv/Scripts/python.exe" "./dev.py" test --only backend
+& "./backend/.venv/Scripts/python.exe" "./dev.py" lint --only backend
+& "./backend/.venv/Scripts/python.exe" "./dev.py" typecheck --only backend
+& "./backend/.venv/Scripts/python.exe" "./dev.py" build --only backend
+& "./backend/.venv/Scripts/python.exe" "./tools/check_domain.py"
+# Strict package check from backend, explicit venv interpreter (no activation):
+& "./.venv/Scripts/python.exe" -m mypy --strict --config-file "./pyproject.toml" "./domain" "./providers"
+```
+
+All new environmental values and exact request conventions are listed in
+[adapters.md](adapters.md). Runtime connect3/weather-read8,50/batch,two concurrent,
+weatherTTL900 and global35 values were retained. Weather model/endpoint, separate
+weather retry controls, daily/per-attempt quota controls, bounded cache capacity,
+gust flag and prepared cache-TTL wiring were added; cap300→200 is the only changed
+existing value. No routing/geocode setting or real secret/env was edited.
+
+The measurement phase used three requests/nine coordinate submissions, plus
+one deliberately rejected hour-format request/one coordinate (HTTP400). That
+failed probe counts against the budget. It is not an unresolved adapter failure:
+the implemented request uses documented offset-free UTC hours. The final smoke
+is limited to three requests/150 submissions with retries disabled. Actual
+combined totals and its once-only outcome are recorded below after execution.
+
+Skipped/unimplemented: frontend/browser, API error serialization/per-IP throttles,
+domain integration,49-frame heatmap payload, browser zero-request scrub/performance,
+geographic timezone enrichment, integrated long-trip35s/TIME-03 M5, Linux CI run,
+hosting/release and dependency audit (dependencies unchanged). Release eligibility
+and both TomTom legal gates remain OPEN and user-owned. No elapsed working time
+is estimated; no remote/push operation is authorized.
+
+### Weather once-only live smoke: EXECUTED/PASS
+
+Exactly one invocation of tests/test_live_weather.py with its explicit flag;
+three calls,150 coordinate submissions,retries0. Inspected real output:
+
+```text
+50 coordinates:1 HTTP,1.820s,2450/2450 complete coordinate-hours,failed0,cache hits0
+100 coordinates:2 HTTP,0.666s,4900/4900 complete coordinate-hours,failed0,cache hits0
+Each required variable:2450 non-null (50 operation),4900 non-null (100 operation)
+HTTP statuses:[200,200,200]
+Per-request seconds:1.757,0.317,0.576
+Conservative ledger units:150 (actual charged provider counter not exposed)
+1 passed in2.84s
+```
+
+Coordinates are an invented public-city grid: first operation starts at
+latitude34.05/longitude-118.25; second at39.74/-104.99. The committed test defines
+the exact0.02-degree row/column construction without printing bulk coordinates.
+The window is49 whole UTC rows over48h beginning at the next whole hour. Exact
+epoch endpoints and observation time are preserved in
+weather_live_smoke_measurement.json, alongside only counts/status/latency.
+All required wind/rain/showers/snow values were present; no partial point, retry,
+cache overlap, TomTom call or other provider call occurred in this smoke.
+
+TOTAL LIVE TASK BUDGET USED: **7 Open-Meteo forecast requests /160 coordinate
+submissions**, including the HTTP400 probe. Limits were12/250. Documentation
+reads are distinct from forecast calls. No raw live response was saved. The
+weather-only timings do not prove integrated routing+weather35s behavior, model
+accuracy, future coverage, eligibility or provider-counter agreement. No further
+live invocation is authorized by this task's once-only instruction.
+
+The final staged-file/secret review and one local commit are reported in the
+task response; the three user-owned release gates remain OPEN.

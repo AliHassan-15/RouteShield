@@ -1,4 +1,4 @@
-"""Normal tests are offline; only the explicitly enabled two-request smoke uses sockets."""
+"""Normal tests are offline; only individually enabled provider smokes use sockets."""
 
 import os
 import socket
@@ -15,6 +15,9 @@ def prohibit_network(
     if (
         request.node.name == "test_tomtom_live_smoke"
         and os.environ.get("ROUTESHIELD_LIVE_TOMTOM") == "1"
+    ) or (
+        request.node.name == "test_open_meteo_live_smoke"
+        and os.environ.get("ROUTESHIELD_LIVE_OPEN_METEO") == "1"
     ):
         yield
         return

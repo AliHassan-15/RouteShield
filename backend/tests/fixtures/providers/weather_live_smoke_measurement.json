@@ -1,0 +1,51 @@
+{
+  "recording": "numeric counts, timestamps and latency only; no response data",
+  "reference_utc": "2026-10-10T19:34:11.034766+00:00",
+  "request_start_epoch": 1791662400,
+  "request_end_epoch": 1791835200,
+  "requests": 3,
+  "coordinates": 150,
+  "statuses": [
+    200,
+    200,
+    200
+  ],
+  "request_seconds": [
+    1.757,
+    0.317,
+    0.576
+  ],
+  "operations": [
+    {
+      "coordinates": 50,
+      "http": 1,
+      "seconds": 1.82,
+      "complete_hours": 2450,
+      "expected_hours": 2450,
+      "nonnull": {
+        "wind_speed_10m": 2450,
+        "rain": 2450,
+        "showers": 2450,
+        "snowfall": 2450
+      },
+      "failed_coordinates": 0,
+      "cache_hits": 0
+    },
+    {
+      "coordinates": 100,
+      "http": 2,
+      "seconds": 0.666,
+      "complete_hours": 4900,
+      "expected_hours": 4900,
+      "nonnull": {
+        "wind_speed_10m": 4900,
+        "rain": 4900,
+        "showers": 4900,
+        "snowfall": 4900
+      },
+      "failed_coordinates": 0,
+      "cache_hits": 0
+    }
+  ],
+  "retries": 0
+}

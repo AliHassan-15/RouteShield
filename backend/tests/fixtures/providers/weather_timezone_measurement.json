@@ -1,0 +1,9 @@
+[
+  {
+    "probe": "explicit UTC-offset hour with auto timezone",
+    "requests": 1,
+    "coordinates": 1,
+    "status": 400,
+    "expected_start_epoch": 1791662400
+  }
+]

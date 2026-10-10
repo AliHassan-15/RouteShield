@@ -17,3 +17,19 @@ JSON/XML/empty errors, malformed/missing fields, waypoint responses and dense
 numeric values are test inputs, not observed provider measurements. New tests
 do not load either historical real weather fixture. The optional live test
 prints safe findings only and writes no response file.
+
+## Weather adapter evidence and synthetic cases (2026-10-11)
+
+`tests/weather_helpers.py` constructs explicitly SYNTHETIC Open-Meteo-shaped
+payloads with epoch arrays, mp/h/inch metadata and distinct per-coordinate values.
+Nulls, absent showers, unit/array errors and JSON/XML/empty error bodies are
+invented in the test modules. New offline tests do not load historical real weather
+fixtures or any live measurement file. `weather_long_trip_shape.json` is SYNTHETIC:
+58/57/62 checkpoint counts mirror the spike, but all coordinates are invented.
+
+`weather_model_measurement.json`, `weather_timezone_measurement.json` and the
+once-enabled smoke's `weather_live_smoke_measurement.json` contain numeric
+counts/status/latency/timestamps only, not response recordings or fixture weather.
+They document actual authorized non-display Open-Meteo probes; they do not resolve
+the free-service eligibility release gate. Weather data credit: Open-Meteo /
+CC BY4.0; processing consists of coverage counting and normalization diagnostics.

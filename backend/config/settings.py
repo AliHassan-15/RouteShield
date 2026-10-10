@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from config.environment import integer, load_environment_file, number, runtime_settings
+from config.environment import boolean, integer, load_environment_file, number, runtime_settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_environment_file(BASE_DIR / ".env")
@@ -60,13 +60,25 @@ PROVIDER_CONFIG = {
     "weather_timeout_seconds": number(os.environ, "WEATHER_READ_TIMEOUT_SECONDS", 8),
     "geocode_timeout_seconds": number(os.environ, "GEOCODE_READ_TIMEOUT_SECONDS", 8),
     "analysis_deadline_seconds": number(os.environ, "ANALYSIS_DEADLINE_SECONDS", 35),
-    "max_coordinates": integer(os.environ, "MAX_WEATHER_COORDINATES", 300),
+    # Legacy local overrides cannot expand the approved unique-coordinate cap.
+    "max_coordinates": min(integer(os.environ, "MAX_WEATHER_COORDINATES", 200), 200),
     "batch_size": integer(os.environ, "WEATHER_BATCH_SIZE", 50),
     "concurrency": integer(os.environ, "WEATHER_BATCH_CONCURRENCY", 2),
     "max_retries": integer(os.environ, "PROVIDER_ATTEMPTS", 2) - 1,
     "requests_per_second": integer(os.environ, "PROVIDER_REQUESTS_PER_SECOND", 5),
     "call_concurrency": integer(os.environ, "PROVIDER_CALL_CONCURRENCY", 2),
     "retry_backoff_seconds": number(os.environ, "PROVIDER_RETRY_BACKOFF_SECONDS", 0.5),
+    "weather_base_url": os.environ.get(
+        "OPEN_METEO_BASE_URL", "https://api.open-meteo.com/v1/forecast"
+    ),
+    "weather_model": os.environ.get("OPEN_METEO_MODEL", "best_match"),
+    "weather_max_retries": integer(os.environ, "WEATHER_ATTEMPTS", 2) - 1,
+    "weather_retry_backoff_seconds": number(os.environ, "WEATHER_RETRY_BACKOFF_SECONDS", 0.5),
+    "weather_daily_quota_units": integer(os.environ, "WEATHER_DAILY_QUOTA_UNITS", 8000),
+    "weather_request_unit_limit": integer(os.environ, "WEATHER_REQUEST_UNIT_LIMIT", 200),
+    "weather_cache_ttl_seconds": integer(os.environ, "WEATHER_CACHE_TTL_SECONDS", 900),
+    "weather_cache_max_entries": integer(os.environ, "WEATHER_CACHE_MAX_ENTRIES", 400),
+    "weather_gusts": boolean(os.environ, "WEATHER_GUSTS_ENABLED", False),
 }
 # Configuration is prepared now; provider work/throttling belongs to later tasks.
 ANALYSIS_RATE_LIMIT = integer(os.environ, "ANALYSIS_RATE_LIMIT", 10)

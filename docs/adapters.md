@@ -1,9 +1,10 @@
-# Routing and geocoding adapters — 2026-10-10
+# Provider adapters
 
-Implemented TomTom adapters under the approved D09/D11/D13/D19/D20/D21
-contract. This task adds no weather implementation, API endpoint, frontend,
-provider-result cache or persistence. All three user-owned release gates in
-decisions.md remain OPEN; non-display development does not settle them.
+The routing/geocoding sections record the 2026-10-10 TomTom milestone under
+D09/D11/D13/D19/D20/D21. That milestone added no weather implementation. The
+2026-10-11 weather implementation is recorded below. Neither milestone builds
+an API endpoint or frontend. All three user-owned release gates in decisions.md
+remain OPEN; technical access and non-display development do not settle them.
 
 ## Boundaries and construction
 
@@ -224,7 +225,8 @@ copyright content/display permission remains user-owned; no Copyright API call.
 
 Connect3, geocoding8 and analysis35 were already correct and remain unchanged.
 All other settings unchanged, including MAX_WEATHER_COORDINATES300: the additional
-authorization excludes that weather setting; align it to200 in the weather task.
+authorization excluded that weather setting. The weather milestone below now
+aligns its default and effective upper bound to200; the real .env is untouched.
 The later factory must map PROVIDER_ATTEMPTS−1 into geocode_retries and share
 limiter/configuration. No real .env is edited. Existing HTTPX0.28.1 is reused;
 no dependency/lock/install/audit change. Lint uses the documented repository-root
@@ -249,9 +251,254 @@ and one geocoding request, sharing35s. Ordinary tests block socket construction,
 connections and DNS. No live response is recorded.
 
 Executed results and the once-only smoke outcome are recorded in
-[acceptance-tests.md](acceptance-tests.md). Future work: weather/corridor pooling,
-application composition/global quotas/per-IP throttles, API serialization/DST
+[acceptance-tests.md](acceptance-tests.md). Weather/corridor pooling and the process
+quota ledger are implemented below. Future work: application composition/per-IP throttles, API serialization/DST
 validation, frontend/maps and integrated/hosted verification. Three distinct
 routes are required for full PDF fulfillment; an honest partial response alone
 does not meet that requirement. AGENTS.md's phase/default-history paragraphs
 need a later documentation update; this task's explicit edit scope excludes it.
+
+## Weather adapter milestone — 2026-10-11
+
+IMPLEMENTED | `WeatherProvider.fetch(pooled_coordinates, window, deadline=...)`
+returns `WeatherResult.series` in precisely the input order. Each immutable
+`WeatherSeries` holds the requested whole UTC hours and either `HourlyWeather`
+or typed `Unavailable` at every requested hour. Successful hours retain exact
+source components/raw units, normalized Decimal values and provenance: provider,
+requested model selection, fetched-at UTC epoch and cache-hit flag. Provenance
+does not invent which underlying model supplied automatic `best_match` data.
+Mappings are read-only. These normalized types live in providers/contracts.py;
+domain code and the frozen contract were not edited.
+
+`OpenMeteoWeather.from_mapping(PROVIDER_CONFIG, client=..., clock=..., sleeper=...,
+limiter=..., ledger=..., cache=...)` consumes prepared environment settings
+without importing Django. Inject one shared clock-aware quota ledger, limiter,
+weather cache and adapter per process, and pass the SAME Deadline through future
+routing/weather orchestration. Creating new ledgers per analysis would bypass
+the process budget. Call adapter.close() and client.close() at lifecycle shutdown.
+No HTTP is performed during construction. There is no route/geocode caching.
+
+### Exact forecast request and hour ownership
+
+GET the environment-driven Open-Meteo forecast endpoint, default
+`https://api.open-meteo.com/v1/forecast`, without a key. Parameters are:
+
+| Parameter | Exact convention |
+|---|---|
+| latitude / longitude | Separate comma-separated lists in the pooled input order, <=50 each |
+| hourly | wind_speed_10m,rain,showers,snowfall |
+| wind_speed_unit / precipitation_unit | mph / inch |
+| timeformat / timezone | unixtime / UTC |
+| start_hour / end_hour | UTC yyyy-MM-ddTHH:mm, inclusive whole-hour endpoints |
+| models | Omitted for automatic best_match; the configured single selector otherwise |
+| Optional gusts | Append wind_gusts_10m only when enabled; fifth variable remains within the <=10-variable base charge |
+
+`forecast_window` floors departure to the preceding whole UTC hour and ceilings
+max(departure+48h, last checkpoint ETA). `lookup_forecast` selects row t owning
+(t-3600,t]: 12:20 ->13:00, exact13:00 ->13:00, 13:00:01 ->14:00. The same row's
+instantaneous sustained 10m wind is used; no interpolation, nearest endpoint,
+calm fallback or horizon extrapolation. Lookup reports the ETA and selected row
+as separate epoch instants and rejects past ETAs as PAST_TIME. An adapter request
+is clipped at the documented maximum16-day calendar envelope; this is an upper
+request bound, never evidence of valid values. Requested hours outside real
+returned coverage stay OUT_OF_HORIZON; null rows remain MISSING_HOUR even when
+their timestamps exist. Array lengths must match sorted unique epoch timestamps.
+
+The [official forecast documentation](https://open-meteo.com/en/docs) defines
+offset-free start_hour/end_hour. A one-coordinate probe using offset-bearing
+hour strings with timezone=auto returned HTTP400. It consumed one request/one
+coordinate and is preserved only as numeric status evidence. UTC requests avoid
+local-hour reinterpretation and non-whole-hour offset ambiguity. Returned IANA
+metadata/offset are retained solely for display; IANA rules handle DST, never a
+single fixed offset across the trip. Because this request mode returns UTC/GMT,
+the adapter flags an explicit geographic-timezone fallback. A geographic local
+zone is not inferred from UTC metadata. Later UI must label this fallback; local
+zone enrichment is not implemented in this task. Synthetic New York DST tests
+prove lookup stays UTC when genuine IANA display metadata is available.
+
+### Unit and missing-data semantics
+
+The documentation describes rain/showers/snowfall as preceding-hour accumulations,
+and wind_speed_10m as instantaneous sustained wind. One-hour liquid average rate
+is (rain_inches + showers_inches)/1h; snow average rate is snowfall_DEPTH_inches/1h.
+Units are checked separately even though mph/inch were requested. Supported wind
+spellings: mph, observed mp/h, km/h, m/s, kn/knots; depth spellings: inch/in, mm, cm.
+km/h divides by1.609344; m/s multiplies by2.2369362921; mm divides by25.4; cm divides
+by2.54; kn/knots multiplies by1.150779448. No total precipitation, snow-water
+equivalent or hidden7:1 factor is used. Optional gusts never replace sustained wind.
+Snow depth is not liquid-equivalent precipitation. All rates are explicitly
+marked hourly averages rather than instantaneous rain/snow rates.
+
+JSON decimal tokens and source components use Decimal/Fraction; rain+showers is
+added exactly before conversion to a Decimal. Defensive non-terminating unit
+conversions use a fixed60-digit Context independent of ambient precision/rounding.
+No epsilon, risk-band rounding or category interpolation is applied. Source
+components and raw units survive for diagnostics, including unknown unit metadata;
+unknown units, booleans, strings, negative and non-finite values are unavailable.
+
+Unavailable codes are OUT_OF_HORIZON, MISSING_HOUR, MISSING_FIELD, PAST_TIME,
+PROVIDER_FAILURE, QUOTA_EXCEEDED and DEMO_QUOTA_REACHED. Missing showers invalidates
+liquid rainfall; it is not assumed zero. Any required missing/invalid component
+prevents a complete `HourlyWeather` and prevents successful caching. Consistent
+with frozen D08, explicit `Unavailable.known_values` retains the OTHER known
+hazards (e.g. wind55 with missing showers) for later known-block/floor calculation.
+The property-style tests assert no complete sample when any required input is
+missing, and no value for the affected normalized hazard; they deliberately do
+not erase known No Travel evidence. No risk classification is added here.
+
+### Measured model coverage
+
+Measured at reference2026-10-10T19:01:45.127170Z, three public city coordinates
+(Los Angeles34.0522,-118.2437; Denver39.7392,-104.9903; New York40.7128,-74.0060;
+latitude,longitude order).
+Each selector fetched UTC Oct10 19:00 -> Oct21 20:00. Ordinary assessment:
+Oct10 19:00 -> Oct12 20:00 (50 rows). Longest required assessment:
+Oct17 19:00 -> Oct21 20:00 (98 rows), covering departure about seven days out
+plus a trip lasting roughly four days. Table counts apply independently at EACH
+of the three coordinates; they count numeric non-null values, not timestamps.
+
+| Requested selection | HTTP | Seconds | Ordinary wind/rain/showers/snow | Days7-11 wind/rain/showers/snow | All-required longest rows |
+|---|---:|---:|---|---|---:|
+| best_match (automatic) |200|1.322|50/50 for each|98/98 for each|98/98|
+| icon_global |200|0.368|50/50 for each|6/98 for each|6/98|
+| gfs_seamless |200|0.824|50/50 for each|98/98 for each|98/98|
+
+Default remains measured **best_match**: automatic selection ties GFS on full
+usable coverage and does not require overriding the approved automatic default.
+This is not a forecast-quality comparison or a promise about future locations,
+model runs or charged model counts. All returned wind metadata was mp/h and
+rain/showers/snow was inch. ICON-global's92 null tail rows are unusable despite
+continuing timestamps. Numeric evidence is in weather_model_measurement.json;
+the failed hour-format probe is weather_timezone_measurement.json. No raw live
+payload was recorded, and these evidence files are not offline weather fixtures.
+
+### Pooling, density, batching and failure isolation
+
+`pool_coordinates` sorts mandatory points by (route id, checkpoint index,
+longitude, latitude), then optional points by the same stable key. The first
+representative serves subsequent points at great-circle distance <=100m using
+the existing domain Earth radius. It is representative-based, not transitive
+clustering. A point near two representatives uses the earliest. All mandatory
+representatives precede optional coordinates. Every tagged original gets a
+pooled index, distance to its representative and coarsened flag.
+
+Optional samples use the same increasing index stride on each sorted route,
+retaining endpoint candidates, until their deduplicated pool fits. If even that
+minimum cannot fit, optional-only sampling is suppressed uniformly and disclosed;
+mandatory points still cover the routes. Unselected optional points map to the
+nearest retained representative and are explicitly approximate/coarsened. They
+must NEVER replace mandatory checkpoint weather. Report original/selected optional
+counts, stride and per-route maximum retained spacing (supplied route chainage,
+or a clearly labeled great-circle gap when chainage is absent); zero with fewer
+than two retained optional points means no measurable optional spacing. The
+OPTIONAL_COORDINATES_COARSENED warning requires later UI disclosure.
+
+The cap is checked AFTER mandatory deduplication. More than200 mandatory pooled
+points raises existing `domain.route_types.RouteError` with TRIP_TOO_LARGE before
+HTTP. Caller interval escalation through10/25/50 belongs to future orchestration;
+no required point is omitted and no fourth interval is invented. The synthetic
+long-trip shape uses measured counts58/57/62 (177 originals), shared endpoints
+deduplicating to173, and450 invented optional samples coarsened within200. It
+copies no TomTom geometry and does not claim those synthetic coordinates are
+real route checkpoints.
+
+Input order supplies mandatory-first batches of <=50 with at most two batch
+workers and two transport workers; one shared ProviderLimiter bounds actual starts
+to5/rolling second and at most2 outstanding calls, including retries. Queued work,
+HTTP phases, Retry-After and body processing all consume the shared Deadline.
+Only a failed batch's coordinates become unavailable; valid neighbors survive.
+`failed_indices` also identifies partial individual series, not just failed HTTP.
+The distinct-value fixtures prove location results map back to the correct route
+and checkpoint. A worker that outlives the caller deadline keeps its limiter slot
+until it really finishes, cannot cache a late success, and queued work is cancelled.
+
+### Exact quota reservations, reliability and weather-only cache
+
+[Published accounting](https://open-meteo.com/en/pricing) is modeled conservatively:
+
+`units = coordinates × max(1, variables/10) × max(1, inclusive_UTC_calendar_days/14) × requested_model_count`.
+
+Calendar days cover the actual upstream start/end hours, inclusive. Every batch
+and permitted retry reserves exact Fraction units atomically BEFORE HTTP; equality
+at the daily/request guard is allowed. Four variables/three days/one requested
+model/300 coordinates ->300 units, matching the recorded pricing calculator.
+Automatic best_match counts as ONE requested selection; hidden model mixture and
+actual charged counters remain unverified. A model selector is a single name.
+
+Default daily stop8000 and per-upstream-attempt guard200 are independent of HTTP
+request count. Exhaustion returns DEMO_QUOTA_REACHED without calling upstream.
+A pre-send failure releases the reservation; any HTTP invocation retains its
+charge even on connection failure, HTTP failure or timeout, because failures are
+not known to be free. Retries reserve again. A queued reservation crossing UTC
+midnight rechecks and charges the actual send day. The ledger resets on process
+restart and UTC calendar-day rollover, is shared across callers/IPs ONLY inside
+that process, and is best effort rather than distributed/provider-counter control.
+It does not establish compliance with separate provider minute/hour/month limits.
+
+Connect<=3s/read<=8s and all waits are bounded by remaining Deadline<=35s. At most
+one retry for connection failure/502/503/504 uses <=0.5s configured base backoff;
+Retry-After may require a longer wait only if the shared deadline can fit it, and
+never reduces the base backoff. No invalid/auth/429/read-timeout retry. HTTP429
+maps to QUOTA_EXCEEDED for its batch. JSON/XML/empty errors reuse the closed safe
+ProviderError set; upstream URLs, queries and bodies are never copied into
+messages, logs or exception chains. Native client has no redirects/proxy inheritance
+and bounds ephemeral response bytes; no raw response persistence is introduced.
+
+Cache only COMPLETE normalized required-hour series, TTL<=900s, keyed by provider,
+requested model, endpoint source, exact coordinate, exact requested window,
+variables and request units/timeformat/timezone. Partial/failure series never enter
+the cache. A good coordinate may be cached when an unrelated coordinate fails.
+Results expose per-operation hit/miss counts, original fetched-at and per-series
+ages; hits update series/hour provenance without changing stored weather. Expiry
+at900s is a miss; held older payloads can independently be marked stale via
+series_is_stale. Bounded capacity defaults400 entries. No route/geocode result cache
+exists; no risk/load-specific cache or heatmap payload is built here.
+
+### Every weather setting changed or added
+
+All are optional locally; configured values must satisfy the adapter's approved
+bounds. Existing connect3, read8, batch50, concurrency2, TTL900 and provider limiter
+settings retain their values. No real .env, routing setting or secret is changed.
+
+| Environment setting | Default / change | Purpose |
+|---|---|---|
+| MAX_WEATHER_COORDINATES |300 ->200; effective min(configured,200)|Approved unique pooled cap; legacy local300 cannot expand it|
+| OPEN_METEO_BASE_URL |https://api.open-meteo.com/v1/forecast|Eligible environment-selected HTTPS endpoint without query/credentials|
+| OPEN_METEO_MODEL |best_match|Measured requested model selector|
+| WEATHER_ATTEMPTS |2|At most one permitted retry|
+| WEATHER_RETRY_BACKOFF_SECONDS |0.5|Positive environment base wait<=0.5s|
+| WEATHER_DAILY_QUOTA_UNITS |8000|In-process shared daily UTC stop|
+| WEATHER_REQUEST_UNIT_LIMIT |200|Per-upstream-attempt cost guard|
+| WEATHER_CACHE_MAX_ENTRIES |400|Bound complete-series cache capacity|
+| WEATHER_GUSTS_ENABLED |false|Optional display-only fifth variable, unchanged base charging|
+| WEATHER_CACHE_TTL_SECONDS |900 (new PROVIDER_CONFIG wiring; value unchanged)|Weather-series TTL<=15min|
+
+Attribution metadata credits Open-Meteo data under
+[CC BY4.0](https://open-meteo.com/en/licence) and says data were converted/processed
+for RouteShield. The metadata's confirmed flag confirms this documented DATA
+credit, not permission to use the free HOSTED SERVICE for a public assessment.
+RG-OPENMETEO-ELIGIBILITY remains OPEN and owned by the user; both TomTom release
+gates also remain OPEN. No provider switch, purchase or release decision is made.
+
+The optional `tests/test_live_weather.py` is skipped without
+ROUTESHIELD_LIVE_OPEN_METEO=1. It restricts the URL to the forecast endpoint,
+disables retries, requests one50-coordinate batch and a disjoint100-coordinate
+operation split into two concurrent batches, and uses a future48h/49-row UTC
+window. Normal tests keep the socket blocker active. Only numeric coverage/status/
+latency/timestamp evidence is recorded; raw payloads and bulk coordinates are
+not printed or written. This task's once-only outcome and exact live budget are
+recorded in acceptance-tests.md after execution. Do not rerun that task's smoke.
+
+EXECUTED | Once-only smoke passed:50-coordinate operation1.820s;100-coordinate
+operation0.666s, two concurrent batches. All three statuses200; all required
+variables non-null at every49-row coordinate (2450 and4900 coordinate-hours).
+Each request took1.757/0.317/0.576s; no retry or cache hit. Total task usage,
+including model coverage and rejected hour-format probe:7 HTTP requests/160
+coordinate submissions, below12/250. Numeric smoke evidence contains exact epoch
+window endpoints. It does not establish the later integrated35s M5 gate.
+
+Remaining work: API composition/error serialization/per-IP throttles, domain risk
+and recommendation integration, heatmap49-frame payload/density disclosure,
+geographic local-time display enrichment, frontend/map/browser flow, integrated
+long-trip35s M5 evidence, CI execution and hosting. No new dependency was needed;
+the dependency audit is skipped because installed dependencies are unchanged.

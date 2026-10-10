@@ -1,0 +1,324 @@
+{
+  "reference_utc": "2026-10-10T19:01:45.127170+00:00",
+  "request_start_utc": "2026-10-10T19:00:00+00:00",
+  "request_end_utc": "2026-10-21T20:00:00+00:00",
+  "long_window_start_utc": "2026-10-17T19:00:00+00:00",
+  "requests": 3,
+  "coordinates": 9,
+  "coordinate_order_latitude_longitude": [[34.0522, -118.2437], [39.7392, -104.9903], [40.7128, -74.006]],
+  "recording": "numeric coverage only; no response bodies",
+  "findings": [
+    {
+      "model": "best_match",
+      "status": 200,
+      "seconds": 1.322,
+      "coordinates": 3,
+      "locations": [
+        {
+          "coordinate_index": 0,
+          "units": {
+            "time": "unixtime",
+            "wind_speed_10m": "mp/h",
+            "rain": "inch",
+            "showers": "inch",
+            "snowfall": "inch"
+          },
+          "coverage": {
+            "ordinary": {
+              "required_hours": 50,
+              "valid_by_variable": {
+                "wind_speed_10m": 50,
+                "rain": 50,
+                "showers": 50,
+                "snowfall": 50
+              },
+              "all_required": 50
+            },
+            "longest": {
+              "required_hours": 98,
+              "valid_by_variable": {
+                "wind_speed_10m": 98,
+                "rain": 98,
+                "showers": 98,
+                "snowfall": 98
+              },
+              "all_required": 98
+            }
+          }
+        },
+        {
+          "coordinate_index": 1,
+          "units": {
+            "time": "unixtime",
+            "wind_speed_10m": "mp/h",
+            "rain": "inch",
+            "showers": "inch",
+            "snowfall": "inch"
+          },
+          "coverage": {
+            "ordinary": {
+              "required_hours": 50,
+              "valid_by_variable": {
+                "wind_speed_10m": 50,
+                "rain": 50,
+                "showers": 50,
+                "snowfall": 50
+              },
+              "all_required": 50
+            },
+            "longest": {
+              "required_hours": 98,
+              "valid_by_variable": {
+                "wind_speed_10m": 98,
+                "rain": 98,
+                "showers": 98,
+                "snowfall": 98
+              },
+              "all_required": 98
+            }
+          }
+        },
+        {
+          "coordinate_index": 2,
+          "units": {
+            "time": "unixtime",
+            "wind_speed_10m": "mp/h",
+            "rain": "inch",
+            "showers": "inch",
+            "snowfall": "inch"
+          },
+          "coverage": {
+            "ordinary": {
+              "required_hours": 50,
+              "valid_by_variable": {
+                "wind_speed_10m": 50,
+                "rain": 50,
+                "showers": 50,
+                "snowfall": 50
+              },
+              "all_required": 50
+            },
+            "longest": {
+              "required_hours": 98,
+              "valid_by_variable": {
+                "wind_speed_10m": 98,
+                "rain": 98,
+                "showers": 98,
+                "snowfall": 98
+              },
+              "all_required": 98
+            }
+          }
+        }
+      ]
+    },
+    {
+      "model": "icon_global",
+      "status": 200,
+      "seconds": 0.368,
+      "coordinates": 3,
+      "locations": [
+        {
+          "coordinate_index": 0,
+          "units": {
+            "time": "unixtime",
+            "wind_speed_10m": "mp/h",
+            "rain": "inch",
+            "showers": "inch",
+            "snowfall": "inch"
+          },
+          "coverage": {
+            "ordinary": {
+              "required_hours": 50,
+              "valid_by_variable": {
+                "wind_speed_10m": 50,
+                "rain": 50,
+                "showers": 50,
+                "snowfall": 50
+              },
+              "all_required": 50
+            },
+            "longest": {
+              "required_hours": 98,
+              "valid_by_variable": {
+                "wind_speed_10m": 6,
+                "rain": 6,
+                "showers": 6,
+                "snowfall": 6
+              },
+              "all_required": 6
+            }
+          }
+        },
+        {
+          "coordinate_index": 1,
+          "units": {
+            "time": "unixtime",
+            "wind_speed_10m": "mp/h",
+            "rain": "inch",
+            "showers": "inch",
+            "snowfall": "inch"
+          },
+          "coverage": {
+            "ordinary": {
+              "required_hours": 50,
+              "valid_by_variable": {
+                "wind_speed_10m": 50,
+                "rain": 50,
+                "showers": 50,
+                "snowfall": 50
+              },
+              "all_required": 50
+            },
+            "longest": {
+              "required_hours": 98,
+              "valid_by_variable": {
+                "wind_speed_10m": 6,
+                "rain": 6,
+                "showers": 6,
+                "snowfall": 6
+              },
+              "all_required": 6
+            }
+          }
+        },
+        {
+          "coordinate_index": 2,
+          "units": {
+            "time": "unixtime",
+            "wind_speed_10m": "mp/h",
+            "rain": "inch",
+            "showers": "inch",
+            "snowfall": "inch"
+          },
+          "coverage": {
+            "ordinary": {
+              "required_hours": 50,
+              "valid_by_variable": {
+                "wind_speed_10m": 50,
+                "rain": 50,
+                "showers": 50,
+                "snowfall": 50
+              },
+              "all_required": 50
+            },
+            "longest": {
+              "required_hours": 98,
+              "valid_by_variable": {
+                "wind_speed_10m": 6,
+                "rain": 6,
+                "showers": 6,
+                "snowfall": 6
+              },
+              "all_required": 6
+            }
+          }
+        }
+      ]
+    },
+    {
+      "model": "gfs_seamless",
+      "status": 200,
+      "seconds": 0.824,
+      "coordinates": 3,
+      "locations": [
+        {
+          "coordinate_index": 0,
+          "units": {
+            "time": "unixtime",
+            "wind_speed_10m": "mp/h",
+            "rain": "inch",
+            "showers": "inch",
+            "snowfall": "inch"
+          },
+          "coverage": {
+            "ordinary": {
+              "required_hours": 50,
+              "valid_by_variable": {
+                "wind_speed_10m": 50,
+                "rain": 50,
+                "showers": 50,
+                "snowfall": 50
+              },
+              "all_required": 50
+            },
+            "longest": {
+              "required_hours": 98,
+              "valid_by_variable": {
+                "wind_speed_10m": 98,
+                "rain": 98,
+                "showers": 98,
+                "snowfall": 98
+              },
+              "all_required": 98
+            }
+          }
+        },
+        {
+          "coordinate_index": 1,
+          "units": {
+            "time": "unixtime",
+            "wind_speed_10m": "mp/h",
+            "rain": "inch",
+            "showers": "inch",
+            "snowfall": "inch"
+          },
+          "coverage": {
+            "ordinary": {
+              "required_hours": 50,
+              "valid_by_variable": {
+                "wind_speed_10m": 50,
+                "rain": 50,
+                "showers": 50,
+                "snowfall": 50
+              },
+              "all_required": 50
+            },
+            "longest": {
+              "required_hours": 98,
+              "valid_by_variable": {
+                "wind_speed_10m": 98,
+                "rain": 98,
+                "showers": 98,
+                "snowfall": 98
+              },
+              "all_required": 98
+            }
+          }
+        },
+        {
+          "coordinate_index": 2,
+          "units": {
+            "time": "unixtime",
+            "wind_speed_10m": "mp/h",
+            "rain": "inch",
+            "showers": "inch",
+            "snowfall": "inch"
+          },
+          "coverage": {
+            "ordinary": {
+              "required_hours": 50,
+              "valid_by_variable": {
+                "wind_speed_10m": 50,
+                "rain": 50,
+                "showers": 50,
+                "snowfall": 50
+              },
+              "all_required": 50
+            },
+            "longest": {
+              "required_hours": 98,
+              "valid_by_variable": {
+                "wind_speed_10m": 98,
+                "rain": 98,
+                "showers": 98,
+                "snowfall": 98
+              },
+              "all_required": 98
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

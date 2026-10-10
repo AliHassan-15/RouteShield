@@ -1,0 +1,8 @@
+{
+  "provenance": "SYNTHETIC: checkpoint counts reproduce the measured long-trip shape; coordinates are invented",
+  "live_result": false,
+  "checkpoint_counts": [58, 57, 62],
+  "interval_miles": 50,
+  "shared_origin_and_destination": true,
+  "expected_unique_mandatory": 173
+}
