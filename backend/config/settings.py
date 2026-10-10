@@ -5,7 +5,14 @@ from pathlib import Path
 
 from domain.route_policy import DEFAULT_MAX_ROUTE_DISTANCE_MILES
 
-from config.environment import boolean, integer, load_environment_file, number, runtime_settings
+from config.environment import (
+    boolean,
+    integer,
+    load_environment_file,
+    number,
+    provider_selector,
+    runtime_settings,
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_environment_file(BASE_DIR / ".env")
@@ -55,8 +62,8 @@ CACHES = {
     },
 }
 PROVIDER_CONFIG = {
-    "routing": os.environ.get("ROUTING_PROVIDER", "tomtom"),
-    "weather": os.environ.get("WEATHER_PROVIDER", "open_meteo"),
+    "routing": provider_selector(os.environ, "ROUTING_PROVIDER", "tomtom"),
+    "weather": provider_selector(os.environ, "WEATHER_PROVIDER", "open_meteo"),
     "tomtom_api_key": os.environ.get("TOMTOM_API_KEY", ""),
     "connect_timeout_seconds": number(os.environ, "PROVIDER_CONNECT_TIMEOUT_SECONDS", 3),
     "routing_timeout_seconds": number(os.environ, "ROUTING_READ_TIMEOUT_SECONDS", 25),

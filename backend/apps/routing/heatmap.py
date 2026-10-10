@@ -65,9 +65,10 @@ def intensity(hazard: Hazard, value: Decimal, level: RiskLevel) -> int:
 
 def classify_cell(value: HourlyWeather | Unavailable, load: Decimal) -> Cell:
     """Reuse checkpoint classification; no data is unavailable, partial data unknown."""
-    if isinstance(value, Unavailable):
-        return Cell("9", 0, "0", ("9", "9", "9"), value.reason)
-    values = value.values
+    unavailable = isinstance(value, Unavailable)
+    reason = value.reason if isinstance(value, Unavailable) else None
+    # Normalized partial rows retain proven hazards on Unavailable. Never erase a block.
+    values = value.known_values if isinstance(value, Unavailable) else value.values
     risk = classify_checkpoint(
         wind_mph=values.wind_mph,
         rain_in_per_hour=values.rain_in_hr,
@@ -76,13 +77,20 @@ def classify_cell(value: HourlyWeather | Unavailable, load: Decimal) -> Cell:
     )
     codes = (digit(risk.load_adjusted_wind_level), digit(risk.rain_level), digit(risk.snow_level))
     if risk.known_risk_floor is None:
-        return Cell("9", 0, "0", codes, UnavailableReason.MISSING_FIELD)
-    if not isinstance(risk.final_level, RiskLevel):
+        return Cell(
+            "9",
+            0,
+            "0",
+            ("9", "9", "9") if unavailable else codes,
+            reason or UnavailableReason.MISSING_FIELD,
+        )
+    if unavailable or not isinstance(risk.final_level, RiskLevel):
         return Cell(
             "0",
             0,
             "0",
             codes,
+            reason=reason,
             known_blocked=risk.known_blocked,
             known_risk_floor=str(risk.known_risk_floor.value),
         )
@@ -125,19 +133,21 @@ def build_heatmap(
     last: list[int | None] = [None] * len(series)
     warnings: list[str] = []
     # Request-local reuse only; cargo is fixed in this invocation, no retained risk cache.
-    classified: dict[WeatherValues, Cell] = {}
+    classified: dict[tuple[WeatherValues, UnavailableReason | None], Cell] = {}
     for hour in range(FRAME_COUNT):
         instant = departure + timedelta(seconds=hour * FRAME_SECONDS)
         lookups = [lookup_forecast(s, instant, now=now) for s in series]
         cells = []
         for item in lookups:
-            if isinstance(item.result, HourlyWeather):
-                key = item.result.values
-                if key not in classified:
-                    classified[key] = classify_cell(item.result, load)
-                cells.append(classified[key])
-            else:
-                cells.append(classify_cell(item.result, load))
+            sample = item.result
+            key = (
+                (sample.values, None)
+                if isinstance(sample, HourlyWeather)
+                else (sample.known_values, sample.reason)
+            )
+            if key not in classified:
+                classified[key] = classify_cell(sample, load)
+            cells.append(classified[key])
         reasons = {str(i): c.reason.value for i, c in enumerate(cells) if c.reason is not None}
         if (
             any(c.level in ("0", "9") for c in cells)

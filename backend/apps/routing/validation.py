@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import cast
+from unicodedata import category
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from domain.route_types import Coordinate
@@ -83,7 +84,7 @@ def _unknown(value: Mapping[str, object], allowed: set[str], field: str) -> None
 def _text(value: object, field: str, minimum: int, maximum: int) -> str:
     if not isinstance(value, str) or not minimum <= len(value.strip()) <= maximum:
         raise APIError("VALIDATION_ERROR", {field: "INVALID_LENGTH_OR_TYPE"})
-    if any(ord(c) < 32 for c in value):
+    if any(category(c) in {"Cc", "Cs"} for c in value):
         raise APIError("VALIDATION_ERROR", {field: "CONTROL_CHARACTER"})
     return value.strip()
 

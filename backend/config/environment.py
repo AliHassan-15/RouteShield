@@ -35,6 +35,13 @@ def boolean(values: Mapping[str, str], key: str, default: bool) -> bool:
     return value in {"true", "1"}
 
 
+def provider_selector(values: Mapping[str, str], key: str, approved: str) -> str:
+    """Reject unsupported adapters instead of silently ignoring the configured choice."""
+    if values.get(key, approved) != approved:
+        raise ImproperlyConfigured(f"{key} must be {approved}.")
+    return approved
+
+
 def number(values: Mapping[str, str], key: str, default: float) -> float:
     """Parse positive, finite transport limits."""
     import math

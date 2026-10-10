@@ -818,3 +818,85 @@ User-approved task amendments apply; synthetic tests never call providers.
 |D23 payload, API types/no-store |Synthetic3 routes with6001 vertices each,200 points and49 variable frames;300KB filter omission/500KB failure guard; actual compact JSON gzip equality, generated TS drift check, no-store. |PASS; live raw/gzip679073/140610 and568687/103554 bytes; local hosting compression unverified. |
 |Part0 live gate and real budget |Milwaukee–Detroit3 distinct routes30.780593s; conditional Chicago–Detroit3 distinct13.784700s. Totals4 TomTom/4 Open-Meteo/184 submitted coordinates/242 reserved units. |Conditional300mi change applied. Second heatmap partial: one weather request allowed, two additional sends blocked by task guard; application weather-attempt counter3 vs real1. Weather completeness at300mi remains unverified. |
 |Final verification / scope |Targeted236 passed; full backend1541 passed/2 skipped once; root Ruff/format92 files, purity14, strict mypy90 sources/tsc, backend check/static/compile build passed. Final default change33 focused tests/target lint passed. |Initial import/helper typing failures repaired. Browser/frontend runtime/map/hosted/audit skipped; no dependencies, `.env`, AGENTS, remote or release-gate edits. Proposed architecture follow-up in api.md only. |
+
+## Independent offline backend audit — 2026-10-11
+
+Synthetic adapters/Django test client only; **0 real TomTom/0 real Open-Meteo requests**, no dependency changes. No CRITICAL defect found. Approved limits, units, thresholds and ranking are unchanged. All tests named below executed in the full suite; new audit cases live in `backend/tests/test_backend_audit.py`.
+
+**A — routing allowance:** `docs/api.md:236` describes phase timeouts, not a 25s aggregate routing deadline. `providers/transport.py:240` sets read=min(25,remaining), connect=min(3,remaining); `:283` gives routing one attempt and bounds the caller wait by remaining time. `providers/tomtom.py:344` passes the SAME Deadline to initial/past-rejection recovery/at most two waypoint requests, skipping fallback when remaining<=3s (`:401`); `providers/deadline.py:39` never resets it; `apps/routing/service.py:160` bounds the outer wait. Therefore a routing stage can exceed25s, consistently with the observed25.579s; even one call's connect/read work is bounded by35s remaining, not a25s total-call timer. `test_routing_read_allowance_is_not_a_reset_stage_deadline` proves initial/fallback/fallback delays25+6+3.9=34.9s with read caps25/10/4; 25+7=32s skips the last fallback with3s left; 25+6+4=35s rejects late success. Existing `test_routing_never_automatically_retries`, `test_phase_timeouts_bounded_by_remaining` and `test_blocked_adapter_wall_time_bound` prove no timeout retry and caller return within the documented0.5s completion margin on a0.05s blocked-provider fixture. This is not proof of every maximum-payload/hardware wall time; no deadline defect was demonstrated.
+
+**B — quota guard:** `tests/live_heatmap_probe.py:68` caps actual weather sends at FOUR across both live runs; its separate600-unit reserve cap (`:84`) did not block this108-point analysis. The first run used3 weather requests; the next allowed1 then rejected2 before HTTP. Application attempt counters can therefore say3 while actual sends=1. `providers/quota.py:14` gives C×max(1,V/10)×max(1,inclusive UTC days/14)×M; four variables, three days, one model give exactly C, not C per variable/hour.
+
+| Pooled points | Batches | Hand units / observed retained ledger units | Fake sends / outcome |
+|---:|---|---:|---|
+|108|50+50+8|108 /108|3 /complete|
+|150|50+50+50|150 /150|3 /complete|
+|200|50+50+50+50|200 /200|4 /complete under default200 per-batch/8000 daily limits|
+
+`test_quota_hand_calculation_allows_full_default_pool` proves all three. `quota.py:68,79,97` reserves atomically, charges dispatched attempts conservatively, refunds only pre-send cancellation; `weather_transport.py:144` releases in finally. New `test_weather_cancelled_after_reservation_refunds_before_http` proves ledger0/no sends after cancellation (reservation-attempt diagnostics still50). Existing `test_pre_send_release_is_idempotent_but_sent_failure_keeps_charge`, `test_one_transient_retry_backoff_and_charge`, `test_exact_limit_and_concurrent_fractional_reservations` and midnight-rollover tests prove failed sends retain one charge, a retry incurs its own charge, refunds are idempotent and cannot subtract a new day's units. Harness rejection occurs after mark_sent, so its two unsent batches retain58 conservative application units; this is not provider billing evidence or an application guard defect.
+
+**Traceability:** paths below are verified relative to `backend/`; tests contain explicit numeric/order/request assertions, rather than merely checking200 or object shape.
+
+| PDF ID | Existing code | Executed test that fails wrong behavior |
+|---|---|---|
+|05|`providers/tomtom.py`, `distinctness.py`, `apps/routing/service.py`|`test_three_routes_units_coordinate_order_and_sparse_anchors`; `test_two_real_waypoint_calls_yield_distinct_routes`; `test_exact_owned_length_overlap_cutoff`|
+|06|`domain/checkpoints.py`|`test_all_offered_intervals_on_same_route`|
+|07|`domain/geometry.py`, `checkpoints.py`, `providers/forecast.py`, service|NEW `test_pipeline_weather_follows_nonuniform_checkpoint_eta`: elapsed0/1800/7200/9000/10800s selects wind0/25/35/45/45; weighted mean115/40|
+|08|`domain/risk.py`, `risk_policy.py`|`test_all_printed_endpoints` (wind); `test_wind_fractional_gaps`|
+|09|Risk/table; `providers/weather_normalization.py`|`test_all_printed_endpoints` (rain); `test_exact_liquid_addition_and_independent_decimal_context`|
+|10|Risk/table; normalization|`test_all_printed_endpoints` (snow); `test_irrelevant_precipitation_and_snow_water_equivalent_are_never_used`|
+|11|Risk/table|`test_extreme_wind_blocks_zero_cargo`; `test_user_load_cross_product`|
+|12|Risk/table|`test_user_load_cross_product`; NEW `test_hand_scenario_b_strict_load_flips_and_recommendation`|
+|13|Risk/table|Same cross-product and scenario-b tests (strict40000 boundary)|
+|14|`domain/aggregation.py`, `recommendation.py`|`test_each_priority_with_three_adversarial_routes[severe-defeats-hours-and-high]`|
+|15|Aggregation/recommendation|Same test `[high-defeats-average]`; NEW `test_hand_scenario_a_high_miles_beat_mean_and_speed`|
+|16|Aggregation/recommendation|Same test `[average-defeats-hours]`; `test_hand_calculated_23_mile_summary`|
+|17|Recommendation/provider durations|Same test `[duration]`; scenario-b exact risk ties resolve by duration|
+
+| Supporting policies | Existing code / executed evidence; limits of confirmation |
+|---|---|
+|POL-01..03|Risk/table/normalization: endpoint tests above, `test_all_hazard_combinations`, `test_optional_bad_gust_does_not_make_required_weather_unavailable`, `test_each_field_unit_conversion`|
+|POL-04..06|Geometry/checkpoints/forecast/aggregation: `test_adaptive_default_uses_longest_route_in_any_order`, new ETA pipeline test, `test_enclosing_hour`, `test_exact_conservation_across_generated_routes`, hand-summary tests|
+|POL-07..09|Risk/recommendation/TomTom/distinctness: `test_incomplete_is_unranked_even_if_known_average_would_win`, `test_no_recommendation_outcomes_are_stable_in_all_permutations`, `test_request_uses_exact_parameters_and_normalized_utc`, fallback/overlap tests above|
+|POL-10,22,23|`domain/corridor.py`, `apps/routing/heatmap.py`: `test_pool_one_pass_and_one_weather_fetch`, `test_minutes_and_dst_hours_are_absolute`, `test_truck_positions_use_anchors`, `test_synthetic_largest_supported_payload_200_points_49_frames`, `test_filters_omitted_and_size_failure_explicit`; browser display remains planned|
+|POL-12,13,14,19|Domain/adapters/API/typed schema: purity/types; `test_adversarial_client_matrix_returns_closed_safe_shapes`, `test_transport_exception_secrecy`, `test_structured_logging_redacts_inputs`, `test_shared_types_no_drift`, `test_failure_or_partial_never_cached`; optional live tests deliberately skipped|
+|POL-16|Config/health: `test_actual_startup_fails_without_secret`, `test_production_flags`; hosted HTTPS/CORS/wakeup acceptance remains unverified|
+|POL-24,25|Throttles/quota/pooling: `test_endpoint_throttle_retry_after`, quota tests above, `test_uniform_optional_coarsening_density_and_count`, `test_mandatory_over_cap_reuses_domain_trip_too_large`|
+|POL-28|Service midpoint `risk_profile`: new scenario-a assertions prove contiguous0..100mi partition and checkpoint identity/levels; scenario-c asserts UNKNOWN/block/floor on owned5..15mi. Frontend SVG remains planned|
+|POL-11,18,20,30|Terms/dependency docs/locks/workflow exist; API schema drift tested. No executed offline test establishes free eligibility/attribution grants, fresh dependency audit, remote CI success or hosted three-route performance; these remain gates|
+|POL-15,17,21,26,27,29|Trip/map/slider/theme/motion/scenario feature locations remain planned; no test claims those features complete. Reserved simulation error identity is tested; six presets are not implemented|
+
+| Weak/missing coverage or stale mapping | Resolution / backlog severity |
+|---|---|
+|PDF-07 pipeline could use departure hour for every checkpoint despite passing individual ETA/hour tests|Added unequal-time, changing-hour pipeline test; resolved|
+|POL-08/10/28 partial known block and risk-profile values had insufficient pipeline assertions|Added scenario-c heatmap/profile evidence and scenario-a partition assertions; resolved, heatmap defect fixed|
+|PDF-05 planned `providers/routing.py` absent; POL-13 planned serializers absent; planning/status rows still call implemented adapters/API future|Actual `tomtom.py`/`apps/routing/validation.py` and tests above verified. LOW documentation debt; traceability edits forbidden in this task|
+|POL-11/16/19/20/30 live release/display/eligibility, hosted integration/CI and worst-case completion margin|HIGH release gates /MEDIUM unmeasured maximum completion-margin performance; no offline pass substituted|
+|POL-15/17/21/26/27/28 UI portions; POL-29 simulation presets and enable flag|HIGH required UI/simulation backlog, P2 refinements lower priority. `SIMULATION_ENABLED` is parsed but deliberately cannot yet enable the documented deferred feature; no feature added|
+
+**Hand calculations through the real API pipeline (time-invariant synthetic fields; rain/snow0 unless specified):** (a) each100mi route has checkpoints0,10,...100, ownership5+9×10+5. R1 wind45 only at10/20mi gives Severe20/Low80, mean(20×4+80×1)/100=1.6, duration600s. R2 rain.30 at10/20/30/40 gives High40/Low60, mean1.8, duration700s. R3 snow.5 everywhere gives Moderate100, mean2, duration800s. Recommendation/order R3,R2,R1: Severe excludes R1; High decides R3 over R2 before mean or time. Scenario-a asserts each checkpoint, ownership, totals, mean, ordering and explanation criterion.
+
+(b) R1 is40mi with checkpoints0/10/20/30/40, wind44.9/45/54.9/55/44.9 and owned5/10/10/10/5. H/S/N below mean High/Severe/No Travel:
+
+| Load lb | Final checkpoint levels | High /Severe /No Travel mi | Mean numerator /40 | Recommended route |
+|---:|---|---|---|---|
+|30000|H,S,S,N,H|10 /20 /10|(10×3+20×4+10×5)/40=4|R2|
+|30001|H,N,N,N,H|10 /0 /30|(10×3+30×5)/40=4.5|R2|
+|40000|H,N,N,N,H|10 /0 /30|180/40=4.5|R2|
+|40001|S,N,N,N,S|0 /10 /30|(10×4+30×5)/40=4.75|R3|
+
+R1 is always blocked by55mph. R2 is uniform44.9mph: High40/mean3 until load>40000, then Severe40/mean4; R3 is uniform rain.30: High40/mean3. R2 wins the equal-risk duration tie until40000; R3 wins at40001 by Severe miles. Scenario-b executes all four loads and asserts classifications, ownership, means, No Travel miles and winner.
+
+(c) 23mi ownership5/10/6.5/1.5: R1 at10mi has wind55, missing rain, snow0; others Low. Low13/UNKNOWN10, coverage13/23, average=null; known-block diagnostic10mi, disjoint No Travel total0. R1 BLOCKED+UNRANKED+rank=null; R2/R3 completeLow mean1 and fasterR2 wins. Scenario-c verifies checkpoint known floor=NO_TRAVEL, block=true, profile5..15mi, heatmap UNKNOWN code0/floor5/block1/wind5, and evidence surviving optional hazard-filter omission.
+
+| Confirmed defect /severity | Fix location | Regression failing before fix |
+|---|---|---|
+|Normalized partial `Unavailable` erased heatmap known block (checkpoint/ranking already retained it) /HIGH|`apps/routing/heatmap.py:66,120` reuses known observations and request-local memo including availability reason|`test_hand_scenario_c_unknown_known_block_survives_every_representation`; reason separation additionally checked by `test_partial_heatmap_memo_keeps_availability_reasons_distinct`|
+|Configured unsupported providers silently ignored /MEDIUM|`config/environment.py:38`; `config/settings.py:63` validates selectors without echoing input|`test_unsupported_provider_selector_cannot_be_silently_ignored` (both selectors)|
+|DEL/C1 controls accepted200; unpaired surrogate caused500 during response encoding /MEDIUM|`apps/routing/validation.py:84` rejects Unicode Cc/Cs; ordinary international labels/ZWJ emoji still accepted|`test_unicode_controls_and_surrogates_rejected_before_providers` (now400, documented envelope, zero providers)|
+
+Whole-backend search/review found no forbidden domain imports, bare except, TODO/debug breakpoint leftovers, duplicated hazard classification, unredacted application provider-error logging or missing-weather-to-calm conversion beyond the fixed heatmap evidence issue. Provider wire shapes remain in adapters; broad catches map safely to errors/unavailable. Every example variable has a configuration reader; unsupported selector semantics were corrected and deferred simulation usage is listed above. No cosmetic rewrite.
+
+**Verification/confidence:** targeted151 passed; full backend **1566 passed/2 optional live skipped**, run once (21.71s runner time); root Ruff/format93 files, frontend ESLint, strict mypy91 sources/TypeScript, domain purity14 modules and backend check/static/compile build passed. Final risk-profile assertion additions passed25 audit cases plus a focused scenario-c rerun, root-context targeted Ruff/format and backend-context strict types. Initial fixture, typing and ad-hoc wrong-working-directory check failures were repaired; no unresolved check failure. High confidence in deterministic PDF-05..17 logic from exhaustive boundaries, real normalization/transport fakes, independent arithmetic and adversarial API assertions; live/provider/release reliability remains conditional. No browser, live/network, hosted or fresh dependency-security audit performed. No scratch folder or dependencies created.
+
+Effective numeric settings: routing25s/weather12s/geocoding8s/connect3s/global35s, maximum route300mi, coordinate cap200, request units200/daily8000. Weather currently uses the12s default (no weather timeout override detected); legacy local `MAX_WEATHER_COORDINATES=300` is clamped200. User owns RG-TOMTOM-DISPLAY, RG-TOMTOM-STORAGE and RG-OPENMETEO-ELIGIBILITY; all remain OPEN. Existing user `.env.example` deletion of the explicit weather-timeout line is preserved outside this commit. No `.env`, frozen contract, AGENTS or remote changed.
