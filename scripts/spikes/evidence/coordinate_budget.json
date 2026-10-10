@@ -1,0 +1,13 @@
+{
+  "interval_miles": 50,
+  "per_route_checkpoints": [
+    58,
+    57,
+    62
+  ],
+  "exact_unique_mandatory_coordinates": 173,
+  "deduplicated_within_100m": 173,
+  "proposed_100_cap_fits": false,
+  "density_reduction_from_300": 0.6666666666666666,
+  "maximum_duration_seconds": 153823
+}

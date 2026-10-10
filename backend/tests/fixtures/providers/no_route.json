@@ -1,0 +1,16 @@
+{
+  "status": 400,
+  "body": {
+    "formatVersion": "0.0.12",
+    "detailedError": {
+      "code": "NO_ROUTE_FOUND",
+      "message": "Synthetic disconnected road networks"
+    }
+  },
+  "_fixture": {
+    "provenance": "SYNTHETIC: user approved replacement on 2026-10-10",
+    "reason": "real TomTom result storage permission unresolved under section 11.4",
+    "live_result": false,
+    "basis": "observed disconnected-network status and code; message invented"
+  }
+}

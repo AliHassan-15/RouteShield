@@ -1,0 +1,305 @@
+[
+  {
+    "provider": "tomtom",
+    "label": "urban_truck_repeated",
+    "sent_utc": "2026-10-10T15:20:32Z",
+    "status": "NETWORK_ERROR",
+    "error_type": "ConnectError",
+    "seconds": 0.397
+  },
+  {
+    "provider": "tomtom",
+    "label": "urban_truck_repeated",
+    "sent_utc": "2026-10-10T15:20:59Z",
+    "status": 200,
+    "seconds": 2.472,
+    "bytes": 115445,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "tomtom",
+    "label": "urban_truck_repeat_repeated",
+    "sent_utc": "2026-10-10T15:24:09Z",
+    "status": 200,
+    "seconds": 2.634,
+    "bytes": 115658,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "tomtom",
+    "label": "medium_truck_repeated",
+    "sent_utc": "2026-10-10T15:24:16Z",
+    "status": 200,
+    "seconds": 6.256,
+    "bytes": 668961,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "tomtom",
+    "label": "medium_truck_repeat_repeated",
+    "sent_utc": "2026-10-10T15:24:54Z",
+    "status": 200,
+    "seconds": 3.792,
+    "bytes": 668807,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "tomtom",
+    "label": "long_truck_repeated",
+    "sent_utc": "2026-10-10T15:25:02Z",
+    "status": 200,
+    "seconds": 52.149,
+    "bytes": 5086761,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "batch_50_48h",
+    "sent_utc": "2026-10-10T15:27:30Z",
+    "status": "NETWORK_ERROR",
+    "error_type": "ConnectError",
+    "seconds": 11.404
+  },
+  {
+    "provider": "tomtom",
+    "label": "long_truck_repeat_repeated",
+    "sent_utc": "2026-10-10T15:39:01Z",
+    "status": 200,
+    "seconds": 14.749,
+    "bytes": 5086551,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "batch_50_48h",
+    "sent_utc": "2026-10-10T15:40:22Z",
+    "status": 200,
+    "seconds": 1.342,
+    "bytes": 100213,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "batch_100_48h",
+    "sent_utc": "2026-10-10T15:42:37Z",
+    "status": 200,
+    "seconds": 2.521,
+    "bytes": 200652,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "horizon_16_days",
+    "sent_utc": "2026-10-10T15:42:45Z",
+    "status": 200,
+    "seconds": 1.499,
+    "bytes": 658271,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "analysis_300_batch_1",
+    "sent_utc": "2026-10-10T15:44:22Z",
+    "status": 200,
+    "seconds": 1.264,
+    "bytes": 101993,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "analysis_300_batch_2",
+    "sent_utc": "2026-10-10T15:44:23Z",
+    "status": 200,
+    "seconds": 1.276,
+    "bytes": 101868,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "analysis_300_batch_3",
+    "sent_utc": "2026-10-10T15:44:25Z",
+    "status": 200,
+    "seconds": 2.066,
+    "bytes": 102679,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "analysis_300_batch_4",
+    "sent_utc": "2026-10-10T15:44:27Z",
+    "status": 200,
+    "seconds": 2.446,
+    "bytes": 101549,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "analysis_300_batch_5",
+    "sent_utc": "2026-10-10T15:44:30Z",
+    "status": 200,
+    "seconds": 2.487,
+    "bytes": 102195,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "open_meteo",
+    "label": "analysis_300_batch_6",
+    "sent_utc": "2026-10-10T15:44:32Z",
+    "status": 200,
+    "seconds": 1.71,
+    "bytes": 101448,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "tomtom",
+    "label": "geocode_ambiguous",
+    "sent_utc": "2026-10-10T15:46:59Z",
+    "status": 200,
+    "seconds": 1.681,
+    "bytes": 3925,
+    "usage_metadata": {}
+  },
+  {
+    "provider": "tomtom",
+    "label": "urban_fixed_truck_repeated",
+    "sent_utc": "2026-10-10T15:53:21Z",
+    "status": 200,
+    "seconds": 1.9,
+    "bytes": 115014,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": "no-cache, no-transform",
+      "content-type": "application/json;charset=utf-8"
+    }
+  },
+  {
+    "provider": "tomtom",
+    "label": "urban_fixed_car_repeated",
+    "sent_utc": "2026-10-10T15:54:13Z",
+    "status": 200,
+    "seconds": 1.782,
+    "bytes": 112575,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": "no-cache, no-transform",
+      "content-type": "application/json;charset=utf-8"
+    }
+  },
+  {
+    "provider": "tomtom",
+    "label": "geocode_autocomplete",
+    "sent_utc": "2026-10-10T15:54:16Z",
+    "status": 200,
+    "seconds": 1.137,
+    "bytes": 3883,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": null,
+      "content-type": "application/json; charset=utf-8"
+    }
+  },
+  {
+    "provider": "tomtom",
+    "label": "geocode_misspelled",
+    "sent_utc": "2026-10-10T15:54:17Z",
+    "status": 200,
+    "seconds": 1.668,
+    "bytes": 4195,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": null,
+      "content-type": "application/json; charset=utf-8"
+    }
+  },
+  {
+    "provider": "tomtom",
+    "label": "geocode_region",
+    "sent_utc": "2026-10-10T15:54:19Z",
+    "status": 200,
+    "seconds": 1.04,
+    "bytes": 4210,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": null,
+      "content-type": "application/json; charset=utf-8"
+    }
+  },
+  {
+    "provider": "tomtom",
+    "label": "geocode_empty",
+    "sent_utc": "2026-10-10T15:54:21Z",
+    "status": 200,
+    "seconds": 1.171,
+    "bytes": 170,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": null,
+      "content-type": "application/json; charset=utf-8"
+    }
+  },
+  {
+    "provider": "tomtom",
+    "label": "invalid_key",
+    "sent_utc": "2026-10-10T15:54:22Z",
+    "status": 401,
+    "seconds": 1.159,
+    "bytes": 102,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": null,
+      "content-type": "application/json"
+    }
+  },
+  {
+    "provider": "tomtom",
+    "label": "no_route",
+    "sent_utc": "2026-10-10T15:54:24Z",
+    "status": 400,
+    "seconds": 1.417,
+    "bytes": 170,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": "no-cache, no-transform",
+      "content-type": "application/json;charset=utf-8"
+    }
+  },
+  {
+    "provider": "open_meteo",
+    "label": "short_model_16_days",
+    "sent_utc": "2026-10-10T15:54:26Z",
+    "status": 200,
+    "seconds": 1.037,
+    "bytes": 25313,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": null,
+      "content-type": "application/json; charset=utf-8"
+    }
+  },
+  {
+    "provider": "tomtom",
+    "label": "geocode_partial",
+    "sent_utc": "2026-10-10T15:56:39Z",
+    "status": 200,
+    "seconds": 1.296,
+    "bytes": 3883,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": null,
+      "content-type": "application/json; charset=utf-8"
+    }
+  },
+  {
+    "provider": "tomtom",
+    "label": "disconnected",
+    "sent_utc": "2026-10-10T16:06:26Z",
+    "status": 400,
+    "seconds": 2.309,
+    "bytes": 161,
+    "usage_metadata": {},
+    "response_metadata": {
+      "cache-control": "no-cache, no-transform",
+      "content-type": "application/json;charset=utf-8"
+    }
+  }
+]

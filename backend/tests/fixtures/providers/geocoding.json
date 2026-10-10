@@ -1,0 +1,27 @@
+{
+  "summary": {
+    "query": "exampleville",
+    "queryType": "NON_NEAR",
+    "numResults": 1,
+    "totalResults": 1
+  },
+  "results": [
+    {
+      "type": "Geography",
+      "score": 2,
+      "address": {
+        "municipality": "Exampleville",
+        "countryCode": "US"
+      },
+      "position": {
+        "lat": 34,
+        "lon": -100
+      }
+    }
+  ],
+  "_fixture": {
+    "provenance": "SYNTHETIC: user approved replacement on 2026-10-10",
+    "reason": "real TomTom result storage permission unresolved under section 11.4",
+    "live_result": false
+  }
+}

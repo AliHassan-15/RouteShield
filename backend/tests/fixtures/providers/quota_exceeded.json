@@ -1,0 +1,10 @@
+{
+  "status": 429,
+  "body": null,
+  "_fixture": {
+    "provenance": "SYNTHETIC: user approved replacement on 2026-10-10",
+    "reason": "real TomTom result storage permission unresolved under section 11.4",
+    "live_result": false,
+    "basis": "documented quota status; live body UNVERIFIED; quota deliberately not exhausted"
+  }
+}

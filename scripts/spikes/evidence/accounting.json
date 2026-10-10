@@ -1,0 +1,27 @@
+{
+  "tomtom": {
+    "attempts": 18,
+    "completed_http": 17,
+    "statuses": {
+      "NETWORK_ERROR": 1,
+      "200": 14,
+      "401": 1,
+      "400": 2
+    }
+  },
+  "open_meteo": {
+    "attempts": 11,
+    "completed_http": 10,
+    "statuses": {
+      "NETWORK_ERROR": 1,
+      "200": 10
+    }
+  },
+  "analysis_300": {
+    "[URL OMITTED]": 6,
+    "serial_request_seconds": 11.249,
+    "response_bytes": 611732,
+    "published_units": 300,
+    "actual_charged_units": "UNVERIFIED: no quota metadata returned"
+  }
+}

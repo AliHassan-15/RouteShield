@@ -1,0 +1,391 @@
+{
+  "tomtom_terms": {
+    "status": 200,
+    "text_length": 52703,
+    "inputs": [],
+    "clause_signals": {
+      "readable": true
+    },
+    "iframe_count": 0
+  },
+  "pricing": {
+    "status": 200,
+    "text_length": 6109,
+    "inputs": [
+      {
+        "id": "",
+        "type": "number",
+        "value": "10"
+      },
+      {
+        "id": "",
+        "type": "text",
+        "value": "14"
+      },
+      {
+        "id": "",
+        "type": "number",
+        "value": "1"
+      },
+      {
+        "id": "",
+        "type": "number",
+        "value": "1"
+      }
+    ],
+    "number_inputs": 3,
+    "calculator_result": "A request with the parameters selected below will cost 300.0 API calls",
+    "selected": [
+      "4",
+      "3",
+      "1",
+      "300"
+    ]
+  },
+  "documentation_requests": [
+    {
+      "host": "docs.tomtom.com",
+      "type": "document"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "stylesheet"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "font"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "font"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "fetch"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "script"
+    },
+    {
+      "host": "docs.tomtom.com",
+      "type": "font"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "document"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "image"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "stylesheet"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "stylesheet"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    },
+    {
+      "host": "open-meteo.com",
+      "type": "script"
+    }
+  ]
+}

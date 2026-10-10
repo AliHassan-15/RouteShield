@@ -1,0 +1,336 @@
+{
+  "batch_50_48h": {
+    "locations": 50,
+    "first_utc": "2026-10-10T15:00:00+00:00",
+    "last_utc": "2026-10-12T15:00:00+00:00",
+    "counts": {
+      "1": 2365,
+      "2": 63,
+      "3": 19,
+      "4": 3
+    },
+    "examples": {
+      "1": {
+        "timestamp_utc": "2026-10-10T15:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 0.5,
+          "rain": 0.0,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 0.5,
+          "rain_in_per_hour": 0.0,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 1
+      },
+      "2": {
+        "timestamp_utc": "2026-10-11T12:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 14.6,
+          "rain": 0.197,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 14.6,
+          "rain_in_per_hour": 0.197,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 2
+      },
+      "3": {
+        "timestamp_utc": "2026-10-11T11:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 7.1,
+          "rain": 0.327,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 7.1,
+          "rain_in_per_hour": 0.327,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 3
+      },
+      "4": {
+        "timestamp_utc": "2026-10-11T16:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 7.8,
+          "rain": 0.539,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 7.8,
+          "rain_in_per_hour": 0.539,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 4
+      }
+    },
+    "maxima": {
+      "wind_speed_10m": 35.9,
+      "rain": 0.622,
+      "showers": 0.035,
+      "snowfall": 0
+    }
+  },
+  "batch_100_48h": {
+    "locations": 100,
+    "first_utc": "2026-10-10T15:00:00+00:00",
+    "last_utc": "2026-10-12T15:00:00+00:00",
+    "counts": {
+      "1": 4689,
+      "2": 160,
+      "3": 42,
+      "4": 8,
+      "5": 1
+    },
+    "examples": {
+      "1": {
+        "timestamp_utc": "2026-10-10T15:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 0.5,
+          "rain": 0.0,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 0.5,
+          "rain_in_per_hour": 0.0,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 1
+      },
+      "2": {
+        "timestamp_utc": "2026-10-11T12:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 14.6,
+          "rain": 0.197,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 14.6,
+          "rain_in_per_hour": 0.197,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 2
+      },
+      "3": {
+        "timestamp_utc": "2026-10-11T12:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 22.0,
+          "rain": 0.268,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 22.0,
+          "rain_in_per_hour": 0.268,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 3
+      },
+      "4": {
+        "timestamp_utc": "2026-10-11T16:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 12.1,
+          "rain": 0.583,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 12.1,
+          "rain_in_per_hour": 0.583,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 4
+      },
+      "5": {
+        "timestamp_utc": "2026-10-11T19:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 10.4,
+          "rain": 1.205,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 10.4,
+          "rain_in_per_hour": 1.205,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 5
+      }
+    },
+    "maxima": {
+      "wind_speed_10m": 40.3,
+      "rain": 1.205,
+      "showers": 0.051,
+      "snowfall": 0
+    }
+  },
+  "horizon_16_days": {
+    "locations": 50,
+    "first_utc": "2026-10-10T00:00:00+00:00",
+    "last_utc": "2026-10-25T23:00:00+00:00",
+    "counts": {
+      "1": 18927,
+      "2": 242,
+      "3": 27,
+      "4": 3,
+      "5": 1
+    },
+    "examples": {
+      "1": {
+        "timestamp_utc": "2026-10-10T00:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 8.2,
+          "rain": 0.0,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 8.2,
+          "rain_in_per_hour": 0.0,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 1
+      },
+      "2": {
+        "timestamp_utc": "2026-10-11T12:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 14.6,
+          "rain": 0.197,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 14.6,
+          "rain_in_per_hour": 0.197,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 2
+      },
+      "3": {
+        "timestamp_utc": "2026-10-11T11:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 7.1,
+          "rain": 0.327,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 7.1,
+          "rain_in_per_hour": 0.327,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 3
+      },
+      "4": {
+        "timestamp_utc": "2026-10-11T16:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 7.8,
+          "rain": 0.539,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 7.8,
+          "rain_in_per_hour": 0.539,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 4
+      },
+      "5": {
+        "timestamp_utc": "2026-10-14T01:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 15.5,
+          "rain": 1.504,
+          "showers": 0.079,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 15.5,
+          "rain_in_per_hour": 1.583,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 5
+      }
+    },
+    "maxima": {
+      "wind_speed_10m": 39.5,
+      "rain": 1.504,
+      "showers": 0.161,
+      "snowfall": 0.11
+    }
+  },
+  "short_model_16_days": {
+    "locations": 2,
+    "first_utc": "2026-10-10T00:00:00+00:00",
+    "last_utc": "2026-10-25T23:00:00+00:00",
+    "counts": {
+      "1": 381,
+      "UNKNOWN": 382,
+      "2": 5
+    },
+    "examples": {
+      "1": {
+        "timestamp_utc": "2026-10-10T00:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 7.2,
+          "rain": 0.0,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 7.2,
+          "rain_in_per_hour": 0.0,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 1
+      },
+      "2": {
+        "timestamp_utc": "2026-10-11T16:00:00+00:00",
+        "raw": {
+          "wind_speed_10m": 11.3,
+          "rain": 0.157,
+          "showers": 0.0,
+          "snowfall": 0.0
+        },
+        "normalized": {
+          "wind_mph": 11.3,
+          "rain_in_per_hour": 0.157,
+          "snow_in_per_hour": 0.0
+        },
+        "hazard_level": 2
+      }
+    },
+    "maxima": {
+      "wind_speed_10m": 15.1,
+      "rain": 0.236,
+      "showers": 0.012,
+      "snowfall": 0
+    }
+  },
+  "horizon_check": {
+    "sample_now_utc": "2026-10-10T15:42:45+00:00",
+    "latest_departure_utc": "2026-10-17T15:42:45+00:00",
+    "required_slider_end_utc": "2026-10-19T15:42:45+00:00",
+    "covered": true,
+    "required_data": "best_match horizon probe has no nulls; ICON tail is unavailable despite timestamps"
+  },
+  "observed_exact_boundaries": {
+    "wind_mph": [
+      {
+        "value": 25.0,
+        "timestamp_utc": "2026-10-10T22:00:00+00:00"
+      }
+    ],
+    "rain_in_per_hour": [],
+    "snow_in_per_hour": []
+  }
+}

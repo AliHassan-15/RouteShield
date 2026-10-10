@@ -1,0 +1,313 @@
+{
+  "geocode_ambiguous": {
+    "request": {
+      "provider": "tomtom",
+      "label": "geocode_ambiguous",
+      "sent_utc": "2026-10-10T15:46:59Z",
+      "status": 200,
+      "seconds": 1.681,
+      "bytes": 3925,
+      "usage_metadata": {}
+    },
+    "query": "Springfield",
+    "summary": {
+      "query": "springfield",
+      "queryType": "NON_NEAR",
+      "queryTime": 38,
+      "numResults": 5,
+      "offset": 0,
+      "totalResults": 99,
+      "fuzzyLevel": 1
+    },
+    "candidates": [
+      {
+        "score": 2.5414974689,
+        "type": "Geography",
+        "place": "Springfield",
+        "region": "MO"
+      },
+      {
+        "score": 2.4702847004,
+        "type": "Geography",
+        "place": "Springfield",
+        "region": "IL"
+      },
+      {
+        "score": 2.4508712292,
+        "type": "Geography",
+        "place": "Springfield",
+        "region": "MA"
+      },
+      {
+        "score": 2.4488279819,
+        "type": "Geography",
+        "place": "Springfield",
+        "region": "VA"
+      },
+      {
+        "score": 2.4222314358,
+        "type": "Geography",
+        "place": "Springfield",
+        "region": "OR"
+      }
+    ]
+  },
+  "geocode_autocomplete": {
+    "request": {
+      "provider": "tomtom",
+      "label": "geocode_autocomplete",
+      "sent_utc": "2026-10-10T15:54:16Z",
+      "status": 200,
+      "seconds": 1.137,
+      "bytes": 3883,
+      "usage_metadata": {},
+      "response_metadata": {
+        "cache-control": null,
+        "content-type": "application/json; charset=utf-8"
+      }
+    },
+    "query": "Springf",
+    "summary": {
+      "query": "springf",
+      "queryType": "NON_NEAR",
+      "queryTime": 48,
+      "numResults": 5,
+      "offset": 0,
+      "totalResults": 759,
+      "fuzzyLevel": 2
+    },
+    "candidates": [
+      {
+        "score": 2.284232378,
+        "type": "Geography",
+        "place": "Colorado Springs",
+        "region": "CO"
+      },
+      {
+        "score": 2.1331117153,
+        "type": "Geography",
+        "place": "Spring",
+        "region": "TX"
+      },
+      {
+        "score": 2.130407095,
+        "type": "Geography",
+        "place": "Hot Springs National Park",
+        "region": "AR"
+      },
+      {
+        "score": 2.0977127552,
+        "type": "Geography",
+        "place": "Spring Valley",
+        "region": "NV"
+      },
+      {
+        "score": 2.0879034996,
+        "type": "Geography",
+        "place": "Citrus Springs",
+        "region": "FL"
+      }
+    ]
+  },
+  "geocode_empty": {
+    "request": {
+      "provider": "tomtom",
+      "label": "geocode_empty",
+      "sent_utc": "2026-10-10T15:54:21Z",
+      "status": 200,
+      "seconds": 1.171,
+      "bytes": 170,
+      "usage_metadata": {},
+      "response_metadata": {
+        "cache-control": null,
+        "content-type": "application/json; charset=utf-8"
+      }
+    },
+    "query": "Qzxqzxqzx Unexistent Boulevard 999999",
+    "summary": {
+      "query": "unexistent boulevard qzxqzxqzx 999999",
+      "queryType": "NON_NEAR",
+      "queryTime": 54,
+      "numResults": 0,
+      "offset": 0,
+      "totalResults": 0,
+      "fuzzyLevel": 2
+    },
+    "candidates": []
+  },
+  "geocode_misspelled": {
+    "request": {
+      "provider": "tomtom",
+      "label": "geocode_misspelled",
+      "sent_utc": "2026-10-10T15:54:17Z",
+      "status": 200,
+      "seconds": 1.668,
+      "bytes": 4195,
+      "usage_metadata": {},
+      "response_metadata": {
+        "cache-control": null,
+        "content-type": "application/json; charset=utf-8"
+      }
+    },
+    "query": "350 Fift Avnue New York",
+    "summary": {
+      "query": "new york fift avnue 350",
+      "queryType": "NON_NEAR",
+      "queryTime": 368,
+      "numResults": 5,
+      "offset": 0,
+      "totalResults": 7272,
+      "fuzzyLevel": 2
+    },
+    "candidates": [
+      {
+        "score": 9.3148593903,
+        "type": "Point Address",
+        "place": "New York",
+        "region": "NY"
+      },
+      {
+        "score": 9.3148593903,
+        "type": "Point Address",
+        "place": "New York",
+        "region": "NY"
+      },
+      {
+        "score": 8.8992404938,
+        "type": "Point Address",
+        "place": "Saint James",
+        "region": "NY"
+      },
+      {
+        "score": 8.8992404938,
+        "type": "Point Address",
+        "place": "Troy",
+        "region": "NY"
+      },
+      {
+        "score": 8.8190498352,
+        "type": "Address Range",
+        "place": "New Rochelle",
+        "region": "NY"
+      }
+    ]
+  },
+  "geocode_partial": {
+    "request": {
+      "provider": "tomtom",
+      "label": "geocode_partial",
+      "sent_utc": "2026-10-10T15:56:39Z",
+      "status": 200,
+      "seconds": 1.296,
+      "bytes": 3883,
+      "usage_metadata": {},
+      "response_metadata": {
+        "cache-control": null,
+        "content-type": "application/json; charset=utf-8"
+      }
+    },
+    "query": "Springf",
+    "summary": {
+      "query": "springf",
+      "queryType": "NON_NEAR",
+      "queryTime": 52,
+      "numResults": 5,
+      "offset": 0,
+      "totalResults": 759,
+      "fuzzyLevel": 2
+    },
+    "candidates": [
+      {
+        "score": 2.284232378,
+        "type": "Geography",
+        "place": "Colorado Springs",
+        "region": "CO"
+      },
+      {
+        "score": 2.1331117153,
+        "type": "Geography",
+        "place": "Spring",
+        "region": "TX"
+      },
+      {
+        "score": 2.130407095,
+        "type": "Geography",
+        "place": "Hot Springs National Park",
+        "region": "AR"
+      },
+      {
+        "score": 2.0977127552,
+        "type": "Geography",
+        "place": "Spring Valley",
+        "region": "NV"
+      },
+      {
+        "score": 2.0879034996,
+        "type": "Geography",
+        "place": "Citrus Springs",
+        "region": "FL"
+      }
+    ]
+  },
+  "geocode_region": {
+    "request": {
+      "provider": "tomtom",
+      "label": "geocode_region",
+      "sent_utc": "2026-10-10T15:54:19Z",
+      "status": 200,
+      "seconds": 1.04,
+      "bytes": 4210,
+      "usage_metadata": {},
+      "response_metadata": {
+        "cache-control": null,
+        "content-type": "application/json; charset=utf-8"
+      }
+    },
+    "query": "Springfield",
+    "summary": {
+      "query": "springfield",
+      "queryType": "NON_NEAR",
+      "queryTime": 38,
+      "numResults": 5,
+      "offset": 0,
+      "totalResults": 6,
+      "fuzzyLevel": 1,
+      "geoBias": {
+        "lat": 42.1,
+        "lon": -72.59
+      }
+    },
+    "candidates": [
+      {
+        "score": 2.6698877811,
+        "type": "Geography",
+        "place": "Springfield",
+        "region": "MA"
+      },
+      {
+        "score": 2.6433005333,
+        "type": "Geography",
+        "place": "West Springfield",
+        "region": "MA"
+      },
+      {
+        "score": 2.6170926094,
+        "type": "Geography",
+        "place": "West Springfield Town",
+        "region": "MA"
+      },
+      {
+        "score": 2.3506040573,
+        "type": "Geography",
+        "place": "Indian Orchard",
+        "region": "MA"
+      },
+      {
+        "score": 2.2671513557,
+        "type": "Geography",
+        "place": "Springfield",
+        "region": "MA"
+      }
+    ]
+  }
+}

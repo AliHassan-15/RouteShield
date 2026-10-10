@@ -1,0 +1,13 @@
+{
+  "passed": 8,
+  "checks": [
+    "self match",
+    "vertex-density independence",
+    "short inside long",
+    "directional containment",
+    "parallel beyond tolerance",
+    "owned-length conservation",
+    "strict 0.90 cutoff",
+    "duplicates rejected"
+  ]
+}

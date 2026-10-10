@@ -1,0 +1,1370 @@
+{
+  "long_truck_repeat_repeated_routes": {
+    "timing": [
+      {
+        "vertex_count": 38694,
+        "progress_count": 285,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 38693,
+          "travelTimeInSeconds": 142333,
+          "distanceInMeters": 4526560
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 38694,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 4526560.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 38694,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 142333.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 4526560,
+        "duration_seconds": 142333
+      },
+      {
+        "vertex_count": 34954,
+        "progress_count": 282,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 34953,
+          "travelTimeInSeconds": 143217,
+          "distanceInMeters": 4508556
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 34954,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 4508556.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 34954,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 143217.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 4508556,
+        "duration_seconds": 143217
+      },
+      {
+        "vertex_count": 39957,
+        "progress_count": 327,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 39956,
+          "travelTimeInSeconds": 154045,
+          "distanceInMeters": 4858828
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 39957,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 4858828.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 39957,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 154045.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 4858828,
+        "duration_seconds": 154045
+      }
+    ],
+    "overlap": {
+      "pairs": [
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "directional": [
+            0.03291367501856525,
+            0.03301041187020907
+          ],
+          "symmetric": 0.03301041187020907,
+          "distinct": true
+        },
+        {
+          "pair": [
+            0,
+            2
+          ],
+          "directional": [
+            0.00442806898082049,
+            0.004104347669973376
+          ],
+          "symmetric": 0.00442806898082049,
+          "distinct": true
+        },
+        {
+          "pair": [
+            1,
+            2
+          ],
+          "directional": [
+            0.004411828857128379,
+            0.004270136857975763
+          ],
+          "symmetric": 0.004411828857128379,
+          "distinct": true
+        }
+      ],
+      "canonical_ids": [
+        "780b576f44d0a8984ca8eb58a1f5b740b33715aa41ab0cb58a7f7aad379040dd",
+        "d7556a8b6d6cf6fdcf1dacabca639eea62655c0cdf09c9966575446ceeb6858b",
+        "420b384cfac3f279e935317e5a045783a4fb7ae973f9d358df949de18970e762"
+      ],
+      "accepted_indices": [
+        2,
+        0,
+        1
+      ]
+    }
+  },
+  "long_truck_repeated_routes": {
+    "timing": [
+      {
+        "vertex_count": 38694,
+        "progress_count": 289,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 38693,
+          "travelTimeInSeconds": 142367,
+          "distanceInMeters": 4526560
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 38694,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 4526560.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 38694,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 142367.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 4526560,
+        "duration_seconds": 142367
+      },
+      {
+        "vertex_count": 34954,
+        "progress_count": 284,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 34953,
+          "travelTimeInSeconds": 143192,
+          "distanceInMeters": 4508556
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 34954,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 4508556.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 34954,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 143192.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 4508556,
+        "duration_seconds": 143192
+      },
+      {
+        "vertex_count": 39957,
+        "progress_count": 324,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 39956,
+          "travelTimeInSeconds": 153823,
+          "distanceInMeters": 4858828
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 39957,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 4858828.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 39957,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 153823.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 4858828,
+        "duration_seconds": 153823
+      }
+    ],
+    "overlap": {
+      "pairs": [
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "directional": [
+            0.03291367501856525,
+            0.03301041187020907
+          ],
+          "symmetric": 0.03301041187020907,
+          "distinct": true
+        },
+        {
+          "pair": [
+            0,
+            2
+          ],
+          "directional": [
+            0.00442806898082049,
+            0.004104347669973376
+          ],
+          "symmetric": 0.00442806898082049,
+          "distinct": true
+        },
+        {
+          "pair": [
+            1,
+            2
+          ],
+          "directional": [
+            0.004411828857128379,
+            0.004270136857975763
+          ],
+          "symmetric": 0.004411828857128379,
+          "distinct": true
+        }
+      ],
+      "canonical_ids": [
+        "780b576f44d0a8984ca8eb58a1f5b740b33715aa41ab0cb58a7f7aad379040dd",
+        "d7556a8b6d6cf6fdcf1dacabca639eea62655c0cdf09c9966575446ceeb6858b",
+        "420b384cfac3f279e935317e5a045783a4fb7ae973f9d358df949de18970e762"
+      ],
+      "accepted_indices": [
+        2,
+        0,
+        1
+      ]
+    }
+  },
+  "medium_truck_repeat_repeated_routes": {
+    "timing": [
+      {
+        "vertex_count": 4517,
+        "progress_count": 49,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 4516,
+          "travelTimeInSeconds": 15580,
+          "distanceInMeters": 458363
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 4517,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 458363.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 4517,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 15580.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 458363,
+        "duration_seconds": 15580
+      },
+      {
+        "vertex_count": 5036,
+        "progress_count": 62,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 5035,
+          "travelTimeInSeconds": 16729,
+          "distanceInMeters": 491475
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 5036,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 491475.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 5036,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 16729.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 491475,
+        "duration_seconds": 16729
+      },
+      {
+        "vertex_count": 5406,
+        "progress_count": 58,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 5405,
+          "travelTimeInSeconds": 18992,
+          "distanceInMeters": 539114
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 5406,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 539114.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 5406,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 18992.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 539114,
+        "duration_seconds": 18992
+      }
+    ],
+    "overlap": {
+      "pairs": [
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "directional": [
+            0.13830564555776892,
+            0.12926148991972253
+          ],
+          "symmetric": 0.13830564555776892,
+          "distinct": true
+        },
+        {
+          "pair": [
+            0,
+            2
+          ],
+          "directional": [
+            0.26316339895654123,
+            0.22138788535986362
+          ],
+          "symmetric": 0.26316339895654123,
+          "distinct": true
+        },
+        {
+          "pair": [
+            1,
+            2
+          ],
+          "directional": [
+            0.0341525754476772,
+            0.030097385026010608
+          ],
+          "symmetric": 0.0341525754476772,
+          "distinct": true
+        }
+      ],
+      "canonical_ids": [
+        "cc873a188e62aceb8dd10b81e2fed3b87e346c1abc39fb572f21bab58975ce5f",
+        "a38cd3dafee58aa6406de7dd2dca89f930f4ab96b909107e9733ad2c70c36a25",
+        "4eb0e4d2ba9e0ceb00edf8887505f741ce5cfca586fc5f0aacd4a5789eb4f545"
+      ],
+      "accepted_indices": [
+        2,
+        1,
+        0
+      ]
+    }
+  },
+  "medium_truck_repeated_routes": {
+    "timing": [
+      {
+        "vertex_count": 4517,
+        "progress_count": 50,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 4516,
+          "travelTimeInSeconds": 15587,
+          "distanceInMeters": 458363
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 4517,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 458363.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 4517,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 15587.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 458363,
+        "duration_seconds": 15587
+      },
+      {
+        "vertex_count": 5036,
+        "progress_count": 62,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 5035,
+          "travelTimeInSeconds": 16738,
+          "distanceInMeters": 491475
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 5036,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 491475.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 5036,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 16738.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 491475,
+        "duration_seconds": 16738
+      },
+      {
+        "vertex_count": 5406,
+        "progress_count": 59,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 5405,
+          "travelTimeInSeconds": 18992,
+          "distanceInMeters": 539114
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 5406,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 539114.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 5406,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 18992.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 539114,
+        "duration_seconds": 18992
+      }
+    ],
+    "overlap": {
+      "pairs": [
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "directional": [
+            0.13830564555776892,
+            0.12926148991972253
+          ],
+          "symmetric": 0.13830564555776892,
+          "distinct": true
+        },
+        {
+          "pair": [
+            0,
+            2
+          ],
+          "directional": [
+            0.26316339895654123,
+            0.22138788535986362
+          ],
+          "symmetric": 0.26316339895654123,
+          "distinct": true
+        },
+        {
+          "pair": [
+            1,
+            2
+          ],
+          "directional": [
+            0.0341525754476772,
+            0.030097385026010608
+          ],
+          "symmetric": 0.0341525754476772,
+          "distinct": true
+        }
+      ],
+      "canonical_ids": [
+        "cc873a188e62aceb8dd10b81e2fed3b87e346c1abc39fb572f21bab58975ce5f",
+        "a38cd3dafee58aa6406de7dd2dca89f930f4ab96b909107e9733ad2c70c36a25",
+        "4eb0e4d2ba9e0ceb00edf8887505f741ce5cfca586fc5f0aacd4a5789eb4f545"
+      ],
+      "accepted_indices": [
+        2,
+        1,
+        0
+      ]
+    }
+  },
+  "urban_fixed_car_repeated_routes": {
+    "timing": [
+      {
+        "vertex_count": 567,
+        "progress_count": 25,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 566,
+          "travelTimeInSeconds": 1473,
+          "distanceInMeters": 27530
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 567,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 27530.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 567,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 1473.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 27530,
+        "duration_seconds": 1473
+      },
+      {
+        "vertex_count": 835,
+        "progress_count": 30,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 834,
+          "travelTimeInSeconds": 2119,
+          "distanceInMeters": 45370
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 835,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 45370.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 835,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 2119.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 45370,
+        "duration_seconds": 2119
+      },
+      {
+        "vertex_count": 936,
+        "progress_count": 29,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 935,
+          "travelTimeInSeconds": 2202,
+          "distanceInMeters": 49106
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 936,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 49106.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 936,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 2202.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 49106,
+        "duration_seconds": 2202
+      }
+    ],
+    "overlap": {
+      "pairs": [
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "directional": [
+            0.3562086406543484,
+            0.22526078210176687
+          ],
+          "symmetric": 0.3562086406543484,
+          "distinct": true
+        },
+        {
+          "pair": [
+            0,
+            2
+          ],
+          "directional": [
+            0.3269453970477279,
+            0.18069036447171405
+          ],
+          "symmetric": 0.3269453970477279,
+          "distinct": true
+        },
+        {
+          "pair": [
+            1,
+            2
+          ],
+          "directional": [
+            0.15436033877319072,
+            0.14791797905058268
+          ],
+          "symmetric": 0.15436033877319072,
+          "distinct": true
+        }
+      ],
+      "canonical_ids": [
+        "75bcb3a08ce03fe974d46924260e5c072b9a720f231684392668a569a2938ff5",
+        "d546124bd720d8a15cc9dfb1f98990b5ada4880492493e56d010cf427e5295db",
+        "7f0e037ff67a065457ae4e05797fb3874dd1297df9e470da94a52380c8cd0e15"
+      ],
+      "accepted_indices": [
+        0,
+        2,
+        1
+      ]
+    }
+  },
+  "urban_fixed_truck_repeated_routes": {
+    "timing": [
+      {
+        "vertex_count": 567,
+        "progress_count": 25,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 566,
+          "travelTimeInSeconds": 1553,
+          "distanceInMeters": 27530
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 567,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 27530.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 567,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 1553.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 27530,
+        "duration_seconds": 1553
+      },
+      {
+        "vertex_count": 947,
+        "progress_count": 28,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 946,
+          "travelTimeInSeconds": 2381,
+          "distanceInMeters": 49090
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 947,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 49090.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 947,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 2381.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 49090,
+        "duration_seconds": 2381
+      },
+      {
+        "vertex_count": 880,
+        "progress_count": 30,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 879,
+          "travelTimeInSeconds": 2357,
+          "distanceInMeters": 45489
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 880,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 45489.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 880,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 2357.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 45489,
+        "duration_seconds": 2357
+      }
+    ],
+    "overlap": {
+      "pairs": [
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "directional": [
+            0.3269453970477279,
+            0.18043181819709556
+          ],
+          "symmetric": 0.3269453970477279,
+          "distinct": true
+        },
+        {
+          "pair": [
+            0,
+            2
+          ],
+          "directional": [
+            0.3562086406543484,
+            0.22597312121839538
+          ],
+          "symmetric": 0.3562086406543484,
+          "distinct": true
+        },
+        {
+          "pair": [
+            1,
+            2
+          ],
+          "directional": [
+            0.14764909092497944,
+            0.15525650733927177
+          ],
+          "symmetric": 0.15525650733927177,
+          "distinct": true
+        }
+      ],
+      "canonical_ids": [
+        "75bcb3a08ce03fe974d46924260e5c072b9a720f231684392668a569a2938ff5",
+        "0842d21dd2d9a8c553e61996ced841602394f6a67e11427538a90b6867393abf",
+        "bfe6934f1937541a2fca6d3cbd551fb23a1bde17a9c2d37d48e0a4848642742d"
+      ],
+      "accepted_indices": [
+        1,
+        0,
+        2
+      ]
+    }
+  },
+  "urban_truck_repeat_repeated_routes": {
+    "timing": [
+      {
+        "vertex_count": 567,
+        "progress_count": 25,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 566,
+          "travelTimeInSeconds": 1588,
+          "distanceInMeters": 27530
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 567,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 27530.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 567,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 1588.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 27530,
+        "duration_seconds": 1588
+      },
+      {
+        "vertex_count": 880,
+        "progress_count": 39,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 879,
+          "travelTimeInSeconds": 2546,
+          "distanceInMeters": 45489
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 880,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 45489.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 880,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 2546.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 45489,
+        "duration_seconds": 2546
+      },
+      {
+        "vertex_count": 947,
+        "progress_count": 28,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 946,
+          "travelTimeInSeconds": 2415,
+          "distanceInMeters": 49090
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 947,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 49090.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 947,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 2415.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 49090,
+        "duration_seconds": 2415
+      }
+    ],
+    "overlap": {
+      "pairs": [
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "directional": [
+            0.3562086406543484,
+            0.22597312121839538
+          ],
+          "symmetric": 0.3562086406543484,
+          "distinct": true
+        },
+        {
+          "pair": [
+            0,
+            2
+          ],
+          "directional": [
+            0.3269453970477279,
+            0.18043181819709556
+          ],
+          "symmetric": 0.3269453970477279,
+          "distinct": true
+        },
+        {
+          "pair": [
+            1,
+            2
+          ],
+          "directional": [
+            0.15525650733927177,
+            0.14764909092497944
+          ],
+          "symmetric": 0.15525650733927177,
+          "distinct": true
+        }
+      ],
+      "canonical_ids": [
+        "75bcb3a08ce03fe974d46924260e5c072b9a720f231684392668a569a2938ff5",
+        "bfe6934f1937541a2fca6d3cbd551fb23a1bde17a9c2d37d48e0a4848642742d",
+        "0842d21dd2d9a8c553e61996ced841602394f6a67e11427538a90b6867393abf"
+      ],
+      "accepted_indices": [
+        2,
+        0,
+        1
+      ]
+    }
+  },
+  "urban_truck_repeated_routes": {
+    "timing": [
+      {
+        "vertex_count": 567,
+        "progress_count": 24,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 566,
+          "travelTimeInSeconds": 1588,
+          "distanceInMeters": 27530
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 567,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 27530.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 567,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 1588.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 27530,
+        "duration_seconds": 1588
+      },
+      {
+        "vertex_count": 880,
+        "progress_count": 37,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 879,
+          "travelTimeInSeconds": 2548,
+          "distanceInMeters": 45489
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 880,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 45489.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 880,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 2548.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 45489,
+        "duration_seconds": 2548
+      },
+      {
+        "vertex_count": 947,
+        "progress_count": 28,
+        "same_length": false,
+        "valid_anchors": true,
+        "pointIndex_monotonic": true,
+        "distanceInMeters_monotonic": true,
+        "travelTimeInSeconds_monotonic": true,
+        "final_matches": true,
+        "first": {
+          "pointIndex": 0,
+          "travelTimeInSeconds": 0,
+          "distanceInMeters": 0
+        },
+        "last": {
+          "pointIndex": 946,
+          "travelTimeInSeconds": 2413,
+          "distanceInMeters": 49090
+        },
+        "usable": true,
+        "expanded_using_anchors": {
+          "distanceInMeters": {
+            "length": 947,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 49090.0,
+            "monotonic": true
+          },
+          "travelTimeInSeconds": {
+            "length": 947,
+            "nulls": 0,
+            "first": 0.0,
+            "last": 2413.0,
+            "monotonic": true
+          }
+        },
+        "length_meters": 49090,
+        "duration_seconds": 2413
+      }
+    ],
+    "overlap": {
+      "pairs": [
+        {
+          "pair": [
+            0,
+            1
+          ],
+          "directional": [
+            0.3562086406543484,
+            0.22597312121839538
+          ],
+          "symmetric": 0.3562086406543484,
+          "distinct": true
+        },
+        {
+          "pair": [
+            0,
+            2
+          ],
+          "directional": [
+            0.3269453970477279,
+            0.18043181819709556
+          ],
+          "symmetric": 0.3269453970477279,
+          "distinct": true
+        },
+        {
+          "pair": [
+            1,
+            2
+          ],
+          "directional": [
+            0.15525650733927177,
+            0.14764909092497944
+          ],
+          "symmetric": 0.15525650733927177,
+          "distinct": true
+        }
+      ],
+      "canonical_ids": [
+        "75bcb3a08ce03fe974d46924260e5c072b9a720f231684392668a569a2938ff5",
+        "bfe6934f1937541a2fca6d3cbd551fb23a1bde17a9c2d37d48e0a4848642742d",
+        "0842d21dd2d9a8c553e61996ced841602394f6a67e11427538a90b6867393abf"
+      ],
+      "accepted_indices": [
+        2,
+        0,
+        1
+      ]
+    }
+  }
+}

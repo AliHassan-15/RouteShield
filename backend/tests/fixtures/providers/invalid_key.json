@@ -1,0 +1,15 @@
+{
+  "status": 401,
+  "body": {
+    "detailedError": {
+      "code": "Unauthorized",
+      "message": "Invalid credentials"
+    }
+  },
+  "_fixture": {
+    "provenance": "SYNTHETIC: user approved replacement on 2026-10-10",
+    "reason": "real TomTom result storage permission unresolved under section 11.4",
+    "live_result": false,
+    "basis": "observed status and error structure; message invented"
+  }
+}

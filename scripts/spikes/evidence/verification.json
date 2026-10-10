@@ -1,0 +1,16 @@
+{
+  "exact_key_present_in_memory": true,
+  "files_scanned_including_ignored_spike_caches": 40,
+  "credential_matches": 0,
+  "scripts_compiled_or_syntax_counted": 14,
+  "all_scripts_at_most_80_lines": true,
+  "fixture_checks": "PASS",
+  "metric_controls": 8,
+  "approved_scope": "PASS",
+  "api_attempts": {
+    "tomtom": 18,
+    "open_meteo": 11
+  },
+  "staged_review": "PASS",
+  "staged_file_count": 36
+}

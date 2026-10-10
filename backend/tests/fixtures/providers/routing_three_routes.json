@@ -1,0 +1,155 @@
+{
+  "formatVersion": "0.0.12",
+  "routes": [
+    {
+      "summary": {
+        "lengthInMeters": 2983,
+        "travelTimeInSeconds": 200
+      },
+      "legs": [
+        {
+          "summary": {
+            "lengthInMeters": 2983,
+            "travelTimeInSeconds": 200
+          },
+          "points": [
+            {
+              "latitude": 34,
+              "longitude": -100
+            },
+            {
+              "latitude": 34.005,
+              "longitude": -99.99
+            },
+            {
+              "latitude": 34.02,
+              "longitude": -99.98
+            }
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "startPointIndex": 0,
+          "endPointIndex": 2,
+          "sectionType": "TRAVEL_MODE",
+          "travelMode": "truck"
+        }
+      ],
+      "progress": [
+        {
+          "pointIndex": 0,
+          "distanceInMeters": 0,
+          "travelTimeInSeconds": 0
+        },
+        {
+          "pointIndex": 2,
+          "distanceInMeters": 2983,
+          "travelTimeInSeconds": 200
+        }
+      ]
+    },
+    {
+      "summary": {
+        "lengthInMeters": 2893,
+        "travelTimeInSeconds": 220
+      },
+      "legs": [
+        {
+          "summary": {
+            "lengthInMeters": 2893,
+            "travelTimeInSeconds": 220
+          },
+          "points": [
+            {
+              "latitude": 34,
+              "longitude": -100
+            },
+            {
+              "latitude": 34.011,
+              "longitude": -99.99
+            },
+            {
+              "latitude": 34.02,
+              "longitude": -99.98
+            }
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "startPointIndex": 0,
+          "endPointIndex": 2,
+          "sectionType": "TRAVEL_MODE",
+          "travelMode": "truck"
+        }
+      ],
+      "progress": [
+        {
+          "pointIndex": 0,
+          "distanceInMeters": 0,
+          "travelTimeInSeconds": 0
+        },
+        {
+          "pointIndex": 2,
+          "distanceInMeters": 2893,
+          "travelTimeInSeconds": 220
+        }
+      ]
+    },
+    {
+      "summary": {
+        "lengthInMeters": 3083,
+        "travelTimeInSeconds": 240
+      },
+      "legs": [
+        {
+          "summary": {
+            "lengthInMeters": 3083,
+            "travelTimeInSeconds": 240
+          },
+          "points": [
+            {
+              "latitude": 34,
+              "longitude": -100
+            },
+            {
+              "latitude": 34.017,
+              "longitude": -99.99
+            },
+            {
+              "latitude": 34.02,
+              "longitude": -99.98
+            }
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "startPointIndex": 0,
+          "endPointIndex": 2,
+          "sectionType": "TRAVEL_MODE",
+          "travelMode": "truck"
+        }
+      ],
+      "progress": [
+        {
+          "pointIndex": 0,
+          "distanceInMeters": 0,
+          "travelTimeInSeconds": 0
+        },
+        {
+          "pointIndex": 2,
+          "distanceInMeters": 3083,
+          "travelTimeInSeconds": 240
+        }
+      ]
+    }
+  ],
+  "_fixture": {
+    "provenance": "SYNTHETIC: user approved replacement on 2026-10-10",
+    "reason": "real TomTom result storage permission unresolved under section 11.4",
+    "live_result": false,
+    "trim": "invented three-vertex geometry, sparse endpoint progress; no copied provider geometry"
+  }
+}
