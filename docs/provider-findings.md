@@ -207,3 +207,197 @@
 **VERIFIED:** Before the one authorized commit, the staged-file review ran `verify_files.py --staged`, `tools/check_staged.py`, `git diff --cached --check`, and inspected the staged file list/stat. It found no actual key, key-like credential assignment, private key, `.env`, PDF or ignored artifact, and confirmed no changes to `AGENTS.md` or `docs/decisions.md`. The local commit message is `docs: provider feasibility findings`; no remote or push was requested/performed.
 
 **HISTORICAL:** At spike completion these proposals were unapplied. User decisions dated2026-10-10 now approve1/2/6/7/8 and modify3/4/5; current choices are in decisions.md. The original measured values/proposal text are preserved as evidence, not current policy. Non-display development may proceed only in a focused authorized task; the three user-owned release gates remain OPEN.
+
+## M5 integrated live API measurements — 2026-10-11 (Asia/Karachi)
+
+**EXECUTED / GATE FAILED:** Application baseline `26bbe14`. A fresh local Python
+process loaded the real backend `.env`, composed the existing adapters/service,
+and served the actual Django WSGI application on loopback. The throwaway harness
+made real HTTP requests to the local API; external requests occurred only inside
+the application's TomTom and Open-Meteo adapters. No settings, limits, domain,
+provider or API code changed. The harness enforced the additional task ceilings
+of20 TomTom sends,10 Open-Meteo sends and800 successful quota reservations;
+these safeguards never triggered and did not change application configuration.
+The script was removed before the documentation-only commit. No live response,
+geometry, key, provider URL or query string was printed or saved; only extracted
+measurement summaries were retained here.
+
+**EFFECTIVE CONFIGURATION, checked before any provider call:** routing read
+**12s**, overriding the approved/default25s through the existing local `.env`.
+The actual TomTom transport confirmed12s. The user was warned before the runs;
+the override was left unchanged. Global deadline35s; documented local completion
+margin0.5s; connect3s; weather/geocoding read8s; pooled coordinate cap200;
+weather batch50/two concurrent; process daily guard8000; per-weather-request
+unit limit200. Waypoint fallback remained enabled with at most2 extra calls.
+Open-Meteo model was `best_match`. No geocoding, attribution or other provider
+request was made. Routing/geocoding persistence remained disabled.
+
+Common submitted departure: **2026-10-10T23:37:23Z**, UTC timezone, approximately
+three hours after the harness started. Repeats retained that exact departure and
+the same public-city coordinates from the earlier spike; the optional interval
+was omitted to exercise the adaptive default. Cargo was45000lb except run3,
+which used25000lb. Readiness returned HTTP200/status `ready` in0.106098s with
+zero provider requests. This warms local Django startup, not upstream providers.
+The weather cache started empty and stayed in the same process across runs.
+Provider cache state and controlled upstream cold/warm latency remain unknown.
+
+### Per-run results
+
+All wall times below cover the local HTTP request through reading the complete
+response bytes, using `perf_counter`; stage timings are the application's
+`monotonic` measurements. Distinctness was independently rechecked in memory
+with the current production D09 spherical metric: symmetric maximum directional
+coverage,0.5-mile sampling,100m tolerance, reject strictly above0.90. These extra
+overlap checks occurred after the HTTP wall measurement and made no requests.
+
+| Run / corridor / cargo | HTTP / error | Wall seconds | Returned routes / three distinct | Fallback calls | TomTom sends | Open-Meteo sends / submitted coordinates | Reserved units | Cache hits / misses | Effective interval |
+|---|---|---:|---|---:|---:|---|---:|---|---|
+|1 Santa Monica Pier → Los Angeles City Hall /45000lb |200 /none |9.015371 |3 /yes |0 |1 |1 /7 |7 |0 /7 |10mi |
+|2 Chicago → Detroit /45000lb |200 /none; degraded weather |17.447814 |3 /yes |0 |1 |1 /37 |37 |0 /37 |25mi |
+|3 Chicago → Detroit /25000lb |200 /none |14.702101 |3 /yes |0 |1 |1 /37 |37 |0 /37 |25mi |
+|4 Los Angeles City Hall → New York City Hall /45000lb |504 /`DEADLINE_EXCEEDED` |34.995703 |0 /no |0 |1 |0 /0 |0 |0 /0 |Not reached |
+|5 same long trip warm /45000lb |NOT ATTEMPTED: stop after run4 |— |— |— |— |— |— |— |— |
+
+| Run | validation ms | routing ms | checkpoints_and_pooling ms | weather ms | risk_and_aggregation ms | ranking_and_explanation ms | Success metadata total ms | Rendered-request log total ms |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+|1 |16 |3328 |32 |5562 |31 |32 |9016 |9016 |
+|2 |0 |7844 |156 |8828 |235 |203 |17422 |17437 |
+|3 |0 |12219 |156 |1750 |172 |188 |14657 |14688 |
+|4 |0 |34984 |Not reached |Not reached |Not reached |Not reached |Not returned on error |35000 |
+
+Stage/total and wall windows differ, and Windows clock resolution is visible in
+the millisecond stage measurements; do not infer exact overhead by subtracting
+these clocks. The12s HTTPX read timeout bounds individual network read waits,
+not the whole routing stage, body parsing, distinctness or end-to-end request.
+Thus run3's12219ms routing stage does not by itself prove a timeout violation.
+For run4, the global deadline bounded caller return; its upstream phase and
+final HTTP status were not observed before cancellation. Do not assert that
+changing the12s read override would have made that trip succeed.
+
+| Run / provider attempt | HTTP status observed | Complete adapter-client call seconds | Coordinates |
+|---|---|---:|---:|
+|1 TomTom |200 |3.191033 |— |
+|1 Open-Meteo |200 |5.553623 |7 |
+|2 TomTom |200 |6.934543 |— |
+|2 Open-Meteo |No response; `ReadTimeout` |8.820067 |37 |
+|3 TomTom |200 |11.157069 |— |
+|3 Open-Meteo |200 |1.693250 |37 |
+|4 TomTom |Not observed before API deadline/cancellation |Not completed at measurement snapshot |— |
+
+No retry or waypoint fallback ran. The failed run2 weather attempt counts as a
+request and retains its37-unit reservation. Connect/read/body phases were not
+measured separately. Successful weather operations requested50 inclusive hourly
+rows, pooling7/37/37 coordinates, with four required variables and one requested
+best-match selection; the conservative accounting multiplier remained1 unit per
+coordinate. Actual provider-billed units were not exposed or inferred.
+
+### Route identity, coverage, recommendation and warnings
+
+The identifiers below are output identities only; no route geometry or raw
+provider recording is retained. U/M aliases are for reading this report and do
+not change the API's full stable IDs or ranking order.
+
+| Alias | Full route ID |
+|---|---|
+|U1 |`route_1d3c9ca48db5319decd81448af3b1e126518cc6042705ed20292f796e01b6126` |
+|U2 |`route_91f13768648ff11f695dde2b8175151d4ce1a43df8e799564f652a367650d2df` |
+|U3 |`route_59d22519914930fb86147717382e064c55d19b7d879e2073490c807a8e97a353` |
+|M1 |`route_4fad0fd9a84621453fa0fd9ad03aa9fa71696c4ca773d4ec65147d63385bd132` |
+|M2 |`route_6e10d84da07fca3c85e42157091f255d7d25e4f79d2460e018aad32c540f1e13` |
+|M3 |`route_cf9bc3a6a6dfda2a672f766a56a363a9e6ad71f02c793fd27413aa7d724f2117` |
+
+| Run / alias, in returned order | Miles | Travel seconds | Checkpoints / vertices | Travel status | Mile-weighted weather coverage |
+|---|---:|---:|---|---|---:|
+|1 /U1 |16.466958 |3359 |3 /560 |ASSESSED |100% |
+|1 /U2 |16.409170 |3501 |3 /654 |ASSESSED |100% |
+|1 /U3 |30.503112 |4718 |5 /947 |ASSESSED |100% |
+|2 /M1 |305.388407 |16561 |14 /5036 |INCOMPLETE |0% |
+|2 /M2 |334.989909 |18144 |15 /5405 |INCOMPLETE |0% |
+|2 /M3 |283.112871 |15339 |13 /4601 |INCOMPLETE |0% |
+|3 /M3 |283.112871 |15339 |13 /4601 |ASSESSED |100% |
+|3 /M1 |305.388407 |16561 |14 /5036 |ASSESSED |100% |
+|3 /M2 |334.989909 |18144 |15 /5405 |ASSESSED |100% |
+
+- Run1: `RECOMMENDED`, recommended U1; warning `UTC_FALLBACK` (trip).
+  Pairwise symmetric overlaps, canonical-ID pair order:
+  **0.271984373 /0.698291531 /0.271202080**, all<=0.90.
+  The primary urban options are under30mi; the30.503112mi alternative is disclosed.
+- Run2: `ALL_INCOMPLETE`, recommended route **null**; `UTC_FALLBACK` (trip),
+  `WEATHER_UNAVAILABLE` and `INCOMPLETE_WEATHER` for each M1/M2/M3.
+  Pairwise overlaps **0.034152575 /0.138413506 /0.264024679**, all<=0.90.
+  A single37-coordinate weather read timeout made every route unavailable;
+  UNKNOWN was not promoted to safe or recommended. This is controlled HTTP200
+  partial-data behavior, not an API `error` envelope. The stop rule was applied
+  to API errors, deadline-margin violations and fewer than three routes; this
+  degraded success was reported as an anomaly and the next scheduled run continued.
+- Run3: `RECOMMENDED`, recommended M3; `UTC_FALLBACK` (trip). Same route IDs,
+  checkpoint counts, distances and overlaps as run2. All37 coordinates missed
+  cache: run2's failed forecasts were correctly not cached. The expected
+  successful-weather cache-hit demonstration was therefore **not obtained**;
+  no additional repeat was made. Recommendation changes here cannot isolate a
+  cargo effect because run2 had no usable weather.
+- Run4: no recommendation, travel status, coverage or warning list was returned;
+  only the safe API error envelope. Routing reached the35s deadline before any
+  accepted routes, checkpoint interval, pooling or weather operation completed.
+  No fallback attempt or weather reservation occurred. Run5 was skipped immediately.
+
+### Response size and cap evidence
+
+| Run | Raw UTF-8 response bytes | Measured gzip bytes (level9, mtime0) | Against500000-byte compressed target |
+|---|---:|---:|---|
+|1 |84691 |13830 |Within target for this interim analysis |
+|2 |412942 |94775 |Within target for this interim analysis |
+|3 |429423 |95943 |Within target for this interim analysis |
+|4 error only |180 |163 |Not a successful analysis measurement |
+|5 |Not measured |Not measured |Unknown |
+
+The harness received uncompressed responses; wire sizes equaled the raw column.
+It did not advertise gzip. These are measured gzip encodings in memory, **not a
+verified production compression configuration**. The current API omits the
+planned49-frame/corridor/truck payload (api.md API-P01); the final frozen payload
+size gate therefore remains open. No bytes from those responses were saved.
+
+**Interval policy:** urban longest route30.503112mi selected10mi; medium longest
+334.989909mi selected25mi on both runs, as designed. Pools7 and37 stayed below200
+and below50 per batch. **Long-trip interval/cap behavior was NOT EXERCISED**:
+run4 failed before checkpoint generation. Historical173 mandatory pooled points
+at50mi fit the current200 cap on that earlier geometry, but this is not a live
+integrated pass or proof that all long trips fit. No interval increase occurred
+on the completed short/medium runs; the over-cap rejection branch was not run.
+
+### M5 conclusion and user decision options (no choice applied)
+
+1. **FAIL / user decision required:** the first integrated long observation
+   returned504 `DEADLINE_EXCEEDED` in34.995703s, with34984ms routing. No observed
+   run exceeded35.5s, but the API-error stop condition fired. The warm long run
+   and all further live measurements were stopped; long-trip support is unproven.
+2. **Observed three-route corridors:** urban earlier spike2/2 plus this API1/1;
+   medium earlier spike2/2 plus this API2/2. This small sample supports those
+   demonstration corridors, not a reliability guarantee. Long earlier spike2/2
+   under a60s probe timeout contrasts with this API0/1 under unchanged limits.
+3. **Demo/Loom recommendation:** Santa Monica Pier → Los Angeles City Hall,
+   submitted departure aroundnow+3h,45000lb, adaptive10mi. It delivered three
+   distinct routes,100% coverage, a real recommendation and9.015371s wall time.
+   Chicago → Detroit is an alternative for a longer narrative, with disclosed
+   weather variability (0% then100% coverage). No blocked/scenario/map/slider
+   demonstration was performed; their later implementation and release gates
+   are unaffected by this technical corridor recommendation.
+4. **Cache evidence is limited:** failed forecasts were not cached; successful
+   cache hits were not measured. Whole-route payload and long-cap evidence also
+   remain incomplete. No observed behavior justified changing a risk rule.
+
+| Option requiring user direction | Evidence / expected benefit | Cost or uncertainty |
+|---|---|---|
+|Limit the supported/demo trip envelope to a selected maximum distance |Successful observations cover urban through334.989909mi alternatives; avoid promising the failing cross-country envelope |A distance ceiling is not yet established by a boundary sweep; restricting support sacrifices long-haul scope and needs approved validation/docs/UI changes. Weather failures can still occur inside it. |
+|Authorize alignment of the local12s override to25s, then remeasure |Restores the approved default for a comparable follow-up |Does not increase35s and cannot be claimed to fix this deadline failure; requires explicit authorization to edit `.env` and a new bounded live budget. |
+|Raise the global deadline to a user-selected value |Historical cross-country HTTP observation52.149s exceeded35s even before integrated weather |Longer waits and hosting/proxy considerations;52.149s alone is not a sufficient new deadline or a success guarantee; contract/settings approval plus remeasurement needed. |
+|Request less from TomTom, or reduce geometry payload/processing |Routing consumed nearly the entire failing run; medium raw responses were412942/429423 bytes |Could trade geometry/timing fidelity or alternatives for latency; upstream transfer versus parsing cost was not isolated. Must preserve genuine three routes, validated sparse timing and accurate checkpoints; regression tests and new measurements needed. |
+|Restrict or defer waypoint fallback |Avoids up to2 additional calls on future difficult corridors |Fallback used0 calls in every run and cannot explain/fix this failure; restricting it reduces the chance of obtaining three routes elsewhere. |
+
+**REAL TASK TOTAL:** **4 TomTom sends /3 Open-Meteo sends /81 coordinate
+submissions /81 successfully reserved quota units**, versus authorized20/10/800.
+Independent send counts matched each request's application counters; reservations
+were counted before sends, including the failed weather attempt. Geocoding0,
+fallback0, other providers0. No retries, budget-guard stops, installs, application
+edits, remote operations or push occurred. No defect fix was applied after the
+gate failed. All three existing user-owned release gates remain OPEN.

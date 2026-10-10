@@ -760,3 +760,47 @@ live invocation is authorized by this task's once-only instruction.
 
 The final staged-file/secret review and one local commit are reported in the
 task response; the three user-owned release gates remain OPEN.
+
+## M5 integrated live measurement — 2026-10-11 (Asia/Karachi)
+
+**EXECUTED / GATE FAILED:** Actual loopback HTTP requests exercised the Django
+application and its real TomTom/Open-Meteo adapters at baseline `26bbe14`, loading
+the existing backend `.env`. Full numeric evidence, stage timings, route IDs,
+coverage, warnings, payload sizes and decision options are appended in
+[provider-findings.md](provider-findings.md#m5-integrated-live-api-measurements--2026-10-11-asiakarachi).
+No acceptance requirement, frozen decision, AGENTS instruction, setting or
+application code was changed by this measurement record.
+
+| Acceptance IDs | Live observation | Result / scope |
+|---|---|---|
+|TIME-03, PERF-03 |Urban9.015371s, medium45000lb17.447814s, medium25000lb14.702101s; long45000lb34.995703s/HTTP504 `DEADLINE_EXCEEDED` |**M5 FAIL / user decision required.** No run exceeded35+0.5s; the long API error triggered immediate stop. Warm long run not attempted. Provider cold/cache state was not controlled. |
+|TIME-01..02, API-06 |Long routing34984ms, request log35000ms, one TomTom send, zero fallback/weather; safe504 error body, no retry |Observed deadline/error branch; no limit change. Effective local routing read12s overrides approved/default25s; user warned before live calls. Network read caps are not whole-stage durations. |
+|ROUTE-01/02/07, API-01 |Urban and both medium runs returned three truck routes; production D09 recheck max pair overlaps<=0.90 |Three genuinely distinct routes on these observations. Urban recommended demo/Loom corridor; long returned no routes. These runs do not prove universal provider reliability. |
+|ROUTE-04, API-05 |Fallback enabled at<=2 extra calls; native routes sufficient in short/medium runs, long failed before fallback |Fallback calls0. Live fallback-success behavior **NOT EXERCISED**. |
+|CP-03, BUDGET-01/02, WX-07, API-08 |Adaptive10mi urban/25mi medium; pooled7/37/37; one forecast batch per run |Observed completed trips obey200 pooled cap/50 batch. Long50mi selection, long200-coordinate pooling and interval-increase/over-cap branches **NOT EXERCISED** because routing failed first. |
+|WX-08/09, API-05, MET-03, RANK-07 |Run2 Open-Meteo `ReadTimeout`: all three routes INCOMPLETE/0% coverage, `ALL_INCOMPLETE`, null recommendation; run3 recovered to100% |Observed truthful missing-data handling. Failed run2 forecasts were not cached: run3 hits0/misses37. Successful-weather cache-hit gate remains **UNVERIFIED**; no extra repeat authorized/executed. |
+|QUOTA-01/02/03 |4 TomTom sends,3 Open-Meteo sends,81 coordinate submissions/81 successful reserved units |Within task20/10/800 budget; failed weather attempt included. Published conservative accounting, not verified billable provider counters; quota-exhaustion branch not exercised. |
+|PERF-03, D23 payload target |Successful raw bytes84691/412942/429423; measured gzip level9 bytes13830/94775/95943 |Within500000 bytes for the current interim payload. Local responses arrived uncompressed and harness did not request gzip; production compression and final49-frame/corridor/truck payload size **NOT VERIFIED**. |
+
+Departure was2026-10-10T23:37:23Z, common across runs, aboutnow+3h when the
+harness began. Urban alternatives included one30.503112mi route despite the
+short primary routes being under30mi. Medium route identities/distances matched
+across the cargo repeat; recommendation differences cannot isolate cargo because
+the first run had no usable weather. The HTTP200 controlled partial-data response
+was treated as degraded success; the stop rule fired on the long API error.
+No assertion that UNKNOWN is safe or that the M5 long-trip gate passed is made.
+
+The temporary harness used only installed libraries/standard library, passed
+Ruff check/format before execution, retained summaries rather than response
+bodies, and was removed before the docs-only commit. Documentation verification
+checks append-only scope, local references, measurement arithmetic, unchanged
+contract/AGENTS/settings, diff whitespace and staged secrets/ignored artifacts.
+No application defect was fixed, so regression tests and application lint,
+type-check, build, browser/map/slider, hosted verification and dependency audit
+were **SKIPPED** in this task; no new result for those checks is claimed.
+No remote operation, push, install or release-gate resolution occurred.
+
+Remaining: user choice on supported envelope/deadline/provider payload/local
+timeout alignment, then a newly authorized bounded follow-up for the skipped
+warm-long/cache-hit/cap/final-payload observations. Existing three release gates
+and api.md's pending proposals remain unchanged.
