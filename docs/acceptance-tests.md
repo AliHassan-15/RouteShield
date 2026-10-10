@@ -1,6 +1,6 @@
 # RouteShield acceptance and boundary tests
 
-RECOMMENDATION | Status: APPROVED SPECIFICATION, 2026-10-10. These are specifications, not tests already implemented or executed. Numerical interpretations follow [decisions.md](decisions.md). Use fixed fixtures, injected provider clients, and a frozen clock; ordinary tests prohibit outbound routing/weather/geocode calls. Planned file paths are in [requirements-traceability.md](requirements-traceability.md).
+RECOMMENDATION | Status: APPROVED SPECIFICATION, 2026-10-10. Implementation and execution evidence is recorded only in the dated sections below; a specification alone is not a passing test. Numerical interpretations follow [decisions.md](decisions.md). Use fixed fixtures, injected provider clients, and a frozen clock; ordinary tests prohibit outbound routing/weather/geocode calls. Planned file paths are in [requirements-traceability.md](requirements-traceability.md).
 
 REQUIREMENT | The target assessment journey is enter origin/destination/departure/load -> three API routes -> ETA-sampled risk -> ordered recommendation -> inspect map/checkpoints/summary -> scrub corridor forecast +0..48 h. React and Django, a hosted app, GitHub repository and 5-10 minute Loom are required.
 
@@ -40,7 +40,17 @@ RECOMMENDATION | Additionally test zero, positive within-band values, wind fract
 | RISK-06 | Wind 10, gust 60, rain/snow zero; then wind 55, gust missing | First is Low (gust display cannot escalate); second No Travel; missing optional gust does not make required data incomplete |
 | RISK-07 | Rain missing, other known Low | Final UNKNOWN, no ordinal, known floor Low, unavailable reason; never Low overall |
 | RISK-07 | Wind 55, rain missing | Final UNKNOWN plus known floor No Travel and known_blocked=true; unknown cannot erase block |
-| RISK-07 | Required rain/showers/snow/wind components each null/missing/malformed separately | Appropriate unknown field/reason, no zero fallback; all four result layers retain available evidence |
+| RISK-07 | Provider rain/showers/snow/wind components each null/missing/malformed separately | Adapter marks the affected normalized hazard unavailable; pure domain consumes combined rainfall, not rain/showers components. None gives UNKNOWN and retains known evidence. Invalid normalized numbers raise a domain validation error; component parsing belongs to adapter tests |
+| RISK-07 | Every nonempty missing-hazard subset, including all three absent; missing wind with heavy cargo | Final/hazard level UNKNOWN; individual known levels and known floor retained (none if no evidence), block flag retained; missing wind has an explicit load-rules-unavailable reason |
+| RISK-07 | Cargo None with otherwise complete weather, including wind >=55 | No implicit zero cargo; final UNKNOWN, known hazard floor retained. Extreme wind still proves No Travel for any cargo and keeps known_blocked=true |
+| RISK-08 | Every normalized hazard and cargo given a negative, NaN/infinity, boolean, string or complex value | DomainValidationError with field and stable validation code; None alone means missing, not malformed |
+| RISK-08 | Cargo 0,100000,100000.0001; 30000.5/40000.5 and arbitrarily small exact Decimal excesses | Inclusive D20 limits; reject excess beyond maximum; preserve decimal cargo and strict load comparisons without integer coercion |
+| RISK-09 | Decimal sums reaching .10,.25,.50,1.00; float boundary literals and adjacent representable floats | Exact Decimal sums reach their bands; canonical float decimal text is compared without quantization/epsilon; an already computed below/above-boundary float stays there |
+| RISK-10 | Repeat inputs under different Decimal contexts; mutate result/reason/band/policy; import in isolated interpreter | Equal deterministic results, immutable evidence and policy, no framework/network imports; existing AST purity guard still passes |
+
+IMPLEMENTATION | Numeric input contract: use Decimal for exact source values and arithmetic in future adapters. Integers convert exactly; floats convert with Decimal(str(value)), using their shortest round-trip decimal representation. Literal float 0.1 therefore compares at the decimal 0.10 boundary. There is no fixed precision, rounding, quantization, or epsilon adjustment in classification. The intended decimal sum cannot be recovered from a float already affected by binary arithmetic: ten sequential float additions of 0.05 produce 0.49999999999999994, which remains High; the corresponding exact Decimal sum is 0.50, which is Severe. Future adapter arithmetic must use adequate Decimal precision before passing normalized inputs; the engine itself only compares and does not depend on the caller's Decimal context.
+
+IMPLEMENTATION | The module accepts normalized sustained wind mph, combined liquid rainfall in/hr, snow-depth in/hr, and cargo pounds only. Gusts, unit conversions, provider components, timestamps and transport data do not enter this interface. Missing cargo follows this task's None-is-missing convention and yields an incomplete final assessment; this adds no invented cargo value or hazard. UNKNOWN has no ordinal. Its known_risk_floor is evidence, never a substitute for a complete final assessment; known_blocked=false on incomplete data is not proof that travel is safe.
 
 ## CP and MET: geometry, ETA, mileage, metrics
 
@@ -213,3 +223,34 @@ These criteria were added for the explicitly authorized foundation task; earlier
 | FND-09 | Exact license/purpose/size inventory and advisory tools | dependencies.md; OSV32/0affected, npm0vulnerabilities |
 
 See [foundation.md](foundation.md) for failures corrected, skipped Linux/hosted/feature checks and actual outputs. This does not satisfy API-01 route-analysis or E2E-01 full trip journey.
+
+## Pure risk engine execution record (2026-10-10)
+
+Only risk classification, wind/load rules and normalized-input validation were implemented in this task. No dependency was added. The frozen contract remains unchanged.
+
+| Criteria | Executable evidence | Result |
+|---|---|---|
+| RISK-01..03 | backend/tests/test_risk_boundaries.py: all printed endpoints at -0.0001/exact/+0.0001, wind fractions, strict rain/snow cutoffs | Passed |
+| RISK-04 | Same file: requested 36-case load/wind matrix, existing acceptance 77-case matrix, wind55/zero cargo | Passed |
+| RISK-05 | backend/tests/test_risk_results.py: all 125 hazard combinations, explicit combined/load examples, all three load-reason codes and comparison evidence | Passed |
+| RISK-07 | Same file: all seven missing-hazard subsets, all-low known floors, known hazard/load blocks, missing-wind and missing-cargo explanations | Passed at the normalized domain boundary; provider component parsing remains future adapter work |
+| RISK-08..10 | backend/tests/test_risk_validation.py and test_risk_results.py: field-specific errors, exact decimal cargo, boundary float neighbors/sums, context independence, immutable results/policy and isolated runtime import | Passed |
+| Domain purity | Existing backend/tests/test_domain_boundary.py plus tools/check_domain.py | Both guard tests passed; four domain files have no forbidden imports |
+| Existing startup safety | backend/tests/test_environment.py production fixture now explicitly sets DEBUG=false | Prevents a user's local development .env from changing the missing-secret assertion; all ten config/startup tests passed |
+
+Verified commands from the repository root in PowerShell (explicit project interpreter; quoted spaced paths):
+
+```powershell
+& "./backend/.venv/Scripts/python.exe" "./dev.py" test --only backend
+& "./backend/.venv/Scripts/python.exe" "./dev.py" lint --only backend
+& "./backend/.venv/Scripts/python.exe" "./dev.py" typecheck --only backend
+& "./backend/.venv/Scripts/python.exe" "./dev.py" build --only backend
+```
+
+- Tests: exit0, **438 passed**, including **423 new risk cases** and 15 existing foundation cases.
+- Lint/format/purity: exit0, Ruff clean, 29 Python files already formatted, four domain files checked.
+- Strict type check: exit0, mypy found no issues in 27 source files.
+- Backend build: exit0, Django system check found no issues, static collection completed, configuration/API/domain/provider packages compiled.
+- Corrected during verification: a test incorrectly relied on the older float sum() algorithm; it now uses explicit sequential addition. The full suite exposed the existing production fixture's inherited DEBUG value, corrected above. Test import formatting and deliberate invalid-comparison type annotations were also fixed before the passing runs. No outstanding failure in the performed checks.
+- Skipped: frontend tests/lint/types/build and browser checks (no frontend change); HTTP/live-provider checks, dependency audit (no dependency change), Linux CI and deployment. RISK-06's optional-gust adapter/UI journey, provider component parsing, checkpoints/ETA/mile attribution, aggregation/ranking and integration remain later tasks. This record does not claim those specifications pass.
+- Documentation follow-up: AGENTS.md section4 still describes the domain as having no feature logic. That foundation-status sentence needs a later update because AGENTS.md is outside this task's authorized edit paths; this execution record states the implemented domain status.

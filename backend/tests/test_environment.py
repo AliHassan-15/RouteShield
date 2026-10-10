@@ -15,6 +15,7 @@ def production_values() -> dict[str, str]:
     """Return public synthetic configuration, never a real secret."""
     return {
         "APP_ENV": "production",
+        "DEBUG": "false",  # A local development .env must not change this fixture.
         "SECRET_KEY": PUBLIC_TEST_VALUE,
         "ALLOWED_HOSTS": "api.example.test",
         "CORS_ALLOWED_ORIGINS": "https://app.example.test",
