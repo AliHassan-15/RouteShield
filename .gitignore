@@ -1,0 +1,43 @@
+# Employer source stays local.
+Requirements/fs-assessment-spotter.pdf
+
+# Secrets: only documented examples are tracked.
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Project environments, dependencies, caches and builds.
+.venv/
+venv/
+node_modules/
+.cache/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+staticfiles/
+*.egg-info/
+*.tsbuildinfo
+*.sqlite3
+coverage/
+.coverage*
+htmlcov/
+test-results/
+playwright-report/
+output/playwright/
+*.log
+
+# Editors and operating systems.
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini

@@ -1,0 +1,71 @@
+{
+  "name": "Foundation CI",
+  "on": {
+    "push": {
+      "branches": [
+        "main"
+      ]
+    },
+    "pull_request": {}
+  },
+  "permissions": {
+    "contents": "read"
+  },
+  "jobs": {
+    "foundation": {
+      "runs-on": "ubuntu-latest",
+      "timeout-minutes": 15,
+      "defaults": {
+        "run": {
+          "working-directory": "Projects New/RouteShield"
+        }
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@v7",
+          "with": {
+            "persist-credentials": false,
+            "path": "Projects New/RouteShield"
+          }
+        },
+        {
+          "uses": "actions/setup-python@v7",
+          "with": {
+            "python-version": "3.12"
+          }
+        },
+        {
+          "uses": "actions/setup-node@v7.1.0",
+          "with": {
+            "node-version": "24",
+            "package-manager-cache": false
+          }
+        },
+        {
+          "name": "Install project-local locked dependencies",
+          "run": "python \"./dev.py\" setup"
+        },
+        {
+          "name": "Validate CI syntax and paths",
+          "run": "python \"./dev.py\" ci-check"
+        },
+        {
+          "name": "Lint and formatting",
+          "run": "python \"./dev.py\" lint"
+        },
+        {
+          "name": "Strict type checks",
+          "run": "python \"./dev.py\" typecheck"
+        },
+        {
+          "name": "Tests",
+          "run": "python \"./dev.py\" test"
+        },
+        {
+          "name": "Production artifacts",
+          "run": "python \"./dev.py\" build"
+        }
+      ]
+    }
+  }
+}
