@@ -1,5 +1,50 @@
 # RouteShield acceptance and boundary tests
 
+## Public API/orchestration execution — 2026-10-11 (OFFLINE)
+
+IMPLEMENTED/EXECUTED | New tests: **199** across test_api_pipeline.py,
+test_api_validation.py and test_api_protection.py, with synthetic api_helpers.py.
+Canonical final run `dev.py test --only backend`: **1502 passed,2 skipped in14.95s**
+(previous baseline1303 passed,2 skipped). Both optional live smokes stayed skipped;
+the existing outbound socket blocker stayed active. Runtime14.95s is test execution,
+not an estimate of the user's working time. No live measurement is claimed.
+
+| Acceptance IDs | Test group / evidence | Status |
+|---|---|---|
+| API-01..04, ROUTE-09..10 | strict selected-place/weight/interval/unknown-field/JSON-size/media/offset/IANA/DST/past/future validation, decimal JSON cargo; invalid input before provider work | EXECUTED/PASS API boundary; actual location selector UI still PLANNED |
+| API-02/07, ROUTE-01/04/05 | synthetic geocoding choice/empty/query errors; injected routing1/2/3/zero, stable IDs across6 orders; same Deadline passed to router/weather | EXECUTED/PASS orchestration; UI debounce/cancellation and real three-route demo PLANNED |
+| CP-03, WX-07/11, API-08, BUDGET-01/02 | longest-route adaptive defaults, common requested interval, budget bump/TRIP_TOO_LARGE, actual unique pooling (3×71→71), single loop route >200 raw checkpoints pools under200 | EXECUTED/PASS API planning; corridor optional-point density UI PLANNED |
+| WX-03/04/05/06/08/10, API-03, RISK-04/05/07 | D05 enclosing-hour/window through60h ETA, timezone fallback/known IANA time, cache diagnostics exact1/3s, missing/batch/quota/out-of-horizon weather, known No Travel under UNKNOWN;30000/30001 and40000/40001 change recommendation | EXECUTED/PASS API/domain composition; geographic enrichment/live horizon/browser labels PLANNED |
+| MET-01/02/03, RANK-01..08, API-03 | hand-calculated23mi ownership[5,10,6.5,1.5]/66÷23 mean, category partition, ranking/facts/text, all5 statuses, all-blocked, mixed incomplete/blocked, best assessed, provider order independence | EXECUTED/PASS; additional pure-domain priority/boundary cases remain passing in full suite |
+| API-06, ERROR-01..03, TIME-01/02 | every typed provider mapping for both endpoints; no routing retry; safe unexpected errors; fake-clock expiry before/during routing and weather; completed partial data survives expiry; real blocked fakes return below0.05+0.5s | EXECUTED/PASS offline; TIME-03 integrated live latency remains PLANNED |
+| API-08/09, QUOTA-01/02/03 | low-limit DRF throttles/Retry-After/separate endpoint scopes, trusted/untrusted/malformed proxy chains, shared composition ledger, daily refusal with200 routes/DEMO warning | EXECUTED/PASS requested API behavior; QUOTA-02's old429 wording is a pending API-P03 proposal in api.md |
+| API-03/06, ATTR-01/03 | closed recursive schema on every success/status/error, JSON finite values, lossless ratios/decimal strings, correlation header, one structured private log, weather credit/TomTom placeholder/basemap metadata | EXECUTED/PASS backend metadata; map attribution and all3 user release gates remain OPEN/PLANNED |
+| API-01..09, RANK-08 | single-source schema/TS rendering, explicit one-sided add/remove drift rejection, swappable no-HTTP WeatherProvider fake, CORS preflight with no provider work | EXECUTED/PASS contract seam; actual simulation adapter/banner and frontend analysis UI PLANNED |
+| HEAT-01..06, SIM-01..10, MAP, E2E, TIME-03, DEPLOY |49-frame/corridor/truck payload, presets/UI, map/browser/network/performance and live/hosted evidence | NOT EXECUTED; outside this offline API task |
+
+Verification output inspected: root canonical backend lint passed, **88 files already
+formatted**; strict domain/providers/API mypy **41 source files**, canonical full
+backend strict mypy **86 source files**; domain boundary **13 files**, no forbidden
+imports. Django check:0 issues; collectstatic:0 copied,27 unmodified,49 processed;
+compileall passed. Frontend ESLint/tsc/Vite passed (62 modules; JS254.17kB,
+gzip78.72kB). No UI changes or browser check; dependency audit/install and all
+network checks skipped under this task's offline scope, with no dependency changes.
+
+Initial direct root pytest/full-mypy invocations used the wrong working directory
+or omitted the canonical MYPYPATH; the canonical commands above passed. An extra
+purity invocation used a nonexistent filename; the actual tools/check_domain.py
+passed. Generated TypeScript quote style and import formatting failures were
+corrected, and their final checks passed. No outstanding failed check is concealed.
+The final full suite ran after the weather-source metadata/nullable ordinal additions
+and explicit INFO JSON logging configuration. The logging test does not raise the
+runtime logger level. No application behavior changed after those passing checks.
+
+Scope/wiring and pending architecture proposals API-P01..05, every public error,
+warning/detail name and field, exact serialization and completion margin are in
+[api.md](api.md). No frozen decision/architecture/AGENTS or dependency document was
+changed. The authorized single local commit follows passing checks and an explicit
+staged-file review; no remote operation is authorized by this evidence.
+
 RECOMMENDATION | Status: APPROVED SPECIFICATION, 2026-10-10. Implementation and execution evidence is recorded only in the dated sections below; a specification alone is not a passing test. Numerical interpretations follow [decisions.md](decisions.md). Use labeled synthetic fixtures in all later offline tests, injected provider clients, and a frozen clock; ordinary tests prohibit outbound routing/weather/geocode calls. Planned file paths are in [requirements-traceability.md](requirements-traceability.md).
 
 REQUIREMENT | The target assessment journey is enter origin/destination/departure/load -> three API routes -> ETA-sampled risk -> ordered recommendation -> inspect map/checkpoints/summary -> scrub corridor forecast +0..48 h. React and Django, a hosted app, GitHub repository and 5-10 minute Loom are required.

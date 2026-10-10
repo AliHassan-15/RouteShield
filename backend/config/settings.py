@@ -20,6 +20,7 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.routing.middleware.APIRequestMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -80,8 +81,29 @@ PROVIDER_CONFIG = {
     "weather_cache_max_entries": integer(os.environ, "WEATHER_CACHE_MAX_ENTRIES", 400),
     "weather_gusts": boolean(os.environ, "WEATHER_GUSTS_ENABLED", False),
 }
-# Configuration is prepared now; provider work/throttling belongs to later tasks.
+# Per-process DRF throttles are friction, not a distributed DoS defense.
 ANALYSIS_RATE_LIMIT = integer(os.environ, "ANALYSIS_RATE_LIMIT", 10)
 ANALYSIS_RATE_WINDOW_SECONDS = integer(os.environ, "ANALYSIS_RATE_WINDOW_SECONDS", 600)
 GEOCODE_RATE_LIMIT = integer(os.environ, "GEOCODE_RATE_LIMIT", 30)
 GEOCODE_RATE_WINDOW_SECONDS = integer(os.environ, "GEOCODE_RATE_WINDOW_SECONDS", 60)
+API_TRUSTED_PROXY_CIDRS = tuple(
+    value.strip()
+    for value in os.environ.get("API_TRUSTED_PROXY_CIDRS", "").split(",")
+    if value.strip()
+)
+CORS_EXPOSE_HEADERS = ["X-Request-ID", "Retry-After"]
+# Structured API records replace Django's status/path logging; no traceback/body logging.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"api_json": {"format": "%(message)s"}},
+    "handlers": {
+        "discard": {"class": "logging.NullHandler"},
+        "api_console": {"class": "logging.StreamHandler", "formatter": "api_json"},
+    },
+    "loggers": {
+        "django.request": {"handlers": ["discard"], "propagate": False},
+        "django.server": {"handlers": ["discard"], "propagate": False},
+        "routeshield.requests": {"handlers": ["api_console"], "level": "INFO", "propagate": False},
+    },
+}

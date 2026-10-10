@@ -1,8 +1,9 @@
 """One injectable monotonic deadline, shared by every attempt and fallback."""
 
 from collections.abc import Callable
+from fractions import Fraction
 from math import isfinite
-from threading import Event
+from threading import Event, Lock
 
 from providers.errors import ErrorCode, ProviderError
 
@@ -16,6 +17,24 @@ class Deadline:
         self._clock = clock
         self._ends_at = clock() + seconds
         self._cancelled = Event()
+        self._metrics_lock = Lock()
+        self._calls = {"routing": 0, "geocoding": 0, "weather": 0}
+        self._quota_reserved = Fraction(0)
+
+    def record_call(self, provider: str) -> None:
+        """Count actual sends per request, including retries, without retaining locations."""
+        with self._metrics_lock:
+            self._calls[provider] += 1
+
+    def record_reservation(self, units: Fraction) -> None:
+        """Count successful reservation attempts (including later pre-send refunds)."""
+        with self._metrics_lock:
+            self._quota_reserved += units
+
+    def metrics(self) -> tuple[dict[str, int], Fraction]:
+        """Snapshot isolated request counters, safely across transport workers."""
+        with self._metrics_lock:
+            return dict(self._calls), self._quota_reserved
 
     def remaining(self) -> float:
         """Return remaining seconds without resetting the original budget."""

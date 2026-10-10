@@ -1,4 +1,4 @@
-"""Only the foundation health API is available in this task."""
+"""Versioned health, candidate geocoding and route-analysis API."""
 
 from django.urls import include, path
 

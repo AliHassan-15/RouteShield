@@ -255,6 +255,7 @@ class TomTomTransport:
                 write=min(remaining, 3),
             )
             try:
+                deadline.record_call("routing" if path.startswith("/routing/") else "geocoding")
                 response = self._client.get(
                     "https://api.tomtom.com" + path,
                     params=(*params, ("key", self._key)),

@@ -147,6 +147,7 @@ class WeatherTransport:
             reservation = self.ledger.reserve(quota_units(coordinates, variables, window))
             if reservation is None:
                 return UnavailableReason.DEMO_QUOTA_REACHED
+            deadline.record_reservation(reservation.units)
             response: HTTPResponse | None = None
             error: ProviderError | None = None
             try:
@@ -161,6 +162,7 @@ class WeatherTransport:
                 if not self.ledger.mark_sent(reservation):
                     return UnavailableReason.DEMO_QUOTA_REACHED
                 counter.increment()
+                deadline.record_call("weather")
                 response = self.client.get(
                     self.config.base_url, params=params, timeout=timeout, deadline=deadline
                 )

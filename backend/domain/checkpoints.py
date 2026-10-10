@@ -122,12 +122,12 @@ def utc_departure(departure: datetime) -> datetime:
 
 
 def generate_checkpoints(
-    route: Route, departure: datetime, interval_miles: int
+    route: Route, departure: datetime, interval_miles: int, *, check_budget: bool = True
 ) -> tuple[Checkpoint, ...]:
     """Generate a bounded route at an already selected interval, including both ends."""
     utc = utc_departure(departure)
     count = checkpoint_count(route, interval_miles)
-    if count > route.policy.checkpoint_budget:
+    if check_budget and count > route.policy.checkpoint_budget:
         raise RouteError(
             "TRIP_TOO_LARGE", "Select a coarser permitted interval before generating checkpoints."
         )
@@ -148,6 +148,31 @@ def generate_checkpoints(
             Checkpoint(interpolate_coordinate(route, distance), distance, elapsed, eta, owned)
         )
     return tuple(result)
+
+
+def candidate_intervals(routes: Sequence[Route], requested: int | None = None) -> tuple[int, ...]:
+    """Offer the common adaptive interval and coarser options before unique pooling.
+
+    The API must evaluate actual pooled coordinates, rather than select_interval's
+    historical conservative pre-deduplication count. No provider imports belong here.
+    """
+    if not routes:
+        raise RouteError("NO_ROUTE", "At least one route is required.")
+    policy = routes[0].policy
+    if any(route.policy != policy for route in routes):
+        raise RouteError("POLICY_MISMATCH", "All trip routes must share a policy.")
+    offered = policy.offered_intervals_miles
+    if requested is not None:
+        _validate_interval(requested, policy)
+        initial = requested
+    else:
+        longest = max(route.distance_miles for route in routes)
+        initial = offered[-1]
+        for threshold, interval in zip(policy.adaptive_thresholds_miles, offered, strict=False):
+            if longest <= threshold:
+                initial = interval
+                break
+    return offered[offered.index(initial) :]
 
 
 def generate_trip_checkpoints(
