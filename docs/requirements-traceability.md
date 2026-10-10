@@ -1,8 +1,8 @@
 # RouteShield requirements traceability
 
-RECOMMENDATION | Status: APPROVED SPECIFICATION, 2026-10-10; every implementation location below is planned, not existing code. All acceptance IDs resolve in [acceptance-tests.md](acceptance-tests.md). Source is `../Requirements/fs-assessment-spotter.pdf`, fully inspected pages 1-2. Interpretation choices are separated in [decisions.md](decisions.md); execution sequence is [plan.md](plan.md).
+RECOMMENDATION | Status: APPROVED SPECIFICATION, 2026-10-10; foundation and pure risk/geometry/checkpoints/aggregation/ranking exist; provider/API/map/heatmap locations remain planned, with execution evidence in the dated acceptance records. All acceptance IDs resolve in [acceptance-tests.md](acceptance-tests.md). Source is `../Requirements/fs-assessment-spotter.pdf`, fully inspected pages 1-2. Interpretation choices are separated in [decisions.md](decisions.md); execution sequence is [plan.md](plan.md).
 
-RECOMMENDATION | Priority P0 = required assessment behavior or correctness gate; P1 = essential supporting reliability/clarity; P2 = optional refinement within budget. Priority is engineering judgment, not an additional assessment weight. Acceptance criteria are approved and executable tests remain unimplemented/unexecuted.
+RECOMMENDATION | Priority P0 = required assessment behavior or correctness gate; P1 = essential supporting reliability/clarity; P2 = optional refinement within budget. Priority is engineering judgment, not an additional assessment weight. Approved criteria are distinguished from executed evidence; foundation/domain records identify passing cases, new provider amendment criteria below remain planned.
 
 ## Explicit PDF requirements
 
@@ -12,7 +12,7 @@ RECOMMENDATION | Priority P0 = required assessment behavior or correctness gate;
 | PDF-02 REQUIREMENT | p1: Origin and destination input | `frontend/src/features/trip/TripForm.tsx`; `backend/apps/routing/serializers.py`; geocoding adapter | API-02; API-07; UI-01 | P0 / API/component and deterministic geocode fixtures |
 | PDF-03 REQUIREMENT | p1: Departure date/time input | Trip form/serializers; `backend/domain/checkpoints.py` | API-03..04; CP-06; WX-03 | P0 / offset/DST/frozen-clock tests |
 | PDF-04 REQUIREMENT | p1: Load weight input | Trip form/serializers; `backend/domain/risk.py` | API-03; RISK-04 | P0 / input and strict-threshold tests |
-| PDF-05 REQUIREMENT | p1: Generate three route options with routing API | `backend/providers/routing.py`; `backend/apps/routing/service.py` | ROUTE-01..07; E2E-01; DEPLOY-04 | P0 / recorded three-route fixtures plus separately observed live three-route trip |
+| PDF-05 REQUIREMENT | p1: Generate three route options with routing API | `backend/providers/routing.py`; `backend/apps/routing/service.py` | ROUTE-01..07; E2E-01; DEPLOY-04 | P0 / synthetic three-route fixtures plus separately observed live three-route trip |
 | PDF-06 REQUIREMENT | p1: Sample every 10/25/50 miles | `backend/domain/checkpoints.py` | CP-01..03; MET-01 | P0 / synthetic along-geometry distance tests for all intervals |
 | PDF-07 REQUIREMENT | p1: Weather uses estimated arrival at each checkpoint | Checkpoints; weather adapter; service | CP-04..06; WX-03..05 | P0 / unequal segment times, timestamp/horizon fixtures |
 | PDF-08 REQUIREMENT | p1: Wind Low <25, Moderate 25-34, High 35-44, Severe 45-54, No Travel >=55 mph | `backend/domain/risk.py`; named threshold table | RISK-01; RISK-06 | P0 / every printed endpoint plus approved fractional gaps |
@@ -56,29 +56,29 @@ RECOMMENDATION | The rows below are not additional PDF statements. Each follows 
 |---|---|---|---|---|
 | POL-01 RECOMMENDATION | Continuous gaps/shared boundaries; D01 | Backend risk table | RISK-01..04 | P0 / all exact/fractional cases |
 | POL-02 RECOMMENDATION | Maximum hazards, separate load result, sustained wind, ordinal scale; D02 | Domain risk/models | RISK-05..07 | P0 / combined/gust/unknown fixtures |
-| POL-03 RECOMMENDATION | Rain+showers, snowfall depth, hourly rate conversion; D03 | Weather adapter | WX-01..03; RISK-02..03 | P0 / metadata and unit-equivalence fixtures |
-| POL-04 RECOMMENDATION | Adaptive/selectable common intervals and ETA chainage; D04 | Checkpoints/routing adapter | CP-01..06; ROUTE-02 | P0 / provider timing mapping and bounds |
-| POL-05 RECOMMENDATION | Enclosing hourly interval and real horizon; D05 | Weather lookup/service | WX-03..06 | P0 / exacthour/minutes/horizon/DST |
+| POL-03 RECOMMENDATION | Rain+showers/snow depth/hourly rate, documented units+mp/h; D03 | Weather adapter | WX-01..03; WX-12; RISK-02..03 | P0 / metadata and unit-equivalence fixtures |
+| POL-04 RECOMMENDATION | Adaptive common intervals/ETA sparse-anchor chainage; D04 | Checkpoints/routing adapter | CP-01..06; ROUTE-02; ROUTE-08 | P0 / provider timing mapping and bounds |
+| POL-05 RECOMMENDATION | Enclosing hour/non-null coverage/model choice measured later; D05 | Weather lookup/service | WX-03..06; WX-13 | P0 / exacthour/minutes/horizon/DST |
 | POL-06 RECOMMENDATION | Midpoint ownership and mile-weighted means; D06 | Aggregation | MET-01..04 | P0 / conservation and hand-calculated examples |
 | POL-07 RECOMMENDATION | Known No Travel blocking, deterministic ties, no all-blocked recommendation; D07 | Recommendation | RANK-04..08 | P0 / permutation, all-blocked, explanation facts |
 | POL-08 RECOMMENDATION | UNKNOWN incomplete eligibility/staleness; D08 | Risk/aggregation/recommendation/UI | RISK-07; MET-03; RANK-07; UI-04 | P0 / no missing=Low and null average |
-| POL-09 RECOMMENDATION | HGV, overlap tolerances and bounded fallback; D09 | Routing adapter/distinctness/service | ROUTE-01..07 | P0 / authentic alternatives, live gate, exact overlap |
+| POL-09 RECOMMENDATION | HGV/overlap/bounded fallback/UTC departAt/traffic=false; D09 | Routing adapter/distinctness/service | ROUTE-01..10 | P0 / authentic alternatives, live gate, exact overlap |
 | POL-10 RECOMMENDATION | Departure-relative snapshots, ETA distinction, risk categorical heatmap; D10 | Corridor/map/slider/details | HEAT-01..07 | P0 / unchanged ranking, meaningful 49 frames, duplicateLow |
 | POL-11 RECOMMENDATION | Free-only/no-required-card access, limits/licenses/attribution; D11..13,D17..18 | Adapters/UI/deployment/docs | MAP-05; DEPLOY-05..06 | P0 / official terms and later actual account gate |
 | POL-12 RECOMMENDATION | Backend domain authority, strictTS/DRF, one typed client; D14..16 | Domain/adapters/views/types/client | API-01..06; RISK/MET/RANK; futurelint/types | P1 / code boundary inspection + actual checks |
 | POL-13 RECOMMENDATION | Input/time/load bounds; D20 | Form/API serializers | API-02..04; UI-01 | P1 / frozen clock/DST/invalid inputs |
-| POL-14 RECOMMENDATION | Bounded batches/retry/cache/quota/error shape; D21 | Provider transport/service/API | WX-06..09; WX-11; API-06..09; ROUTE-06 | P1 / recorded failure responses and request counts |
+| POL-14 RECOMMENDATION | Bounded batches/retry/cache/quota/error shape; D21 | Provider transport/service/API | WX-06..09; WX-11; API-06..09; ROUTE-06 | P1 / synthetic failure responses and request counts |
 | POL-15 RECOMMENDATION | Accessible synchronized professional UX; D22 | Form/cards/map/legend/state panels | UI-01..05; MAP-02..05; HEAT-07 | P1 / component + keyboard/mobile screenshot checks |
 | POL-16 RECOMMENDATION | Envsecrets, production CORS/HTTPS, health/wakeup; D23 | Config/deploy/APIclient/loading | DEPLOY-01..03; API-06; UI-03 | P0 / actual hosted requests/config review |
 | POL-17 RECOMMENDATION | Zero scrub requests, persistent map, lazy chunk, measurable budgets; D10,D23 | Map/slider/Vite output | HEAT-02; PERF-01..03; MAP-04 | P1 / network/frame/profile/build evidence |
 | POL-18 RECOMMENDATION | Dependency/license inventory and minimal additions; D19 | Manifests/locks/docs/dependencies.md; future README content | DEL-01; PERF-02 | P1 / actual dependency audit/license/build report |
-| POL-19 RECOMMENDATION | Deterministic fixtures and separate live smoke; D16 | Backend/frontend tests and e2e config; future trip fixtures | ROUTE-07; WX-10; E2E-01..03 | P0 / offline enforcement and honestlive status |
+| POL-19 RECOMMENDATION | Synthetic fixtures in all later offline tests/separate live smoke; D16 | Backend/frontend tests and e2e config; future trip fixtures | ROUTE-07; WX-10; E2E-01..03 | P0 / offline enforcement and honestlive status |
 | POL-20 RECOMMENDATION | Optional compact CI/generated OpenAPI | Future workflow/schema tooling | DEL-04 | P2 / only if it fits fixedtime box, actualgreenchecks |
 | POL-21 RECOMMENDATION | Explicit play/pause, never autoplay/reduced motion; D10 | Heatmap feature/native controls | HEAT-08; HEAT-02; PERF-04 | P2 / timer lifecycle, accessible explicit action, zero request count |
 | POL-22 RECOMMENDATION | Estimated truck marker from existing checkpoint ETAs; D10 | Backend corridor/checkpoints; map display | HEAT-09; CP-04; PERF-04 | P2 / geometry/time fixtures, clamp and selected-route display |
 | POL-23 RECOMMENDATION | Combined/wind/rain/snow codes only within500 KB payload; D10,D23 | Corridor serializer/map filters | HEAT-10; PERF-02..04 | P2 / measured compressed size, conditional capability/control |
-| POL-24 RECOMMENDATION | 10 analyses/10min/IP and30 geocode/min/IP plus global guard; CHANGED D21 | API throttles/service | API-08..09 | P1 / frozen-clock windows and shared guard |
-| POL-25 RECOMMENDATION | First300-coordinate weather quota measurement; >100 requires lower-cap proposal before API orchestration; D21 | Feasibility spike/plan/provider accounting | WX-11; API-08 | P0 / observed units/parameters, hold on missing or high-cost evidence |
+| POL-24 RECOMMENDATION | 10 analyses/10min/IP,30 geocode/min/IP, configurable8000 daily best-effort restart-reset guard; CHANGED D21 | API throttles/service | API-08..09; QUOTA-01..03 | P1 / injected-clock windows/reservations/shared process guard |
+| POL-25 RECOMMENDATION | Accepted published accounting;200 pooled/50 batch/two concurrent/mandatory-first/TRIP_TOO_LARGE; D10,D20,D21 | Checkpoints/pooling/weather accounting/config/service | WX-11; BUDGET-01..02; QUOTA-01..03 | P0 / guard/cap tests, actual charged counter remains unverified |
 | POL-26 RECOMMENDATION | System/manual light-dark CSS-variable theme/refined type; CHANGED D22 | Plain CSS/theme controls | UI-05..06; PERF-02 | P2 / contrast/focus/system/manual behavior, measured optional font size |
 | POL-27 RECOMMENDATION | Transform/opacity DOM motion, reduced motion, no layout shift/library; D22 | Map/results CSS/Web Animations | UI-07; PERF-04; MAP-04 | P2 / actual visual/cleanup/layout evidence and disabled-motion case |
 | POL-28 RECOMMENDATION | Selected-distance risk strip/SVG from midpoint-owned segments; D22 | Backend risk_profile/API; selected-route SVG | UI-08; MET-01..04 | P2 / distance partition equals backend, no chart library |
@@ -88,9 +88,9 @@ RECOMMENDATION | The rows below are not additional PDF statements. Each follows 
 ## Planning constraints and completion limits
 
 - RECOMMENDATION | User constraints:16 working hours/4 calendar days including planning. The user reports elapsed time; never invent actual hours, start/deadline or remaining balance. Gates: API7h, local journey10.5h, hosted13.75h. Additions are time-boxed inside M7-M9/reserve; the total remains16.00h.
-- RECOMMENDATION | Planning is closed with all24 decisions recorded and AGENTS.md/five docs reconciled. This approval task completes documentation only; next phase is implementation, one focused user-issued task at a time. It does not mean any PDF feature is implemented. All implementation/evidence rows remain **PLANNED / UNEXECUTED**; approved policy is not a passed acceptance test.
+- RECOMMENDATION | Current18 APPROVED/6 CHANGED architecture decisions plus three user-owned OPEN RELEASE GATES; foundation/domain tests are executed as dated below, provider amendments/API/UI remain planned. Approval is not implementation or release permission; non-display development can continue.
 - RECOMMENDATION | A request returning fewer than three routes or insufficient forecast coverage is handled honestly but is not used to claim full requirement compliance. A successful complete assessment demonstration must show three genuine distinct routes and a working map/forecast journey on the hosted app.
-- UNVERIFIED | No application, fixtures, test results, build output, deployed URL, GitHub repository or Loom exists in the inspected workspace. External accounts or previous work elsewhere were not inspected; this is not a claim they do not exist outside the workspace.
+- CURRENT INVENTORY | Foundation shell/local Git/fixtures and pure domain implementation exist. Provider spike evidence and787 passing backend tests were recorded in earlier tasks, not rerun in this docs task. Hosted app/map/trip API/remote publication/Loom and release grants remain incomplete.
 
 ## Authorized foundation task mapping
 
@@ -105,3 +105,20 @@ RECOMMENDATION | The rows below are not additional PDF statements. Each follows 
 | Linux CI syntax and exact case/spaced path | .github/workflows/ci.yml, tools/check_ci.mjs | FND-07; execution remains UNVERIFIED |
 | Dependency locks/licenses/sizes/audits | requirements.lock, package-lock.json, docs/dependencies.md, tools/audit_python.py | FND-09 |
 | README headings and real command guidance | README.md, AGENTS.md section10, docs/foundation.md | FND-01..09; README content deferred |
+
+## Provider decision amendments — planned acceptance mapping (2026-10-10)
+
+| Policy | Authority | Existing/next location | Acceptance IDs | Execution status |
+|---|---|---|---|---|
+| Sparse geometry-indexed progress/chainage expansion | D04/D09 | domain/geometry.py (exists), future providers/routing.py | ROUTE-08; CP-04..05; ROUTE-02 | Domain sparse cases previously executed; JSON adapter parsing PLANNED |
+| Explicit UTC departAt/traffic=false/past-rejection-only request exception/ETAs unchanged/no typeahead | D09/D21 | Future routing/geocode adapters/client | ROUTE-09..10; API-07 | PLANNED |
+| Unit alias/array/value validation; model measured non-null required-window coverage | D03/D05 | Future providers/weather.py | WX-12..13; WX-03..06 | PLANNED; spike evidence is not adapter test |
+|200 pooled/mandatory-first/coarsened optional/density/TRIP_TOO_LARGE | D10/D20/D21 | domain/route_policy.py default currently300; future pooling/config | BUDGET-01..02; CP-03; HEAT-06 | APPROVED POLICY/PENDING CODE ALIGNMENT |
+| Variable/window/model accounting and configurable8000 daily guard/DEMO_QUOTA_REACHED/process restart | D21 | Future weather accounting/service/config | QUOTA-01..03; API-08..09; WX-11 | PLANNED; published basis accepted, charged counter UNVERIFIED |
+| Routing<=25s/remaining35s hard deadline/no routing-timeout retry/M5 measurement | D21/D23 | config current12s; future HTTP transport/service | TIME-01..03; ROUTE-06; API-06 | PLANNED/PENDING CONFIG |
+| JSON/XML/empty quota-auth bodies, safe envelope/key-URL redaction | D09/D23 | Future provider transport/API handler | ERROR-01..03; API-06 | PLANNED |
+| No server route/geocode caching/persistence, synthetic-only future fixtures | D11/D16/D21 | Future provider/service/tests; existing fixtures reviewed as historical | CACHE-01..02; ROUTE-01; E2E-02 | PLANNED provider verification; no such result cache currently implemented |
+| TomTom17.3/no premature Copyright call; OpenMapTiles/OSM/near-weather Open-Meteo | D11/D13 | Future map/weather UI/attribution adapter | ATTR-01..03; MAP-05; DEPLOY-05 | PLANNED; user-owned OPEN RELEASE GATES not resolved |
+| Approved ranking names/statuses/messages/identity/ranks/closeness | D07/user approval | domain/recommendation*.py,identity.py,explanations.py | RANK-01..08; MET-03; UI-02,UI-04 domain portion | Previously EXECUTED domain; API/UI rendering PLANNED |
+
+RG-TOMTOM-DISPLAY, RG-TOMTOM-STORAGE, RG-OPENMETEO-ELIGIBILITY remain OPEN RELEASE GATE, owner=user; agents never resolve them. Non-display code can proceed; release/display follows user answers. Prohibited non-TomTom display reopens D13 before map work; failed later TomTom gate requires user direction before ORS switch.

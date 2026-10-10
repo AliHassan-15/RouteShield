@@ -22,8 +22,9 @@
   If a new material ambiguity changes correctness and is not settled there,
   mark it OPEN, ask at most three specific questions and stop dependent work.
   Never turn a proposed entry or undocumented default into approval.
-- Planning is closed (2026-10-10). The next phase is implementation, **one
-  focused user-issued task at a time**. Approval of the plan does not start
+- Planning is closed (2026-10-10). Foundation, pure risk, geometry/checkpoints,
+  aggregation and ranking are committed; provider adapters/API/UI remain planned.
+  Continue implementation **one focused user-issued task at a time**. Approval of the plan does not start
   implementation automatically; respect each task's allowed files/actions.
 - Never invent the content of a doc this file references. If a referenced doc
   is missing, say so and create it only when the task asks for it.
@@ -94,6 +95,10 @@ Rules:
 - If the PDF and any other source disagree, the PDF wins; tell me.
 - PROPOSED/OPEN entries never authorize implementation. An UNVERIFIED external
   fact remains an evidence gate even when the policy itself is approved.
+- Agents never mark release gates resolved. The three OPEN RELEASE GATES in
+  docs/decisions.md are owned by the user; non-display development may continue.
+  If the user reports TomTom non-TomTom-map display is prohibited, reopen D13
+  before map work; do not silently change provider or basemap.
 
 ---
 
@@ -144,8 +149,9 @@ not additional printed PDF statements. Full records: `docs/decisions.md`.
   route ≤100mi:10, ≤500mi:25, else50. Cap-driven increase to the next
   offered interval must warn; if50 cannot fit mandatory points, fail
   TRIP_TOO_LARGE. Coarsen extra display samples before mandatory checkpoints.
-- ETA = departure + interpolated cumulative provider time, preferring
-  aligned vertex distance/time; valid guidance anchors are a fallback.
+- ETA = submitted departure + interpolated provider cumulative time. Validate
+  sparse geometry-indexed progress[] anchors and interpolate by geometry
+  chainage; no requirement for one anchor per vertex. Valid guidance is fallback.
   Invalid/missing timing is an error, never guessed constant speed.
 - UTC instants internally; input includes ISO offset and visibly named IANA
   zone, checked for DST gaps/repeated times and consistency. Checkpoint local
@@ -177,7 +183,10 @@ not additional printed PDF statements. Full records: `docs/decisions.md`.
 
 - Open-Meteo primary; access/use eligibility, attribution, required variables
   and horizon are later verified gates, not approval claims.
-- Explicit mph/inch request; independently validate unit metadata.
+- Explicit mph/inch request; independently validate unit metadata/array lengths,
+  accept documented units plus mp/h as mph. A timestamp without required valid
+  values is unavailable. Choose the model in the weather adapter task only from
+  measured non-null coverage of the required window; assume no model now.
   Liquid rain = rain + showers; missing either is unknown, not zero.
   Snowfall is snow depth, never snow water equivalent/total precipitation.
 - Convert accumulation depth to inches and divide by interval hours for
@@ -194,11 +203,16 @@ not additional printed PDF statements. Full records: `docs/decisions.md`.
 ### 3.6 Real routing and distinctness (D09)
 
 - TomTom Routing + Geocoding primary: truck mode, maxAlternatives2,
-  anyRoute, full geometry, extended cumulative distance/travelTime vertices;
-  validate summary alignment and monotonic timing. Cargo is not gross truck
+  anyRoute, full geometry, sparse cumulative distance/travelTime progress;
+  validate indices, summary endpoints and monotonic timing.
+- Send departAt=submitted departure as UTC ISO8601 and traffic=false; disclose
+  no live traffic. Only after provider rejection of a past departure within the
+  five-minute grace may routing request current time instead; document it and
+  retain submitted departure for all ETAs. Cargo is not gross truck
   weight; do not invent tare/dimensions or pass cargo as gross restriction.
-- First live gate must confirm free/no-card access, truck alternatives and
-  usable cumulative timing. If it fails, STOP and ask before switching.
+- Spike observed technical truck/timing access; entitlement/display/storage
+  remain user-owned OPEN RELEASE GATES. A later failed TomTom gate requires
+  STOP/user direction before switching.
   ORS driving-hgv is the approved conditional fallback, with a100km native
   alternatives cap; it is not a general long-haul replacement.
 - Distinctness: resample geometry every0.5mi with length ownership;
@@ -215,7 +229,8 @@ not additional printed PDF statements. Full records: `docs/decisions.md`.
 
 - Pool all returned routes' centerlines, mandatory checkpoints first,
   extra display samples initially10mi and coarsened; dedupe within100m,
-  ≤300 unique points pending D21 quota gate. Show actual spacing.
+  ≤200 pooled coordinates. Show actual spacing; mandatory checkpoints first,
+  optional samples coarsened, TRIP_TOO_LARGE if50mi mandatory pooled points>200.
 - Return h0..48 (49 frames), departure-relative with absolute time/zone.
   All risk codes computed by the same Python risk rules and load.
   Arrival-time risk/recommendation stays fixed while corridor time changes.
@@ -262,8 +277,10 @@ and user direction where specified; they never authorize silent substitution):
 - D19 before dependencies: exact pinned versions/licenses, purpose/replacement
   and measured size impact; no guessed size/license claims.
 
-Foundation layout below exists; comments naming risk, adapters, maps or trips
-describe future work. Domain/provider packages contain no feature logic yet.
+Foundation and pure risk, geometry/checkpoints, aggregation and ranking exist
+and have executed tests. Provider adapters, trip/geocode API, maps and heatmap
+remain planned. The new200/25s policies are approved documentation; existing
+code defaults300/12s must be changed in the next implementation task.
 
 ```
 /Requirements
@@ -273,7 +290,7 @@ describe future work. Domain/provider packages contain no feature logic yet.
   /apps/routing          # thin API, serializers, service orchestration
   /domain                # risk, checkpoints, aggregation, ranking, corridor
   /providers             # geocoding, routing, weather, scenario_weather
-  /tests                 # recorded fixtures; pure/adapter/API tests
+  /tests                 # synthetic fixtures; pure/adapter/API tests
   requirements.in        # exact approved direct pins
   requirements.lock      # complete Python environment pins, including pip
   pyproject.toml
@@ -328,15 +345,29 @@ README.md
 ## 5. Reliability and external APIs
 
 - Validate every external response; handle missing, null, or malformed fields.
-- D21: ≤300 pooled locations, ≤50/batch, ≤2 concurrent; connect3s,
-  routing read12s, weather/geocode read8s, total warm35s deadline, ≤1 transient
-  retry with capped backoff; fallback calls count toward the same deadline.
+- D21: ≤200 pooled locations, ≤50/batch, ≤2 concurrent; connect3s,
+  routing read≤25s bounded by the remaining35s hard deadline, weather/geocode
+  read8s. No automatic routing-timeout retry; ≤1 otherwise permitted transient
+  retry within remaining time. Fallback/body processing share the deadline.
+  Limits are provisional: M5 measures integrated long-trip latency; if it cannot
+  fit, present envelope/deadline/payload options to the user, no silent changes.
+- Use variable/window/model-aware conservative published quota accounting.
+  Configurable global daily guard defaults8000units, in-process/best effort,
+  resets on restart; return clear DEMO_QUOTA_REACHED before exceeding allowance.
+  ~40 full200-unit analyses fit this default, vs~50 at provider10000/day before
+  other use. Retain10 analyses/10min/IP and30 geocode/min/IP; no distributed guarantee.
 - Apply timeouts, **bounded** retries with backoff, and clear user-facing
   errors for provider failure, rate limiting, and no-route-found.
-- Respect provider quotas, licensing, and attribution (display required
-  attributions in the UI footer).
-- No shared routing/geocode cache until provider storage terms permit it.
-  Successful normalized weather uses exact coordinate/window/model/unit/source
+- Respect provider quotas/licensing: TomTom17.3 text/mechanism once user confirms,
+  no Copyright API call until display grant; OpenMapTiles/OSM visibly on-map and
+  Open-Meteo credit near weather displays. Release gates remain user-owned.
+- No server-side routing/geocode result caching at all, persistent or shared;
+  no route/geocode persistence. All later offline tests use synthetic fixtures;
+  no real TomTom recordings committed until permission is confirmed.
+- Normalize provider status/content type, tolerate JSON/XML/empty quota-auth
+  bodies, and map to the public error envelope. Redact keys/key-bearing URLs in
+  logs/errors and never leak raw upstream details.
+  Successful normalized weather uses exact coordinate/window/variable/model/unit/source
   keys and ≤15min TTL; risk caches include load/policy. Never cache errors as
   successes or share live/scenario entries.
 - Never fabricate weather, routes, or success responses. Mocks and fixtures
@@ -346,7 +377,7 @@ README.md
   deterministic weather presets: All clear, High-wind corridor, Winter storm,
   Heavy rain front, Blocked trip, Tie-break; same weather interface and real
   risk/aggregation/ranking, no score overrides. Weather stays independent of
-  load; real routing in the app, separately labeled recorded routes in tests.
+  load; real routing in the app, separately labeled synthetic routes in later offline tests.
 - Never silently mix live/scenario weather, including partial/cache/stale data.
   Every simulated analysis success/error carries true/preset identity; preserve
   persistent SIMULATION banner and named badge throughout results/errors.
@@ -443,7 +474,8 @@ README.md
   every hazard, every load rule (including exactly 30,000 and 40,000 lb and
   exactly 55 mph), combined hazards, UNKNOWN weather, mile attribution,
   average risk, ranking priority order, ties, and all-blocked routes.
-- Use deterministic recorded fixtures or mocks for provider tests; never hit
+- Use deterministic synthetic fixtures in all later offline tests; no real
+  TomTom response recordings committed without confirmed permission. Never hit
   live APIs in unit tests. Keep one small, clearly marked, optional
   live-provider smoke test.
 - Test API validation failures, provider timeouts, malformed responses, and
@@ -458,7 +490,7 @@ README.md
   actually render and respond. Take screenshots when verifying UI changes.
 - Verify API behavior with real requests, not only that the server starts.
 - D24 deterministic browser tests exercise the actual scenario weather adapter
-  plus recorded routing/geocode fixtures, six intended risk/comparison scenarios,
+  plus synthetic routing/geocode fixtures, six intended risk/comparison scenarios,
   flag/banner propagation and live/scenario isolation. These are not live API
   evidence. Consult SIM-01..10 and E2E-04 before implementing.
 
@@ -506,11 +538,13 @@ or setup in a documentation-only task without user authorization.
 - Validate and constrain user input (coordinate ranges, weight ranges,
   date ranges, string lengths). D21 per-IP analysis10/10min, geocode30/min
   plus global quota guard; DRF throttles are best effort, not DoS protection.
-  First feasibility spike MEASURES one uncached300-coordinate Open-Meteo
-  analysis; >100 quota units -> propose lower cap/get user direction BEFORE
-  API orchestration. Missing evidence does not permit a guessed cost/cap.
+  User accepted published spike accounting and approved200 pooled coordinates
+  plus a variable/window/model-aware guard and configurable8000 daily stop.
+  This is not an actual charged-counter measurement; process/restart limits
+  are explicit, and no guessed provider allowance is treated as verified.
 - Return safe error messages; never leak stack traces, keys, or internals.
-- Do not log secrets or unnecessary personal data.
+- Do not log secrets, key-bearing URLs, raw provider errors or unnecessary
+  personal data; redact credentials in logs and public errors.
 - Keep dependencies minimal and current; run a dependency audit before
   submitting.
 - Do not run destructive commands or make consequential external changes

@@ -1,10 +1,12 @@
 # Real-provider feasibility findings — 2026-10-10
 
+**CURRENT POLICY NOTICE (2026-10-10):** The user reviewed this spike:200 pooled coordinates (not proposed100/historical300), variable/window/model accounting/default8000 daily guard, routing<=25s within35s/no routing-timeout retry, explicit UTC departAt/traffic=false with past-rejection exception, synthetic-only later offline tests/no server route-geocode cache, conditional attribution and safe error normalization are now approved in [decisions.md](decisions.md). Three OPEN RELEASE GATES remain owned by user; agents never resolve them. This file preserves original spike observations/proposals; it does not establish a release grant.
+
 **VERIFIED:** Scope: throwaway probes and documentation only. No application code, dependency installation, remote operation, provider switch or frozen-contract edit occurred. Existing local HTTPX/Playwright were used. The user authorized reading OpenFreeMap/OSM official documentation and subsequently approved **synthetic TomTom fixtures** in place of stored real results.
 
 **VERIFIED:** Labels distinguish observed responses, published documentation and offline calculations. **UNVERIFIED** identifies absent measurements, unresolved permissions and proposed release behavior. A successful request is not proof of licensing, billing-plan identity or future availability.
 
-## Verdicts and release gates
+## Historical spike verdicts before the provider amendments
 
 | Provider | Verdict | Evidence and limits |
 |---|---|---|
@@ -183,7 +185,7 @@
 - **VERIFIED:** Deprecated `typeahead=true` still accepted 200 but did not produce reliable Springfield prefix matches. Misspelling correction can produce equally scored different municipalities.
 - **VERIFIED:** TomTom terms are readable in a browser; unresolved storage permission prompted user-approved synthetic fixtures. The precise public-demo grant remains **UNVERIFIED**.
 
-## Proposed decision / frozen-contract changes — not applied
+## Historical proposed decision / frozen-contract changes — superseded by user decisions
 
 1. **UNVERIFIED — PROPOSED D04/D09:** Treat `progress[]` as validated sparse geometry-indexed cumulative anchors; interpolate between them by geometry chainage. Remove the assumption that extended arrays must equal vertex count. **VERIFIED evidence:** all 24 returned routes have valid monotonic endpoints; all expand without gaps.
 2. **UNVERIFIED — PROPOSED D03/D05:** Accept documented units plus the observed `mp/h` alias; validate metadata/array lengths and all required values. Keep enclosing-hour ownership, rain+showers and snow depth; consider model horizon valid only where values exist. **VERIFIED evidence:** real units and ICON null fixture; no threshold changes.
@@ -204,4 +206,4 @@
 
 **VERIFIED:** Before the one authorized commit, the staged-file review ran `verify_files.py --staged`, `tools/check_staged.py`, `git diff --cached --check`, and inspected the staged file list/stat. It found no actual key, key-like credential assignment, private key, `.env`, PDF or ignored artifact, and confirmed no changes to `AGENTS.md` or `docs/decisions.md`. The local commit message is `docs: provider feasibility findings`; no remote or push was requested/performed.
 
-**UNVERIFIED:** Proposed choices above have not been approved/applied to the frozen contract. Stop here for user review; this spike does not authorize adapter development.
+**HISTORICAL:** At spike completion these proposals were unapplied. User decisions dated2026-10-10 now approve1/2/6/7/8 and modify3/4/5; current choices are in decisions.md. The original measured values/proposal text are preserved as evidence, not current policy. Non-display development may proceed only in a focused authorized task; the three user-owned release gates remain OPEN.
