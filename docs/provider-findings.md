@@ -401,3 +401,88 @@ were counted before sends, including the failed weather attempt. Geocoding0,
 fallback0, other providers0. No retries, budget-guard stops, installs, application
 edits, remote operations or push occurred. No defect fix was applied after the
 gate failed. All three existing user-owned release gates remain OPEN.
+
+## Part0 live gate and corridor heatmap — 2026-10-11
+
+User approved an initial400-mile default, a conditional reduction to300 miles,
+12s weather read and one deadline-qualified read retry. Other timeouts and
+provider caps were unchanged. Measurements used the real local settings, application
+adapters and a local WSGI HTTP API; the opt-in helper is
+`backend/tests/live_heatmap_probe.py`. No provider body, key, request URL or query
+was printed or retained. No real `.env`, AGENTS.md or remote was modified.
+
+**Effective settings for both runs:** routing read25s, weather read8s, connect3s,
+geocoding read8s, global deadline35s. The local weather8s overrides the approved
+new default12s; the user was warned before network requests. Routing25s now
+matches its approved default. The helper changed no application setting.
+
+Phoenix–Los Angeles was not called: its356.833 straight-line miles exceed the
+initial320-mile pre-check. Milwaukee–Detroit passes at251.629 straight-line miles;
+the conditional Chicago–Detroit check passes the final240-mile threshold at237.032mi.
+Cargo was45000lb; departures were about3h ahead. These are two fresh-process
+observations, with uncontrolled provider cold state, not reliability guarantees.
+
+| Observation | Initial near370mi check | Conditional near280mi check |
+|---|---:|---:|
+| Corridor |Milwaukee–Detroit |Chicago–Detroit |
+| Departure UTC |2026-10-11T00:15:42Z |2026-10-11T00:18:00Z |
+| Effective envelope miles |400 |300 |
+| HTTP / routes / distinct |200 /3 /yes |200 /3 /yes |
+| Wall seconds |30.780593 |13.784700 |
+| Validation ms |0 |0 |
+| Routing ms |25579 |9625 |
+| Checkpoints/pooling ms |532 |375 |
+| Weather ms |2843 |2282 |
+| Risk/aggregation ms |250 |203 |
+| Ranking/explanation ms |250 |234 |
+| Heatmap ms |672 |531 |
+| Application request-log total ms |30782 |13781 |
+| Fallback attempted / calls |yes /2 |no /0 |
+| Real TomTom / Open-Meteo requests |3 /3 |1 /1 |
+| Coordinates actually submitted to weather |134 |50 |
+| Quota units reserved, including guard-blocked attempts |134 |108 |
+| Raw JSON / gzip level9 bytes |679073 /140610 |568687 /103554 |
+| Pooled / mandatory / optional candidates |134 /46 /97 |108 /37 /74 |
+| Optional selected / unique added |97 /88 |74 /71 |
+| Optional requested spacing / retained max gap miles |10 /20 |10 /20 |
+| Optional stride / cap-driven reduction |1 /no |1 /no |
+| Frames / hazard filters included |49 /yes |49 /yes |
+| Recommendation status |RECOMMENDED |RECOMMENDED |
+| Warning codes |FALLBACK_UNAVAILABLE, UTC_FALLBACK |UTC_FALLBACK, HEATMAP_PARTIAL_AVAILABILITY |
+| Returned route miles, public stable-ID order |373.568361,439.400153,405.832439 |283.112871,305.388407,334.989909 |
+
+Distinctness uses the existing production D09 adapter filtering, not merely three
+IDs. The first run used both real waypoint fallback calls; one fallback failure
+was disclosed while three routes remained. Longer alternatives were correctly
+retained even above the configured shortest-route envelope. Stage times exclude
+some encoding/response work; wall time measures the complete HTTP exchange.
+
+**Final default300mi:** both first-run conditions fired (wall>30s and routing>22s),
+so the approved conditional change was applied and its33 focused tests passed.
+The second run fit both margins, but it cannot establish complete heatmap weather
+behavior at300mi: the task budget left only one Open-Meteo request. The helper
+blocked two additional weather sends before HTTP, yielding unavailable optional
+points. Application counters recorded three weather attempts for that run; real
+outbound requests were one. The108 reserved units include all batch reservations,
+including58 units for blocked sends; this conservative count is not provider billing.
+All37 mandatory pooled points fit in the first50-coordinate batch; the API could
+still recommend a route while reporting the heatmap's partial availability.
+
+Ten-mile optional stations skip mandatory stations; therefore retained optional
+gaps can be20mi even with stride1. No optional coarsening was needed in these live
+runs. Both pools stayed below200; pooling/coarsening and three-route/200-point/
+49-frame worst-case payload behavior were verified with synthetic tests. Filters
+fit below300000 bytes in both observations; total responses fit500000 bytes.
+Raw responses arrived uncompressed locally; gzip measurements do not establish
+production compression. No browser slider, map, hosted deployment or simulation
+was exercised, and no additional weather fetch was introduced for heatmap frames.
+
+**Real task total:**4 TomTom requests /4 Open-Meteo requests /184 coordinate
+submissions /242 reserved quota units, within6/4/600. Geocoding0, actual fallback
+requests2, other external providers0. Live calls stop here. Full backend1541 passed/
+2 optional live tests skipped, lint/format/purity and strict Python/TypeScript
+passed after correcting import/test-helper typing failures; backend build passed.
+The later400→300 constant change was checked with33 focused tests and targeted
+lint/format, without repeating the full suite. All user-owned release gates remain
+OPEN. The local8s weather override and a complete fresh300mi heatmap observation
+remain matters for a later user-authorized measurement, not silent changes.

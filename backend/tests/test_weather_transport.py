@@ -130,9 +130,7 @@ def test_retry_after_too_long_and_second_failure_stop() -> None:
             worker.close()
 
 
-@pytest.mark.parametrize(
-    "failure", [httpx.ReadTimeout("secret"), httpx.ConnectTimeout("secret"), ValueError("secret")]
-)
+@pytest.mark.parametrize("failure", [httpx.ConnectTimeout("secret"), ValueError("secret")])
 def test_timeout_and_unexpected_transport_errors_never_retry_or_leak(failure: Exception) -> None:
     time = FakeTime()
     client = FakeClient([failure])
@@ -153,8 +151,42 @@ def test_phase_timeouts_clamped_to_remaining_deadline() -> None:
     try:
         get(worker, time.deadline())
         get(worker, time.deadline(2))
-        assert client.calls[0][2].connect == 3 and client.calls[0][2].read == 8
+        assert client.calls[0][2].connect == 3 and client.calls[0][2].read == 12
         assert client.calls[1][2].connect == 2 and client.calls[1][2].read == 2
+    finally:
+        worker.close()
+
+
+@pytest.mark.parametrize("remaining,retry", [(9.999, False), (10, True), (10.5, True)])
+def test_read_timeout_retry_requires_ten_seconds(remaining: float, retry: bool) -> None:
+    time = FakeTime()
+    client = FakeClient([httpx.ReadTimeout("secret"), response({})])
+    worker = transport(client, time)
+    try:
+        if retry:
+            assert isinstance(get(worker, time.deadline(remaining)), HTTPResponse)
+        else:
+            with pytest.raises(ProviderError) as caught:
+                get(worker, time.deadline(remaining))
+            assert caught.value.code is ErrorCode.PROVIDER_TIMEOUT
+            assert caught.value.__context__ is None
+        assert len(client.calls) == (2 if retry else 1)
+        assert worker.ledger.used == (100 if retry else 50)
+    finally:
+        worker.close()
+
+
+@pytest.mark.parametrize(
+    "first", [httpx.ReadTimeout("secret"), httpx.ConnectError("secret"), response({}, 503)]
+)
+def test_read_timeout_never_adds_a_second_retry(first: Exception | HTTPResponse) -> None:
+    time = FakeTime()
+    client = FakeClient([first, httpx.ReadTimeout("secret"), response({})])
+    worker = transport(client, time)
+    try:
+        with pytest.raises(ProviderError):
+            get(worker, time.deadline())
+        assert len(client.calls) == 2 and worker.ledger.used == 100
     finally:
         worker.close()
 
@@ -287,7 +319,7 @@ def test_transport_log_and_traceback_secrecy(caplog: pytest.LogCaptureFixture) -
         ("model", "a,b"),
         ("model", None),
         ("connect_seconds", 4),
-        ("read_seconds", 9),
+        ("read_seconds", 13),
         ("retries", 2),
         ("retries", True),
         ("backoff_seconds", 0.51),

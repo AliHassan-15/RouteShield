@@ -12,11 +12,13 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from domain.aggregation import aggregate_route
 from domain.checkpoints import candidate_intervals, generate_checkpoints
+from domain.corridor import corridor_samples
 from domain.identity import stable_route_id
 from domain.recommendation import recommend_routes
 from domain.recommendation_types import RankingInput
 from domain.risk import classify_checkpoint
 from domain.risk_types import CheckpointRisk
+from domain.route_policy import DEFAULT_MAX_ROUTE_DISTANCE_MILES, DEFAULT_ROUTE_POLICY
 from domain.route_types import Checkpoint, Coordinate, Route, RouteError
 from providers.contracts import (
     Attribution,
@@ -34,6 +36,7 @@ from providers.contracts import (
     WeatherSeries,
 )
 from providers.deadline import Deadline
+from providers.distinctness import point_distance
 from providers.errors import ProviderError
 from providers.forecast import forecast_window, lookup_forecast
 from providers.pooling import pool_coordinates
@@ -42,11 +45,13 @@ from providers.weather import WEATHER_ATTRIBUTION
 from providers.weather_normalization import unavailable_series
 
 from apps.routing.errors import APIError, provider_error
+from apps.routing.heatmap import build_heatmap, fit_payload
 from apps.routing.serialization import epoch_text, public, risk_result, utc_text
 from apps.routing.validation import Trip, validate_query, validate_trip
 
 T = TypeVar("T")
-POLICY_VERSION = "D01-D24-2026-10-10"
+POLICY_VERSION = "D01-D24-2026-10-11"
+STRAIGHT_LINE_ENVELOPE_RATIO = Fraction(4, 5)
 # This is an operational completion allowance, never extra upstream time.
 COMPLETION_MARGIN_SECONDS = 0.5
 BASEMAP_ATTRIBUTIONS = (
@@ -75,6 +80,10 @@ WARNING_MESSAGES = {
     ),
     "FALLBACK_SKIPPED_DEADLINE": "Additional route search could not fit the remaining time budget.",
     "FALLBACK_UNAVAILABLE": "Additional route search was unavailable.",
+    "HEATMAP_DENSITY_REDUCED": "Optional corridor samples were coarsened to fit 200 locations.",
+    "HEATMAP_PARTIAL_AVAILABILITY": (
+        "Some forecast cells are unknown or unavailable; they are never calm."
+    ),
 }
 
 
@@ -105,11 +114,13 @@ class AnalysisService:
         request_id: Callable[[], str],
         deadline_seconds: float = 35,
         max_coordinates: int = 200,
+        max_route_distance_miles: float = DEFAULT_MAX_ROUTE_DISTANCE_MILES,
     ) -> None:
         self.geocoder, self.router, self.weather, self.ledger = geocoder, router, weather, ledger
         self.clock, self.monotonic = clock, monotonic
         self.deadline_factory, self.request_id = deadline_factory, request_id
         self.deadline_seconds, self.max_coordinates = deadline_seconds, max_coordinates
+        self.max_route_distance_miles = Fraction(str(max_route_distance_miles))
         # A bounded shared executor also bounds caller waits for an uncooperative fake/adapter.
         # Running providers retain their own limiter slots and cooperatively see cancellation.
         self._workers = ThreadPoolExecutor(max_workers=4, thread_name_prefix="api-provider")
@@ -212,8 +223,16 @@ class AnalysisService:
                 for route_id, cps in checkpoints.items()
                 for i, cp in enumerate(cps)
             ]
+            optional = [
+                PoolPoint(PointKey(route_id, i, False), coordinate, distance)
+                for route in routes
+                for route_id in (stable_route_id(route),)
+                for i, (distance, coordinate) in enumerate(
+                    corridor_samples(route, checkpoints[route_id])
+                )
+            ]
             try:
-                pool = pool_coordinates(points, cap=self.max_coordinates)
+                pool = pool_coordinates(points, optional, cap=self.max_coordinates)
                 return interval, checkpoints, pool, options[0]
             except RouteError as error:
                 if error.code != "TRIP_TOO_LARGE":
@@ -223,6 +242,20 @@ class AnalysisService:
     def analyze(self, value: object, context: RequestContext) -> dict[str, object]:
         with self.stage(context, "validation"):
             trip = validate_trip(value, context.now)
+            straight_miles = (
+                Fraction(
+                    str(
+                        point_distance(
+                            trip.origin.coordinate,
+                            trip.destination.coordinate,
+                            float(DEFAULT_ROUTE_POLICY.earth_radius_m),
+                        )
+                    )
+                )
+                / DEFAULT_ROUTE_POLICY.meters_per_mile
+            )
+            if straight_miles > STRAIGHT_LINE_ENVELOPE_RATIO * self.max_route_distance_miles:
+                raise self._envelope_error()
         with self.stage(context, "routing"):
             result = self._bounded(
                 context,
@@ -235,6 +268,8 @@ class AnalysisService:
             )
         if not result.routes:
             raise APIError("NO_ROUTE")
+        if min(r.distance_miles for r in result.routes) > self.max_route_distance_miles:
+            raise self._envelope_error()
         # Provider order never becomes public identity or a tie-breaker.
         routes = tuple(sorted(result.routes, key=stable_route_id))
         warnings: list[dict[str, object]] = []
@@ -375,9 +410,15 @@ class AnalysisService:
                     }
                 )
         generated = self.clock()
+        with self.stage(context, "heatmap"):
+            heatmap, heatmap_warnings = build_heatmap(
+                routes, checkpoints, pool, series, trip.departure, trip.load, generated, attribution
+            )
+        for code in heatmap_warnings:
+            warn(code, "heatmap")
         # A snapshot is only as fresh as its oldest underlying series; no route result cache.
         expires = min(s.provenance.fetched_at for s in series) + 900
-        return {
+        payload = {
             "analysis_id": context.request_id,
             "policy_version": POLICY_VERSION,
             "generated_at": utc_text(generated),
@@ -408,7 +449,18 @@ class AnalysisService:
             "warnings": warnings,
             "attributions": public((result.attribution, attribution, *BASEMAP_ATTRIBUTIONS)),
             "metadata": self.metadata(context),
+            "heatmap": heatmap,
+            "capabilities": {"hazard_filter": True},
         }
+        fit_payload(payload)
+        return payload
+
+    def _envelope_error(self) -> APIError:
+        return APIError(
+            "TRIP_TOO_LARGE",
+            {"max_distance_miles": float(self.max_route_distance_miles)},
+            message="The trip is longer than the supported distance for this demo.",
+        )
 
     @staticmethod
     def _place(label: str, coordinate: Coordinate) -> dict[str, object]:

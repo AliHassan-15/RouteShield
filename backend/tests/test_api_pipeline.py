@@ -173,6 +173,9 @@ def test_partial_routes(api: Harness, count: int) -> None:
 
 
 def test_interval_budget_bump(api: Harness) -> None:
+    api.service.max_route_distance_miles = Fraction(
+        2000
+    )  # Exercise cap independently of demo envelope.
     api.router.routes = routes(1260)
     data = api.post(request_body(checkpoint_interval_miles=10))[1]
     assert data["trip"]["effective_interval_miles"] == 25
@@ -188,6 +191,7 @@ def test_trip_too_large(api: Harness) -> None:
 
 
 def test_pooling_not_conservative_precount(api: Harness) -> None:
+    api.service.max_route_distance_miles = Fraction(2000)
     # Distinct canonical IDs within100m: 3*71 raw samples ->71 mandatory unique.
     base = routes(700)[0]
     api.router.routes = tuple(
@@ -301,6 +305,9 @@ def test_malformed_weather_shape_retains_routes(
 
 
 def test_single_route_raw_count_over_200_can_pool(api: Harness) -> None:
+    api.service.max_route_distance_miles = Fraction(
+        20000
+    )  # Isolate deduplication from demo envelope.
     from domain.geometry import build_route
 
     from tests.route_helpers import straight_route

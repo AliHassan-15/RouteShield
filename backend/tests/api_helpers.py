@@ -230,8 +230,8 @@ def schema_check(name: str, value: object) -> None:
         assert isinstance(value, dict) and all(isinstance(key, str) for key in value)
         for item in value.values():
             schema_check(name[15:-1], item)
-    elif name == "[number, number]":
-        assert isinstance(value, list) and len(value) == 2
+    elif name.startswith("[number,"):
+        assert isinstance(value, list) and len(value) == name.count("number")
         for item in value:
             schema_check("number", item)
     elif name == "string":
@@ -294,6 +294,7 @@ def api(monkeypatch: pytest.MonkeyPatch) -> Iterator[Harness]:
         monotonic=clock.monotonic,
         deadline_factory=lambda: Deadline(35, clock.monotonic),
         request_id=lambda: "synthetic-request-id",
+        max_route_distance_miles=400,  # Explicit fixture policy; defaults are tested separately.
     )
     monkeypatch.setattr(factory, "get_service", lambda: service)
     with override_settings(

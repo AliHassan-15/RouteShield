@@ -1,6 +1,6 @@
 # RouteShield decisions and frozen contract
 
-## Frozen contract (approval/update date: 2026-10-10)
+## Frozen contract (approval/update dates: 2026-10-10; Part0 amendments2026-10-11)
 
 1. Authority: Requirements/fs-assessment-spotter.pdf, then APPROVED/CHANGED decisions; approval is not implementation or release permission.
 2. Providers: TomTom truck routing/geocoding/up to3 distinct routes/<=2 real bounded waypoint fallback calls; Open-Meteo; MapLibre GL JS/OpenFreeMap; Cloudflare Pages/Render Free; free/no-required-card only; ORS HGV conditional100km alternatives, no switch without user direction.
@@ -14,7 +14,7 @@
 10. Checkpoints: origin/destination once along provider chainage at10/25/50mi; common longest-route adaptive default<=100:10,<=500:25,otherwise50; warn on interval increases, no fourth interval.
 11. progress[] is validated sparse geometry-indexed cumulative distance/time, interpolated by geometry chainage; do not require one anchor/vertex; valid guidance fallback only, no guessed uniform speed.
 12. Routing departAt=submitted UTC ISO8601 departure and traffic=false/no live traffic; only on rejection of a past/grace departure may routing use current time, while ETAs always retain submitted departure.
-13. UTC/offset/IANA/DST validation and checkpoint-local display/explicit UTC fallback; cargo0..100000lb exact, labels2..200, five-minute past grace/departure<=now+7days/body<=16KB; no invented rest model.
+13. UTC/offset/IANA/DST validation and checkpoint-local display/explicit UTC fallback; cargo0..100000lb exact, labels2..200, five-minute past grace/departure<=now+7days/body<=16KB; no invented rest model; MAX_ROUTE_DISTANCE_MILES default300 after the approved live gate: straight-line>0.8*limit rejects before providers, shortest returned route>limit rejects after routing,422 TRIP_TOO_LARGE/details.max_distance_miles; keep longer alternatives.
 14. Miles: midpoint ownership/half endpoint segments, exact disjoint categories+UNKNOWN; complete mean unrounded mile-weighted ordinal; incomplete mean=null, known-only diagnostic never ranks.
 15. ASSESSED complete nonblocked precedes BLOCKED_COMPLETE; keys(severe_miles,high_miles,average_risk,duration_seconds,stable_route_id), blocked prepend no_travel_miles; incomplete UNRANKED keeps known blocks/no rank/recommendation.
 16. One-based ranks; ID=route_+SHA256 of directed ordered lon/lat integer microdegrees, six-decimal half-even for identity only; exact ties by ID, raw Fraction keys never round; lower-priority duration note for0<difference<=240s.
@@ -26,7 +26,7 @@
 22. UNKNOWN has no ordinal/never Low; keep known hazard results/floor/block even when missing, display incomplete coverage/unknown miles.
 23. Pool<=200 coordinates,<=50/batch,<=2 concurrent; mandatory checkpoints first, optional heatmap coarsened/density disclosed; >200 mandatory pooled points at50mi -> TRIP_TOO_LARGE.
 24. Variable/window/model-aware published quota accounting accepted, charged counter unverified; configurable global daily guard8000units/default, in-process/best effort/reset on restart; DEMO_QUOTA_REACHED explicit; analyses10/10min/IP/geocode30/min/IP; ~40 full200-unit analyses at guard vs ~50 at provider10000/day before other usage.
-25. Hard deadline35s, routing read<=25s bounded by remaining time/no automatic routing-timeout retry; connect3s/weather-geocode read8s,<=1 otherwise allowed transient retry within deadline; provisional long failures accepted, M5 integrated measurement then user chooses envelope/deadline/payload if needed.
+25. Hard deadline35s/routing read<=25s/no routing-timeout retry/connect3s/geocode read8s unchanged; weather read<=12s, one total batch retry for existing transient failures or READ TIMEOUT only with>=10s remaining; failures never cached; live near370mi measurement: total>30s or routing>22s ->default envelope300mi and one near280mi check, no other limit change.
 26. No server route/geocode caching at all/no persistence/shared cache; all later offline fixtures synthetic/no committed real TomTom recordings without permission; successful weather TTL<=15min with source/model/exact-coordinate/window/variable/unit keys, load/policy for risk, never error or live-scenario mixing.
 27. Attribution: TomTom text/mechanism per17.3 once user confirms/no Copyright call until display grant; OpenMapTiles/OSM on map, Open-Meteo near weather; redact keys/key-bearing URLs/upstream details, normalize JSON/XML/empty quota-auth failures to public errors.
 28. Three OPEN RELEASE GATES owner=user: TomTom entitlement/non-TomTom display, storage/session/attribution, Open-Meteo free eligibility; agents never resolve gates; non-display development allowed, release gated; prohibited cross-basemap display reopens D13 before map work.
@@ -284,7 +284,13 @@ REQUIREMENT | Route priorities are, in order: fewest Severe miles, fewest High m
 - RECOMMENDATION | Consequence: out-of-envelope API input fails before quota use; missing forecast coverage within the guard is still UNKNOWN with warnings, not fabricated. The user approved these time/weight limits on 2026-10-10, recognizing that they constrain usable trips.
 - CHANGED envelope | 2026-10-10; user accepts200 pooled coordinates and coarsened optional heatmap points, mandatory first; TRIP_TOO_LARGE when mandatory pooled points at50mi exceed200. Explicit long-trip failures under35s are accepted provisionally; integrated M5 measurement defines the supported envelope only after user direction.
 
+- APPROVED live-gate outcome | **2026-10-11**: the near373.568361mi Milwaukee-Detroit analysis took30.780593s, with25.579s routing. Both approved thresholds were exceeded, so `MAX_ROUTE_DISTANCE_MILES` DEFAULT is now300mi; pre-check threshold240mi. Longer alternatives remain; `.env` is untouched. The additional near280mi result is reported in provider-findings.md, not a reliability guarantee.
+
+- APPROVED Part0 amendment to D20 | **2026-10-11**, user-directed after M5 failure: provisional environment-driven `MAX_ROUTE_DISTANCE_MILES=400`. Before any provider call reject straight-line distance strictly>0.8*limit; after routing reject only when the SHORTEST route is strictly>limit. Exact equality passes; longer alternatives remain available. Both distance rejections use422 `TRIP_TOO_LARGE`, details `{max_distance_miles}` and a safe supported-demo-distance message. This is a demo envelope, not proof of provider reliability. Live near370mi measurement reduces the DEFAULT to300mi iff total>30s or routing>22s, followed by one near280mi check; actual overrides are reported, not silently edited.
+
 ## D21 - Batching, caching, timeouts, retries, and quota control
+
+- APPROVED Part0 timing amendment | **2026-10-11**, user reasoning: the integrated medium weather timeout motivates more read allowance and one bounded recovery attempt. Weather read default/cap becomes12s; READ TIMEOUT may retry once only with>=10s shared-deadline time remaining. Existing connection/502/503/504 retries share that single retry allowance. No connect-timeout/routing-timeout retry was added; failures remain uncached. Geocoding8s/connect3s/routing25s/global35s and all other quotas/throttles remain unchanged. This supersedes the earlier8s/no-weather-timeout-retry record below.
 
 - RECOMMENDATION | Status: CHANGED; approval/update date: **2026-10-10**.
 - RECOMMENDATION | User reasoning: approve200 rather than100/300 to retain the measured173 mandatory long-trip points; accept conservative published accounting without a charged counter, coarse display and provisional explicit long-trip failures.
@@ -323,7 +329,12 @@ REQUIREMENT | Route priorities are, in order: fewest Severe miles, fewest High m
 - CHANGED / PROVISIONAL amendment | 2026-10-10; user accepts explicit long-trip failures under35s; routing read<=25s bounded by remaining time, no automatic routing-timeout retries. M5 integrated measurement then user chooses supported envelope/deadline/payload changes; no silent changes.
 - APPROVED error amendment | 2026-10-10: normalize status/content type and JSON/XML/empty quota-auth errors to frozen public envelope; redact keys/key-bearing URLs in logs/errors, never leak upstream details. Agents never resolve user-owned release gates.
 
+- APPROVED Part0 amendment to D23 | **2026-10-11**: keep35s hard deadline/25s routing allowance. Provisional default400mi envelope is measured once near370mi; total>30s OR routing>22s authorizes reducing the DEFAULT to300mi, updating tests/docs and one near280mi check. Do not edit the real `.env`; report effective overrides. Payload<=500KB and all user-owned release gates remain unchanged. The thresholds reserve operational time, not a guarantee that every supported request succeeds.
+
+- APPROVED conditional outcome for D23 | **2026-10-11**: near373.568361mi measured30.780593s total/25.579s routing, so the prescribed DEFAULT reduction to300mi was applied. The near283.112871mi follow-up measured13.784700s total/9.625s routing with three distinct routes; its heatmap was partial because only one authorized weather request remained. This supports the narrower measured routing envelope, not unrestricted weather reliability or release readiness. No deadline or routing allowance was increased.
+
 ## D24 - Deterministic, clearly labeled simulation weather
+
 
 - RECOMMENDATION | Status: APPROVED; approval date: **2026-10-10**.
 - RECOMMENDATION | User reasoning: calm real forecasts could hide the risk logic. Labeled deterministic scenarios let reviewers and the Loom show risk levels and recommendation branches while exercising the real implementation.

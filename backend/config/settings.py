@@ -3,6 +3,8 @@
 import os
 from pathlib import Path
 
+from domain.route_policy import DEFAULT_MAX_ROUTE_DISTANCE_MILES
+
 from config.environment import boolean, integer, load_environment_file, number, runtime_settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -58,9 +60,12 @@ PROVIDER_CONFIG = {
     "tomtom_api_key": os.environ.get("TOMTOM_API_KEY", ""),
     "connect_timeout_seconds": number(os.environ, "PROVIDER_CONNECT_TIMEOUT_SECONDS", 3),
     "routing_timeout_seconds": number(os.environ, "ROUTING_READ_TIMEOUT_SECONDS", 25),
-    "weather_timeout_seconds": number(os.environ, "WEATHER_READ_TIMEOUT_SECONDS", 8),
+    "weather_timeout_seconds": number(os.environ, "WEATHER_READ_TIMEOUT_SECONDS", 12),
     "geocode_timeout_seconds": number(os.environ, "GEOCODE_READ_TIMEOUT_SECONDS", 8),
     "analysis_deadline_seconds": number(os.environ, "ANALYSIS_DEADLINE_SECONDS", 35),
+    "max_route_distance_miles": number(
+        os.environ, "MAX_ROUTE_DISTANCE_MILES", DEFAULT_MAX_ROUTE_DISTANCE_MILES
+    ),
     # Legacy local overrides cannot expand the approved unique-coordinate cap.
     "max_coordinates": min(integer(os.environ, "MAX_WEATHER_COORDINATES", 200), 200),
     "batch_size": integer(os.environ, "WEATHER_BATCH_SIZE", 50),

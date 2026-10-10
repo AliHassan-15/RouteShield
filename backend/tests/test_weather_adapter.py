@@ -370,3 +370,22 @@ def test_pooled_coordinate_over_cap_reuses_trip_too_large() -> None:
         assert caught.value.code == "TRIP_TOO_LARGE"
     finally:
         service.close()
+
+
+def test_failed_read_timeout_retry_is_not_cached() -> None:
+    import httpx
+
+    time = FakeTime()
+    client = FakeClient(
+        [httpx.ReadTimeout("synthetic"), httpx.ReadTimeout("synthetic"), response(payload())]
+    )
+    service = adapter(client, time)
+    try:
+        failed = service.fetch([POINT], WINDOW, deadline=time.deadline())
+        assert failed.failed_indices == (0,) and len(client.calls) == 2
+        assert service.cache.get(service._key(POINT, WINDOW)) is None
+        recovered = service.fetch([POINT], WINDOW, deadline=time.deadline())
+        assert recovered.failed_indices == () and recovered.diagnostics.cache_hits == 0
+        assert len(client.calls) == 3 and service.transport.ledger.used == 3
+    finally:
+        service.close()

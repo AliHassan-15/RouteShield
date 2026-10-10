@@ -35,6 +35,7 @@ class APIError(Exception):
     code: str
     details: Mapping[str, object] = field(default_factory=dict)
     retry_after: int | None = None
+    message: str | None = None
 
     @property
     def status(self) -> int:
@@ -44,7 +45,7 @@ class APIError(Exception):
         return {
             "error": {
                 "code": self.code,
-                "message": ERRORS[self.code][1],
+                "message": self.message or ERRORS[self.code][1],
                 "details": dict(self.details),
             }
         }

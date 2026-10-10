@@ -21,6 +21,12 @@ export type NullableExactNumber = ExactNumber | null;
 
 export type NullableString = string | null;
 
+export type NullableNumber = number | null;
+
+export type ErrorValue = string | number;
+
+export type TruckPosition = [number, number, number] | null;
+
 export interface ExactNumber {
   numerator: string;
   denominator: string;
@@ -62,7 +68,7 @@ export interface HealthResponse {
 export interface ErrorDetail {
   code: ErrorCode;
   message: string;
-  details: Record<string, string>;
+  details: Record<string, ErrorValue>;
 }
 
 export interface ErrorResponse {
@@ -278,6 +284,82 @@ export interface ExplanationFact {
   values: Record<string, FactValue>;
 }
 
+export interface HeatmapHazards {
+  wind: string;
+  rain: string;
+  snow: string;
+}
+
+export interface HeatmapFrame {
+  hour: number;
+  timestamp: string;
+  levels: string;
+  intensities: number[];
+  dominant_hazards: string;
+  known_blocked: string;
+  known_risk_floors: string;
+  hazard_levels?: HeatmapHazards;
+  unavailable_reasons: Record<string, UnavailableReason>;
+}
+
+export interface OptionalPointMapping {
+  sample_index: number;
+  point_index: number;
+  coarsened: boolean;
+  distance_to_point_m: number;
+}
+
+export interface HeatmapRouteMapping {
+  route_id: string;
+  checkpoint_point_indices: number[];
+  optional_point_mappings: OptionalPointMapping[];
+}
+
+export interface HeatmapDensity {
+  mandatory_point_count: number;
+  optional_candidate_count: number;
+  optional_selected_count: number;
+  optional_unique_point_count: number;
+  requested_optional_spacing_miles: number;
+  optional_stride: number;
+  actual_optional_max_gap_miles: Record<string, number>;
+  reduced: boolean;
+}
+
+export interface ForecastCoverage {
+  last_usable_hour: number | null;
+  last_usable_timestamp: string | null;
+  last_usable_hour_by_point: NullableNumber[];
+}
+
+export interface HeatmapLegends {
+  levels: Record<string, string>;
+  dominant_hazards: Record<string, string>;
+}
+
+export interface Heatmap {
+  reference_time: string;
+  hour_0_timestamp: string;
+  frame_count: number;
+  point_count: number;
+  points: Position[];
+  frames: HeatmapFrame[];
+  route_mappings: HeatmapRouteMapping[];
+  truck_positions: Record<string, TruckPosition[]>;
+  density: HeatmapDensity;
+  forecast_coverage: ForecastCoverage;
+  hazard_filters_included: boolean;
+  hazard_filter_omission_reason: string | null;
+  legends: HeatmapLegends;
+  intensity_mapping: string;
+  attribution: Attribution;
+  warnings: string[];
+}
+
+export interface Capabilities {
+  hazard_filter: boolean;
+}
+
 export interface AnalysisResponse {
   analysis_id: string;
   policy_version: string;
@@ -300,4 +382,6 @@ export interface AnalysisResponse {
   warnings: Warning[];
   attributions: Attribution[];
   metadata: Metadata;
+  heatmap: Heatmap;
+  capabilities: Capabilities;
 }

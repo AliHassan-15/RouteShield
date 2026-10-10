@@ -1,7 +1,6 @@
 """D04/D21 defaults and explicit numerical reconciliation parameters.
 
-The approved default is 200. Trip selection currently counts points before
-pooling; dedupe-aware budgeting belongs to the later corridor integration task.
+The approved pooled-coordinate default is 200; the API budgets after deduplication.
 Geometry uses a mean-radius sphere, whose WGS84 distance error can approach
 0.56%. The configurable 1% plus 5 m reconciliation allowance covers that model
 and road-polyline rounding; it is an implementation tolerance, not a guarantee.
@@ -10,6 +9,9 @@ and road-polyline rounding; it is an implementation tolerance, not a guarantee.
 from dataclasses import dataclass
 from fractions import Fraction
 from math import isfinite, pi
+
+# D20/D21/D23 live gate dated2026-10-11: near373mi exceeded30s overall/22s routing.
+DEFAULT_MAX_ROUTE_DISTANCE_MILES = 300
 
 
 @dataclass(frozen=True, slots=True)

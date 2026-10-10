@@ -6,6 +6,7 @@ from typing import cast
 from django.conf import settings
 from django.http import HttpRequest, JsonResponse
 from rest_framework.exceptions import MethodNotAllowed, Throttled  # type: ignore[import-untyped]
+from rest_framework.renderers import JSONRenderer  # type: ignore[import-untyped]
 from rest_framework.request import Request  # type: ignore[import-untyped]
 from rest_framework.response import Response  # type: ignore[import-untyped]
 from rest_framework.views import APIView  # type: ignore[import-untyped]
@@ -42,7 +43,15 @@ class SafeAPIView(APIView):  # type: ignore[misc]
         return response
 
 
+class AnalysisJSONRenderer(JSONRenderer):  # type: ignore[misc]
+    """Keep wire bytes consistent with the measured compressed-payload budget."""
+
+    def get_indent(self, accepted_media_type: str | None, renderer_context: object) -> None:
+        return None
+
+
 class AnalysisView(SafeAPIView):
+    renderer_classes = [AnalysisJSONRenderer]
     throttle_classes = [AnalysisThrottle]
     http_method_names = ["post"]
 

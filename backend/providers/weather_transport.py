@@ -32,7 +32,7 @@ class WeatherConfig:
     base_url: str = field(default="https://api.open-meteo.com/v1/forecast", repr=False)
     model: str = "best_match"
     connect_seconds: float = 3
-    read_seconds: float = 8
+    read_seconds: float = 12
     retries: int = 1
     backoff_seconds: float = 0.5
     batch_size: int = 50
@@ -47,7 +47,7 @@ class WeatherConfig:
             base_url=cast(str, values.get("weather_base_url", cls().base_url)),
             model=cast(str, values.get("weather_model", "best_match")),
             connect_seconds=cast(float, values.get("connect_timeout_seconds", 3)),
-            read_seconds=cast(float, values.get("weather_timeout_seconds", 8)),
+            read_seconds=cast(float, values.get("weather_timeout_seconds", 12)),
             retries=cast(int, values.get("weather_max_retries", 1)),
             backoff_seconds=cast(float, values.get("weather_retry_backoff_seconds", 0.5)),
             batch_size=cast(int, values.get("batch_size", 50)),
@@ -79,7 +79,7 @@ class WeatherConfig:
                 for v in (self.connect_seconds, self.read_seconds)
             )
             or self.connect_seconds > 3
-            or self.read_seconds > 8
+            or self.read_seconds > 12
             or type(self.retries) is not int
             or not 0 <= self.retries <= 1
             or isinstance(self.backoff_seconds, bool)
@@ -109,6 +109,13 @@ class SendCounter:
 
 class _ConnectionFailure(ProviderError):
     pass
+
+
+class _ReadTimeout(ProviderError):
+    pass
+
+
+READ_RETRY_MINIMUM_SECONDS = 10
 
 
 class WeatherTransport:
@@ -168,6 +175,8 @@ class WeatherTransport:
                 )
             except ProviderError as safe:
                 error = ProviderError(safe.code)
+            except httpx.ReadTimeout:
+                error = _ReadTimeout(ErrorCode.PROVIDER_TIMEOUT)
             except httpx.TimeoutException:
                 error = ProviderError(ErrorCode.PROVIDER_TIMEOUT)
             except httpx.ConnectError:
@@ -193,7 +202,7 @@ class WeatherTransport:
         deadline: Deadline,
         counter: SendCounter,
     ) -> HTTPResponse | UnavailableReason:
-        """At most one connection/502/503/504 retry; every attempt reserves quota."""
+        """One total retry; read timeouts additionally require >=10s remaining."""
         for attempt in range(1 + self.config.retries):
             deadline.check()
             future = self._workers.submit(
@@ -202,6 +211,7 @@ class WeatherTransport:
             error: ProviderError | None = None
             response: HTTPResponse | UnavailableReason | None = None
             transient = False
+            read_timeout = False
             try:
                 response = future.result(timeout=deadline.remaining())
             except FutureTimeout:
@@ -210,6 +220,7 @@ class WeatherTransport:
             except ProviderError as safe:
                 error = ProviderError(safe.code)
                 transient = isinstance(safe, _ConnectionFailure)
+                read_timeout = isinstance(safe, _ReadTimeout)
             deadline.check()
             if isinstance(response, UnavailableReason):
                 return response
@@ -220,6 +231,8 @@ class WeatherTransport:
                 transient = response.status in {502, 503, 504}
             if error is None:
                 error = ProviderError(ErrorCode.PROVIDER_UNAVAILABLE)
+            if read_timeout:
+                transient = deadline.remaining() >= READ_RETRY_MINIMUM_SECONDS
             if not transient or attempt == self.config.retries:
                 raise error from None
             delay = retry_delay(
@@ -229,6 +242,9 @@ class WeatherTransport:
             )
             if delay >= deadline.remaining():
                 raise error from None
+            if read_timeout and deadline.remaining() - delay < READ_RETRY_MINIMUM_SECONDS:
+                # Do not use backoff to consume the minimum budget promised at retry send.
+                delay = 0
             deadline.sleep(delay, self.sleeper)
         raise ProviderError(ErrorCode.PROVIDER_UNAVAILABLE)
 

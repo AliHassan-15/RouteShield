@@ -804,3 +804,17 @@ Remaining: user choice on supported envelope/deadline/provider payload/local
 timeout alignment, then a newly authorized bounded follow-up for the skipped
 warm-long/cache-hit/cap/final-payload observations. Existing three release gates
 and api.md's pending proposals remain unchanged.
+
+## Part0 envelope and corridor heatmap — 2026-10-11
+
+User-approved task amendments apply; synthetic tests never call providers.
+
+| Requirement / acceptance mapping | Evidence | Result and limitation |
+|---|---|---|
+|D20/D23 envelope, API validation |Strict pre-check at0.8*limit and post-check at shortest limit; equality passes, pre-reject calls neither provider, longer alternatives retained. Default400→300 after30.780593s wall/25.579s routing. |PASS; final default300, pre-check240. Same35s deadline/25s routing allowance. |
+|D21 read timing/retry, WX failure/cache |Default/cap12s, retry at>=10s remaining, one retry total across transient/read failures; failed retry not cached. |PASS synthetic boundary/cache tests. Live local weather8s override untouched; no live read retry observed. |
+|D10 pooling/encoding/risk, D05 time, D08 missing |One combined pool and one fake-provider weather fetch; overlap mappings, checkpoint/frame equality,49 UTC frames across minute/DST departures, risk bands/intensity/dominance, UNKNOWN/Unavailable/known-block floor and legends. |PASS; sentinels are not ordinals or calm. Live pools134/108; no extra heatmap fetch. |
+|Truck positions and optional density |Inverse sparse anchors at origin/middle/arrival/after arrival, stationary waits,10-mile stations skip checkpoints, cap-driven optional coarsening disclosure. |PASS synthetic; live max optional gap20mi/stride1, no cap reduction needed. |
+|D23 payload, API types/no-store |Synthetic3 routes with6001 vertices each,200 points and49 variable frames;300KB filter omission/500KB failure guard; actual compact JSON gzip equality, generated TS drift check, no-store. |PASS; live raw/gzip679073/140610 and568687/103554 bytes; local hosting compression unverified. |
+|Part0 live gate and real budget |Milwaukee–Detroit3 distinct routes30.780593s; conditional Chicago–Detroit3 distinct13.784700s. Totals4 TomTom/4 Open-Meteo/184 submitted coordinates/242 reserved units. |Conditional300mi change applied. Second heatmap partial: one weather request allowed, two additional sends blocked by task guard; application weather-attempt counter3 vs real1. Weather completeness at300mi remains unverified. |
+|Final verification / scope |Targeted236 passed; full backend1541 passed/2 skipped once; root Ruff/format92 files, purity14, strict mypy90 sources/tsc, backend check/static/compile build passed. Final default change33 focused tests/target lint passed. |Initial import/helper typing failures repaired. Browser/frontend runtime/map/hosted/audit skipped; no dependencies, `.env`, AGENTS, remote or release-gate edits. Proposed architecture follow-up in api.md only. |

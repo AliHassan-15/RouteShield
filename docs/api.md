@@ -1,6 +1,12 @@
-# RouteShield public API — offline implementation, 2026-10-11
+# RouteShield public API — corridor heatmap, 2026-10-11
 
-IMPLEMENTED | This milestone joins the approved domain rules and normalized adapters.
+CURRENT UPDATE2026-10-11 | Part0 approved demo-distance and weather-read amendments
+and the backend corridor heatmap are implemented below. Earlier offline milestone
+records are historical; later live evidence is in provider-findings.md. AGENTS.md
+and adapters.md were not edited under this task's allowed scope; the newer approved
+decisions/task take precedence over their historical8s weather summaries.
+
+HISTORICAL OFFLINE MILESTONE | This milestone joined the approved domain rules and normalized adapters.
 No provider call, browser display, release gate, installation, push or deployment
 was performed during verification. Tests use explicitly synthetic adapters and the
 existing socket blocker. This document does not amend the frozen decisions.
@@ -228,7 +234,9 @@ An analysis/geocoding RequestContext starts in API middleware before body parsin
 and DRF throttling, once lazy process composition is available. Exactly one injected
 Deadline is shared with every route fallback and weather batch. The configured
 budget is capped at35s. Adapter phase caps remain connect3s, routing<=25s and
-geocoding/weather<=8s, bounded by the remaining deadline. No automatic routing
+geocoding<=8s/weather<=12s, bounded by the remaining deadline. Weather READ TIMEOUT
+may retry once only with>=10s remaining; that retry shares the existing single
+transient retry allowance, and failed batches remain uncached. No automatic routing
 timeout retry occurs. A bounded shared caller executor also limits uncooperative
 provider waits and queue time; cancellation does not release an actual in-flight
 provider's limiter slot early. Late work cannot become a cached success.
@@ -293,7 +301,7 @@ framework boundary; no new dependency or broad mypy exclusion is introduced.
 
 | ID | Difference implemented under this task's explicit instructions |
 |---|---|
-| API-P01 | Interim analysis omits corridor/49frames/truck_positions/capabilities until the next heatmap task; keeps midpoint risk_profile. This is not completion of the final frozen public contract. |
+| API-P01 | Historical omission superseded by the2026-10-11 heatmap task:49frames/corridor/truck_positions now live inside `heatmap`, with top-level capabilities; midpoint risk_profile remains. See proposed architecture mapping below. |
 | API-P02 | Use this task's closed error inventory/statuses: INVALID_INPUT→VALIDATION_ERROR400; NO_ROUTE404→422; TRIP_TOO_LARGE400→422; REQUEST_LIMIT→THROTTLED429; ANALYSIS_TIMEOUT→DEADLINE_EXCEEDED504; PROVIDER_INVALID_RESPONSE/ROUTE_TIMING_UNAVAILABLE→MALFORMED_PROVIDER_RESPONSE502; PROVIDER_FAILURE→PROVIDER_UNAVAILABLE503, explicit PROVIDER_TIMEOUT504/PROVIDER_AUTH502/QUOTA_EXCEEDED503. DST issues are field details on VALIDATION_ERROR400. Body/media/selection/method/endpoint failures gain explicit typed codes. |
 | API-P03 | QUOTA-02's429 DEMO_QUOTA_REACHED is superseded for an analysis with known routes by the explicitly requested200, unavailable checkpoints, ALL_INCOMPLETE (or preserved known-block evidence) and DEMO_QUOTA_REACHED warning. Throttle alone is429; typed routing/geocode provider-quota failure is503. |
 | API-P04 | Simulation remains deferred: documented preset selections fail SIMULATION_DISABLED400, with explicit attempted true/preset identity; unknown selections fail INVALID_SCENARIO400 (unknown attempted ID is not echoed). No SIMULATION_ENABLED behavior or simulated weather is implemented yet. Pre-parse size/media errors cannot identify a scenario and carry false/null. |
@@ -327,7 +335,7 @@ ZONE_OFFSET_MISMATCH_OR_NONEXISTENT, OUTSIDE_DEPARTURE_WINDOW,
 INVALID_CONTENT_LENGTH, DUPLICATE_FIELDS. Reused names are not new risk rules.
 Other new public names/fields/types are exhaustively enumerated in the dictionary
 below. New operational names: API_TRUSTED_PROXY_CIDRS, routeshield.requests,
-POLICY_VERSION value D01-D24-2026-10-10, COMPLETION_MARGIN_SECONDS=0.5,
+POLICY_VERSION value D01-D24-2026-10-11, COMPLETION_MARGIN_SECONDS=0.5,
 RequestContext and AnalysisService. They introduce no provider, library or ranking rule.
 
 Domain changes: candidate_intervals() offers adaptive/common permitted intervals
@@ -354,14 +362,14 @@ an exact ratio, string, count number, boolean or null. Explanations are server f
 | SelectedPlace | `label`: `string`; `latitude`: `number`; `longitude`: `number`; `candidate_id?`: `string`; `provider?`: `string`; `attribution?`: `Attribution` |
 | AnalysisRequest | `origin`: `SelectedPlace`; `destination`: `SelectedPlace`; `departure_time`: `string`; `departure_timezone`: `string`; `load_weight_lb`: `number`; `checkpoint_interval_miles?`: `10 \| 25 \| 50`; `simulation_scenario?`: `string \| null` |
 | HealthResponse | `status`: `"ok" \| "ready"`; `version`: `string`; `check`: `"liveness" \| "readiness"` |
-| ErrorDetail | `code`: `ErrorCode`; `message`: `string`; `details`: `Record<string, string>` |
+| ErrorDetail | `code`: `ErrorCode`; `message`: `string`; `details`: `Record<string, ErrorValue>` (`ErrorValue=string or number`) |
 | ErrorResponse | `error`: `ErrorDetail`; `is_simulation?`: `boolean`; `simulation_scenario?`: `string \| null` |
 | Warning | `code`: `string`; `message`: `string`; `scope`: `string`; `coverage_fraction`: `ExactNumber \| null` |
 | ProviderCalls | `routing`: `number`; `geocoding`: `number`; `weather`: `number` |
 | CacheDiagnostics | `hits`: `number`; `misses`: `number`; `ages_seconds`: `ExactNumber[]` |
 | Metadata | `request_id`: `string`; `total_ms`: `number`; `stage_ms`: `Record<string, number>`; `provider_calls`: `ProviderCalls`; `weather_cache`: `CacheDiagnostics`; `quota_units_reserved`: `ExactNumber`; `deadline_seconds`: `number`; `simulated`: `boolean` |
 | Candidate | `candidate_id`: `string`; `label`: `string`; `latitude`: `number`; `longitude`: `number`; `region`: `string \| null`; `country`: `string \| null`; `match_type`: `string`; `score`: `ExactNumber`; `provider`: `string`; `attribution`: `Attribution` |
-| GeocodeResponse | `candidates`: `Candidate[]`; `attribution`: `Attribution`; `metadata`: `Metadata` |
+| GeocodeResponse | `candidates`: `Candidate[]`; `attribution`: `Attribution`; `metadata`: `Metadata`; `heatmap`: `Heatmap`; `capabilities`: `Capabilities` |
 | Trip | `origin`: `SelectedPlace`; `destination`: `SelectedPlace`; `departure_time`: `string`; `departure_timezone`: `string`; `load_weight_lb`: `string`; `reference_time`: `string`; `requested_interval_miles`: `number \| null`; `effective_interval_miles`: `number` |
 | RiskBand | `level`: `RiskLevel`; `printed_pdf_band`: `string`; `lower`: `string \| null`; `upper`: `string \| null`; `lower_inclusive`: `boolean`; `upper_inclusive`: `boolean` |
 | RiskReason | `code`: `ReasonCode`; `metric`: `string`; `measured_value`: `string \| null`; `band`: `RiskBand \| null`; `threshold`: `string \| null`; `comparison`: `string \| null`; `level`: `RiskLevel`; `wind_mph`: `string \| null`; `load_weight_lb`: `string \| null` |
@@ -376,7 +384,7 @@ an exact ratio, string, count number, boolean or null. Explanations are server f
 | Route | `route_id`: `string`; `geometry`: `Position[]`; `distance_m`: `ExactNumber`; `duration_s`: `ExactNumber`; `profile`: `string`; `live_traffic`: `boolean`; `attribution`: `Attribution`; `travel_status`: `TravelStatus`; `rank`: `number \| null`; `group`: `string`; `criteria`: `CriterionValues`; `checkpoints`: `Checkpoint[]`; `summary`: `RouteSummary`; `risk_profile`: `RiskProfileSegment[]` |
 | ComparisonFact | `winner_route_id`: `string`; `other_route_id`: `string`; `criterion`: `string`; `winner_value`: `FactValue`; `other_value`: `FactValue`; `code`: `string` |
 | ExplanationFact | `code`: `string`; `route_id`: `string \| null`; `other_route_id`: `string \| null`; `values`: `Record<string, FactValue>` |
-| AnalysisResponse | `analysis_id`: `string`; `policy_version`: `string`; `generated_at`: `string`; `expires_at`: `string`; `trip`: `Trip`; `routes`: `Route[]`; `route_count`: `number`; `recommended_route_id`: `string \| null`; `least_blocked_route_id`: `string \| null`; `recommendation_status`: `RecommendationStatus`; `message`: `string`; `decisive_criterion`: `string`; `diagnostic_decisive_criterion`: `string \| null`; `explanation`: `string`; `comparison_facts`: `ComparisonFact[]`; `explanation_facts`: `ExplanationFact[]`; `is_simulation`: `boolean`; `simulation_scenario`: `string \| null`; `warnings`: `Warning[]`; `attributions`: `Attribution[]`; `metadata`: `Metadata` |
+| AnalysisResponse | `analysis_id`: `string`; `policy_version`: `string`; `generated_at`: `string`; `expires_at`: `string`; `trip`: `Trip`; `routes`: `Route[]`; `route_count`: `number`; `recommended_route_id`: `string \| null`; `least_blocked_route_id`: `string \| null`; `recommendation_status`: `RecommendationStatus`; `message`: `string`; `decisive_criterion`: `string`; `diagnostic_decisive_criterion`: `string \| null`; `explanation`: `string`; `comparison_facts`: `ComparisonFact[]`; `explanation_facts`: `ExplanationFact[]`; `is_simulation`: `boolean`; `simulation_scenario`: `string \| null`; `warnings`: `Warning[]`; `attributions`: `Attribution[]`; `metadata`: `Metadata`; `heatmap`: `Heatmap`; `capabilities`: `Capabilities` |
 
 | Alias | Type |
 |---|---|
@@ -390,3 +398,79 @@ an exact ratio, string, count number, boolean or null. Explanations are server f
 | FactValue | `ExactNumber \| string \| number \| boolean \| null` |
 | NullableExactNumber | `ExactNumber \| null` |
 | NullableString | `string \| null` |
+
+## Corridor heatmap and approved Part0 amendments — 2026-10-11
+
+`MAX_ROUTE_DISTANCE_MILES` now defaults to300 miles under the approved live gate.
+The initial400-mile default was reduced after a373.568361mi primary route took
+30.780593s overall and25.579s in routing; the pre-check threshold is now240mi. Before any
+provider call, straight-line distance strictly greater than80% of the configured
+limit returns422 `TRIP_TOO_LARGE`. After routing, only the shortest returned
+route must fit; longer alternatives are retained. Equality passes both checks.
+Distance rejections have numeric `details.max_distance_miles` and message
+"The trip is longer than the supported distance for this demo." This conservative
+pre-check can exclude road trips below300 miles; it does not estimate road length.
+
+Weather read default/cap is12s; routing25s, geocoding8s, connect3s and global35s
+remain unchanged. Each weather batch has at most one total retry, shared between
+the existing connection/502/503/504 rule and the new READ TIMEOUT rule. A read
+timeout permits retry only with at least10s of the shared deadline remaining;
+backoff becomes zero if it would consume that margin. Other timeout categories
+gain no retry. Failed batches are not cached. The real local `.env` is untouched.
+The approved live gate reduces the default envelope to300 miles if the near370-mile
+analysis takes more than30s overall or22s in routing, then permits one near280-mile check.
+
+`AnalysisResponse` now also requires `heatmap: Heatmap` and
+`capabilities: {hazard_filter: boolean}`; all previous response fields remain.
+The generated [TypeScript contract](../frontend/src/api/types.ts) defines the
+complete nested types. The new aliases are `NullableNumber = number | null`,
+`ErrorValue = string | number`, and `TruckPosition = [number, number, number] | null`.
+
+All mandatory checkpoints and optional interior10-mile geometry stations enter
+one existing pool per attempted common interval. Exact checkpoint stations are
+omitted from optional samples. The pool prioritizes mandatory points, merges
+within100m and coarsens optional stations to fit200 points. Only the accepted
+pool is fetched: checkpoints and frames reuse identical normalized weather series
+and the existing risk engine, with no extra heatmap fetch or browser geometry math.
+
+| Heatmap field | Exact encoding and semantics |
+|---|---|
+| `reference_time`, `hour_0_timestamp` | Submitted departure converted to UTC, preserving minutes and subsecond precision. |
+| `frame_count`, `point_count`, `points` |49 frames; at most200 pooled points; points are `[lon,lat]`, rounded to5 decimals for presentation only. Classification uses the original pooled coordinates. |
+| `frames[].hour`, `timestamp` | h=0..48; absolute UTC departure+h*3600s, including DST transitions. Existing D05 enclosing-hour lookup is used. |
+| `frames[].levels` | One digit per point, in point-list order:1 LOW,2 MODERATE,3 HIGH,4 SEVERE,5 NO_TRAVEL,0 UNKNOWN,9 Unavailable. Sentinels0/9 have no ordinal and never mean calm. An entirely missing sample has no usable forecast and is9/MISSING_FIELD. |
+| `frames[].intensities` | Integers0..100: floor of100*(measurement−final-band lower)/(final-band upper−lower), clamped0..100; LOW lower=0. Bands come from `RISK_POLICY`. NO_TRAVEL=100; UNKNOWN/Unavailable=0 display sentinel. Load-promoted Severe below the Severe wind band clamps to0 while retaining categorical Severe. |
+| `frames[].dominant_hazards` | One digit per point:0 none,1 wind,2 rain,3 snow,4 load-promoted wind. Equal severity chooses wind, then rain, then snow; gusts never classify. |
+| `frames[].known_blocked`, `known_risk_floors` | Always included, even without filters: block bits1 proven/0 not proven; floor digits1..5 highest proven risk or0 no known floor. UNKNOWN cannot erase a known block. |
+| `frames[].hazard_levels?` | Three point-order digit strings `wind`, `rain`, `snow`; wind uses load-adjusted risk. Included only when the complete response with filters is strictly below300000 gzip bytes. |
+| `frames[].unavailable_reasons` | Sparse map from decimal point-index strings to the existing `UnavailableReason` codes, including OUT_OF_HORIZON and provider/quota failures. |
+| `route_mappings` | Each route maps checkpoint indices to pooled points; optional mappings retain sample index, pooled index, coarsening flag and distance to assigned point in meters. Shared points are represented once. |
+| `truck_positions` | Route-id map to49 `[lat,lon,mile]` entries, from inverse provider timing anchors; waits stay stationary, hour0 is the origin, arrival is retained, strictly after arrival is null. |
+| `density` | Mandatory/candidate/selected/unique optional counts, requested10-mile spacing, retained stride, per-route `actual_optional_max_gap_miles`, and reduction flag. The gap describes retained optional stations, not a promise of uniform full-corridor spacing; zero means fewer than two retained optional stations. |
+| `forecast_coverage` | Last usable frame hour/timestamp across any point, plus nullable last usable hour per point. Partial UNKNOWN retains usable observations; all-missing/Unavailable does not count. This maximum does not promise complete coverage. |
+| `hazard_filters_included`, `hazard_filter_omission_reason` | Matches `capabilities.hazard_filter`; omitted filters use COMPRESSED_PAYLOAD_AT_LEAST_300KB. |
+| `legends`, `intensity_mapping`, `attribution`, `warnings` | Payload carries level/dominant legends and mapping text, existing modified Open-Meteo credit, and warning codes. |
+
+Density reduction emits `HEATMAP_DENSITY_REDUCED`; missing/partial cells emit
+`HEATMAP_PARTIAL_AVAILABILITY`; out-of-horizon cells emit `FORECAST_HORIZON_LIMIT`.
+These codes appear in heatmap metadata and top-level warnings scoped to heatmap.
+Existing checkpoint warnings remain. Cell classification may be reused within one
+request/load only; no additional retained risk cache or analysis cache is created.
+
+The analysis renderer always produces compact JSON, even if a client requests
+indentation. Gzip measurement uses level9/mtime0 and DRF-compatible UTF-8 escaping.
+Filters are omitted at300000 bytes; if the resulting total response still exceeds
+500000 bytes, return422 `TRIP_TOO_LARGE` with `details.max_compressed_bytes` and
+"This trip exceeds the supported data size for this demo." Required geometry and
+checkpoint data are not silently discarded. Part1's stricter filter condition
+supersedes the historical500KB filter condition in frozen item30; the total D23
+budget stays500KB. `Cache-Control: no-store` applies to POST successes and errors.
+Measured gzip size is a payload-budget result, not a claim that hosting compression
+has been configured. Slider, playback and filters require no subsequent request.
+
+Proposed follow-up to `docs/architecture.md` (outside this task's edit scope):
+place frames, truck positions and mapping metadata inside the `heatmap` wrapper;
+add the always-present known-block/floor strings and nullable truck triples;
+document numeric error details, the trip envelope,12s weather read/shared retry,
+the300KB filter threshold and500KB success guard. Simulation and user-owned
+release gates remain incomplete and are not resolved by this implementation.

@@ -224,7 +224,7 @@ def test_structured_logging_redacts_inputs(api: Harness, caplog: pytest.LogCaptu
         "stage_ms",
         "provider_calls",
     }
-    assert data["route_name"] == "route_analysis" and data["status"] == 200
+    assert data["route_name"] == "route_analysis" and data["status"] == 422
 
 
 @pytest.mark.parametrize(

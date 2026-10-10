@@ -67,6 +67,7 @@ def get_service() -> AnalysisService:
         request_id=lambda: str(uuid4()),
         deadline_seconds=seconds,
         max_coordinates=cast(int, config["max_coordinates"]),
+        max_route_distance_miles=cast(float, config["max_route_distance_miles"]),
     )
     atexit.register(client.close)
     atexit.register(transport.close)
