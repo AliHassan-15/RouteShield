@@ -338,3 +338,111 @@ Backend build: System check identified no issues (0 silenced).
 Static collection and package compilation also completed successfully. No application test failed during this task; initial formatting findings and six test-only type-check errors were corrected (Fraction expectations and deliberately invalid policy arguments). No outstanding failure or regression was found in the performed checks.
 
 Skipped: frontend tests/lint/types/build, browser checks, HTTP/live-provider checks, dependency audit, Linux CI execution and deployment. These layers/dependencies were not changed; ROUTE adapter, RANK recommendation, weather pooling and application integration acceptance remain planned as mapped above. AGENTS.md and docs/decisions.md were not edited, as explicitly required by this task. The local staged-file/secret review and final commit/clean-tree result are reported with the task.
+
+## Route ranking and explanations execution record — 2026-10-10
+
+IMPLEMENTED | This record supersedes earlier statements that domain RANK work or MET-03 recommendation exclusion is planned. Application/API/browser integration remains planned. Only backend/domain, backend/tests and this document changed; no dependency was added. Frozen decisions, architecture and AGENTS.md were not edited.
+
+### Exact eligibility and ordering
+
+`recommend_routes` consumes `RankingInput(route, summary)` using the existing normalized Route and RouteSummary. It does not classify weather or recalculate aggregates. Every numerical key is the original Fraction returned by aggregation; no float conversion, display rounding or epsilon enters comparison.
+
+| Group | Eligibility and exact ascending key |
+|---|---|
+| ASSESSED | Complete, no known block: `(severe_miles, high_miles, average_risk, duration_seconds, stable_route_id)` |
+| BLOCKED_COMPLETE | Complete, known block: `(no_travel_miles, severe_miles, high_miles, average_risk, duration_seconds, stable_route_id)` |
+| UNRANKED | Any incomplete route, including travel_status BLOCKED: no numerical key or rank; stable ID order is presentation only |
+
+Every ASSESSED row precedes every BLOCKED_COMPLETE row. Ranked rows have consecutive one-based ranks across those two groups. UNRANKED rows retain their travel_status, known_blocked, unknown_miles, coverage_fraction and null average. The known-only diagnostic average is never read by ranking. Contradictory/nonexact aggregates fail INVALID_ROUTE_SUMMARY; zero routes fail the existing NO_ROUTE code.
+
+`decisive_criterion` compares the recommended route with its next ASSESSED competitor: SEVERE_MILES, HIGH_MILES, AVERAGE_RISK, DURATION or TIE_BROKEN_BY_ID; NONE when no such pair exists. A blocked diagnostic has no recommendation winner, so its separate `diagnostic_decisive_criterion` may be NO_TRAVEL_MILES or one of those five criteria, otherwise null. This separates the task's six recommendation criterion codes from blocked ordering. Each comparison fact gives both raw values at the first differing criterion. Cross-group exclusion uses ELIGIBILITY with both group strings, never an incomplete mean.
+
+When present, comparison_facts use the recommendation as winner, otherwise the complete least-blocked diagnostic. Every other route gets a fact, including an eligibility exclusion for incomplete data. With neither selected ID, comparison_facts is empty and all routes still expose coverage and reasons. A least-blocked diagnostic is exposed only when no eligible recommendation exists and is explicitly not recommended.
+
+### Status codes and exact message fields
+
+| recommendation_status | Exact message |
+|---|---|
+| RECOMMENDED | Recommended fully assessed route |
+| BEST_FULLY_ASSESSED_AVAILABLE | Best fully assessed available route |
+| ALL_BLOCKED | No safe route at this departure time and load |
+| NO_FULLY_ASSESSED_TRAVELABLE_ROUTE | No fully assessed travelable route |
+| ALL_INCOMPLETE | All routes have incomplete weather data |
+
+At least two assessed routes use RECOMMENDED. Exactly one assessed route always uses BEST_FULLY_ASSESSED_AVAILABLE, including a lone returned route, with availability/coverage disclosures. ALL_BLOCKED requires known blocking evidence on every route, including incomplete ones; the rendered explanation explicitly says this is based on the assessed data. A diagnostic can only come from complete blocked rows. All-incomplete routes with some, but not universal, known blocking evidence use NO_FULLY_ASSESSED_TRAVELABLE_ROUTE under D08; all-incomplete with no evidence use ALL_INCOMPLETE. No blocked or incomplete route receives recommended_route_id.
+
+### Identity and presentation conventions
+
+IMPLEMENTATION CHOICE | `stable_route_id` returns `route_` plus the full SHA-256 hex digest of versioned ASCII `route-geometry-v1|lon,lat;lon,lat;...`. Values are signed integer microdegrees, longitude first, rounded half-even to six decimal coordinate places from exact Fraction(canonical float text). Signed zero becomes0. Quantization is exclusively for identity. Original coordinates and all comparison values remain unchanged. Canonical Route geometry already removes consecutive duplicate vertices; traveled point order and vertex density are preserved, so reversing a path changes its ID. Coordinate mapping key order and provider alternatives order do not affect identity. Distinctness/resampling remains provider-task work. A duplicate/colliding quantized ID raises DUPLICATE_ROUTE_ID instead of introducing input-order dependence.
+
+IMPLEMENTATION CHOICE | English mileage/time values use2 decimal places (time in minutes), mean risk3 and percentage coverage1, using exact rational half-even display rounding. If a decisive raw numeric difference disappears in display, prose states "Raw values differ; displayed values are rounded." Only exact numerical equality reaches identifier tiebreak prose. The presentation-only closeness policy emits LOWER_PRIORITY_DURATION_CLOSE for `0 < abs(duration difference) <= 240 seconds` when No Travel/Severe/High/average already decided the comparison. Its text says duration did not decide; the note never changes ordering. Equal times or a duration-decided comparison do not emit it.
+
+### Structured fields and names requiring approval
+
+The API's existing routes, route_count, recommended_route_id, least_blocked_route_id, recommendation_status, explanation and comparison_facts names are retained. Existing aggregation/status/criterion units are reused. There is no serialization or API endpoint in this task; a later serializer must preserve raw comparison precision.
+
+| Object | Complete implemented field inventory |
+|---|---|
+| RankingInput | route, summary |
+| CriterionValues | no_travel_miles, severe_miles, high_miles, average_risk, duration_seconds, stable_route_id |
+| RankedRoute | route_id, group, rank, travel_status, known_blocked, criteria, unknown_miles, coverage_fraction |
+| ComparisonFact | winner_route_id, other_route_id, criterion, winner_value, other_value, code |
+| ExplanationFact | code, route_id, other_route_id, values |
+| Recommendation | routes, route_count, recommended_route_id, least_blocked_route_id, recommendation_status, message, decisive_criterion, diagnostic_decisive_criterion, comparison_facts, explanation_facts, explanation |
+
+New structural field names whose detailed shape was not defined in architecture.md, listed for user approval: **route, summary, group, rank, criteria, winner_route_id, other_route_id, criterion, winner_value, other_value, code, values, message, decisive_criterion, diagnostic_decisive_criterion, explanation_facts, duration_difference_seconds**. Some words appear conceptually in the contract; this is a conservative inventory of the newly specified structures. Values-map keys are winner_value, other_value, route_count, coverage_fraction, unknown_miles, known_blocked (boolean), duration_difference_seconds; numbers remain exact Fraction/int. Generated dataclasses, tuples and values mappings are immutable.
+
+New naming choices include RECOMMENDED for normal status, BLOCKED_COMPLETE for the complete blocked group and ELIGIBILITY for exclusion comparisons. Other recommendation status names came directly from this task. Error codes added internally: INVALID_ROUTE_SUMMARY, DUPLICATE_ROUTE_ID, INCOMPLETE_AVERAGE (defensive key guard).
+
+Complete explanation-code inventory (every template executed): **RECOMMENDED, BEST_FULLY_ASSESSED_AVAILABLE, ALL_BLOCKED, NO_FULLY_ASSESSED_TRAVELABLE_ROUTE, ALL_INCOMPLETE, SEVERE_MILES, HIGH_MILES, AVERAGE_RISK, DURATION, TIE_BROKEN_BY_ID, NO_TRAVEL_MILES, PARTIAL_ROUTES, ASSESSED_BEFORE_BLOCKED, INCOMPLETE_UNRANKED, LEAST_BLOCKED_DIAGNOSTIC, LOWER_PRIORITY_DURATION_CLOSE**. All status/warning/comparison text is generated in Python from these facts. Coverage disclosures retain known blocking evidence even for unranked rows.
+
+### Executed versus planned acceptance coverage
+
+| Existing ID | Tests/evidence | Current status |
+|---|---|---|
+| RANK-01 | test_ranking.py: three-route Severe adversary, extra .001mi defeats hours saved/fewer High, sub-display difference | EXECUTED/PASS |
+| RANK-02 | Same: equal Severe, fewer High defeats lower mean/hours, sub-display difference | EXECUTED/PASS |
+| RANK-03 | Same: equal Severe/High, mean1.01 beats1.02/1.03 despite hours, sub-display difference | EXECUTED/PASS |
+| RANK-04 | Same + test_route_identity.py: exact time, sub-display time, six three-route ties, 24 permutations for each of three four-route scenarios, directed geometry/key-order/half-even identity | EXECUTED/PASS; provider response parsing remains PLANNED |
+| RANK-05 | test_ranking.py: assessed Severe90/mean3.7 precedes blocked .001mi/mean1.00004, group-valued facts | EXECUTED/PASS |
+| RANK-06 | Same + test_recommendation_explanations.py: No Travel10/15/20 order, all remaining blocked priorities/id, exact message, complete-only diagnostic with unknown peers | EXECUTED/PASS |
+| RANK-07 | Both files: known-only mean1 excluded against complete3.7, partial known block, mixed/all-incomplete/all-known-blocked, one/two/three/zero options | EXECUTED/PASS |
+| RANK-08 | test_recommendation_explanations.py: every code/template, raw facts for every competitor, exact tie vs display tie, eligibility/coverage, bounded lower-priority duration note | EXECUTED/PASS at pure domain boundary; UI rendering PLANNED |
+| MET-02, MET-04 | test_ranking.py: retains exact aggregate Fractions by identity; real aggregate integration; previous aggregation tests rerun | EXECUTED/PASS |
+| MET-03 | Both files: incomplete means remain null/uncompared, known blocks retained, coverage/unknown facts | EXECUTED/PASS at aggregation/ranking boundary; API serialization PLANNED |
+| UI-02 | Actual recommendation/comparison text/facts generated and asserted | PARTIAL/EXECUTED domain explanation; visual clarity/cards/map interaction PLANNED |
+| UI-04 | Exact blocked/incomplete/availability/coverage text and null IDs asserted | PARTIAL/EXECUTED domain states; visible UI, horizon/stale rendering PLANNED |
+
+### Commands and inspected output
+
+Run in PowerShell from the quoted repository root, using the project's own interpreter:
+
+```powershell
+& "./backend/.venv/Scripts/python.exe" "./dev.py" test --only backend
+& "./backend/.venv/Scripts/python.exe" -m pytest "./backend/tests/test_ranking.py" "./backend/tests/test_route_identity.py" "./backend/tests/test_recommendation_explanations.py"
+& "./backend/.venv/Scripts/python.exe" "./dev.py" lint --only backend
+& "./backend/.venv/Scripts/python.exe" "./dev.py" typecheck --only backend
+& "./backend/.venv/Scripts/python.exe" "./tools/check_domain.py"
+& "./backend/.venv/Scripts/python.exe" "./dev.py" build --only backend
+```
+
+Also executed from backend: `& "./.venv/Scripts/python.exe" -m mypy --strict --config-file "./pyproject.toml" "./domain"`.
+
+Inspected final outputs (all exit0):
+
+```text
+Full backend: 787 passed
+New ranking/identity/explanation tests: 157 passed
+Ruff: All checks passed!
+Ruff format: 46 files already formatted
+Strict mypy, full backend/tooling: Success: no issues found in 44 source files
+Strict mypy, domain only: Success: no issues found in 13 source files
+Domain boundary: 13 files checked; no forbidden imports.
+Backend build: System check identified no issues (0 silenced).
+Static collection: 0 copied, 27 unmodified, 49 post-processed.
+Package compilation: completed, exit0.
+```
+
+Initial findings corrected before these final checks: Ruff formatting/import order/line length; two strict-mypy findings (test sum inferred int/float and fixed-length comparison tuple annotation); one new integration test fixture passed Fraction to the existing Decimal/int/float risk input API, corrected to Decimal. No outstanding failure or regression in the performed checks.
+
+Skipped: frontend/browser/HTTP/provider checks, dependency audit, Linux CI execution and deployment because those layers/dependencies were unchanged and outside this task. API serialization, provider parsing/distinctness, application integration and visual acceptance remain incomplete. Staged-file review, the single local commit and clean-tree confirmation are reported in the final task report; no remote or push is authorized.
