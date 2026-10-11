@@ -1,5 +1,28 @@
 # Foundation dependency inventory
 
+## Frontend design-system addition — 2026-10-11
+
+Authorized D19 justification before installation: Instrument Sans for compact,
+readable interface labels and JetBrains Mono for distinguishable numeric data.
+These self-hosted Latin variable fonts replace network font services/system-only
+typography; they add no JavaScript runtime. Both npm manifests report OFL-1.1.
+Only normal Latin WOFF2 files ship; sans alone is preloaded. Both installed
+LICENSE files were read and copied to frontend/public/fonts for distribution.
+Measured installed file totals are below (excluding filesystem allocation).
+TanStack Query5.104.1 is already installed; no additional fetching, UI, icon,
+motion, map or accessibility package is needed for this foundation.
+
+| Added package | Exact version | License | Purpose | Registry unpacked bytes | Measured installed bytes | Selected Latin WOFF2 bytes |
+|---|---|---|---|---:|---:|---:|
+| @fontsource-variable/instrument-sans |5.3.0|OFL-1.1|Interface variable sans|424,093|424,093|30,092|
+| @fontsource-variable/jetbrains-mono |5.3.0|OFL-1.1|Tabular numeric/technical variable mono|203,866|203,866|40,404|
+
+Selected font payload: **70,496 bytes**, within the 90,000-byte cap; no font
+JavaScript or unused language/style subsets are imported. The production build
+checks its emitted font files and preload path. npm registry audit on 2026-10-11
+reported **0 vulnerabilities** across 218 dependencies; this is an advisory
+snapshot, not a guarantee. No other dependency was installed for this task.
+
 D19 justification before installation: use only the approved D14-D16/D19 groups.
 MapLibre and other map packages are deferred. No global packages are installed.
 Python dependencies live in backend/.venv; npm dependencies in frontend/node_modules;
