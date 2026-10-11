@@ -26,7 +26,7 @@ export function useTripPlanner(health: ReturnType<typeof useHealth>, enabled = t
   const active = useRef<Operation | null>(null), automatic = useRef(false), mounted = useRef(true);
   const lastOperation = useRef<Operation | null>(null);
   const store = useAnalysisStore();
-  const mutation = useMutation({ mutationFn: ({ request, token, signal }: { request: AnalysisRequest; token: string; signal: AbortSignal }) => analyzeTrip(request, signal, token), retry: false });
+  const mutation = useMutation({ mutationFn: ({ request, token, signal }: { request: AnalysisRequest; token: string; signal: AbortSignal }) => analyzeTrip(request, signal, token), retry: false, gcTime: 0 });
   const busy = phase !== 'idle';
   const validation = validateDraft(draft, now);
   const focusInvalid = (fields: FieldErrors) => {

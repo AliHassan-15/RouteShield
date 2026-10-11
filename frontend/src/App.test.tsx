@@ -4,6 +4,8 @@ import { afterEach, expect, test, vi } from 'vitest';
 import App from './App';
 import { AnalysisStoreProvider } from './api/analysis-store';
 
+vi.mock('./features/map/MapWorkspace', () => ({ MapWorkspace: () => <section aria-label="Interactive route map" /> }));
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();

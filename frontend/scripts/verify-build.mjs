@@ -5,11 +5,11 @@ import { gzipSync } from 'node:zlib';
 const root = resolve(process.cwd(), 'dist');
 const files = await readdir(resolve(root, 'assets'));
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
-let jsGzipBytes = 0, fontBytes = 0, fonts = 0;
+let jsGzipBytes = 0, lazyMapGzipBytes = 0, fontBytes = 0, fonts = 0;
 for (const name of files) {
   const bytes = await readFile(resolve(root, 'assets', name));
   if (/\.(js|css)$/.test(name) && /STYLE_GUIDE_ONLY|palette-reference|Example action activated|Every mile, assessed/.test(bytes.toString())) throw new Error(`Development specimen leaked: ${name}`);
-  if (name.endsWith('.js')) jsGzipBytes += gzipSync(bytes).length;
+  if (/\.(m?js)$/.test(name)) { if (/maplibre|worker/.test(name)) lazyMapGzipBytes += gzipSync(bytes).length; else jsGzipBytes += gzipSync(bytes).length; if (bytes.toString().includes('__routeShieldMap')) throw new Error('E2E map hook leaked into production'); }
   if (name.endsWith('.woff2')) { fontBytes += bytes.length; fonts++; }
 }
 if (jsGzipBytes > 200_000) throw new Error('JavaScript exceeds 200 KB gzip');
@@ -20,4 +20,4 @@ const href = preloads[0][0].match(/href="([^"]+)"/)?.[1];
 if (!href) throw new Error('Missing preload path');
 await readFile(resolve(root, href.replace(/^\//, '')));
 if (html.indexOf('theme-init.js') < 0 || html.indexOf('theme-init.js') > html.indexOf('type="module"')) throw new Error('Theme bootstrap must block before application execution');
-console.log(JSON.stringify({ jsGzipBytes, fontBytes, fonts, developmentGuideExcluded: true, primaryFontPreloadValid: true, themeBootstrapFirst: true }));
+console.log(JSON.stringify({ jsGzipBytes, lazyMapGzipBytes, fontBytes, fonts, developmentGuideExcluded: true, primaryFontPreloadValid: true, themeBootstrapFirst: true }));

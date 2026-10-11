@@ -325,3 +325,48 @@ Vite reports JS254.17kB (gzip78.72kB), CSS0.29kB (gzip0.22kB), HTML0.39kB (gzip0
 
 2026-10-10: project-local dev.py audit ran the standard-library OSV PyPI query-batch checker and npm audit. Final results: **32 PyPI packages checked, 0 affected packages; npm found 0 vulnerabilities**, both exit0. OSV covers published indexed PyPI advisories, not an exhaustive security review; npm uses its registry advisory database. Raw Python response is the ignored .cache/python-audit.json; npm printed its actual result.
 Initial OSV detected pip25.0.1 (12 advisory records, some aliases may describe the same issue). Updated only the existing project venv installer to pip26.2.1 (MIT), recorded it in the lock, and reran the audit successfully. No pip-audit, additional audit library, global npm/Python package or provider/map package was installed.
+
+## MapLibre GL JS — map task, 2026-10-12
+
+D13/D19 approved direct addition: **maplibre-gl 6.14.0**, **BSD-3-Clause**,
+exactly pinned in package.json/package-lock.json. It replaces the development SVG
+map placeholder with the real vector-map engine. No React wrapper or other direct
+package was added. Registry metadata and installed LICENSE.txt were inspected.
+Installed MapLibre package size: **28,028,509 bytes** (recursive file sum).
+The install added one direct package and 22 required transitive packages below;
+these support vector decoding, tiling, triangulation, spatial lookup and style validation.
+
+Production measurement uses Node zlib.gzipSync defaults (level 6), not an estimate:
+engine lazy JS **286,023 bytes gzip**, separate lazy worker **144,614 bytes gzip**,
+combined lazy JS **430,637 bytes gzip**; initial JS **108,852 bytes gzip**.
+Map CSS is lazy-loaded too. Vite emits its normal >500 kB uncompressed chunk warning;
+the map remains excluded from the 200 kB initial-JS budget. No claim of a lazy-map
+size budget pass is made. The build guard verifies the E2E hook is absent in production.
+One registry runtime audit (`npm audit --omit=dev`) returned **0 vulnerabilities**;
+dev-only advisories and the unchanged backend environment were not re-audited here.
+
+| Required transitive package | Exact locked version | Installed license | Measured package bytes |
+|---|---|---|---:|
+| @mapbox/jsonlint-lines-primitives | 2.0.3 | MIT | 59,337 |
+| @mapbox/point-geometry | 1.1.0 | ISC | 24,180 |
+| @mapbox/tiny-sdf | 2.3.0 | BSD-2-Clause | 12,970 |
+| @mapbox/unitbezier | 1.0.0 | BSD-3-Clause | 4,479 |
+| @mapbox/vector-tile | 3.0.0 | BSD-3-Clause | 17,650 |
+| @maplibre/geojson-vt | 6.1.2 | ISC | 487,867 |
+| @maplibre/maplibre-gl-style-spec | 26.4.4 | ISC | 9,753,063 |
+| @maplibre/mlt | 1.3.0 | MIT OR Apache-2.0 | 1,256,616 |
+| @maplibre/vt-pbf | 4.3.2 | MIT | 27,760 |
+| @types/geojson | 7946.0.16 | MIT | 9,514 |
+| earcut | 3.2.4 | ISC | 109,815 |
+| gl-matrix | 3.4.4 | MIT | 780,912 |
+| json-stringify-pretty-compact | 4.0.0 | MIT | 7,412 |
+| kdbush | 4.1.0 | ISC | 39,122 |
+| minimist | 1.2.8 | MIT | 54,477 |
+| murmurhash-js | 1.0.0 | MIT | 6,344 |
+| pbf | 5.1.2 | BSD-3-Clause | 90,141 |
+| potpack | 2.1.0 | ISC | 8,467 |
+| protocol-buffers-schema | 3.6.1 | MIT | 68,888 |
+| quickselect | 3.0.0 | ISC | 5,287 |
+| resolve-protobuf-schema | 2.1.0 | MIT | 5,243 |
+| tinyqueue | 3.0.0 | ISC | 4,937 |
+

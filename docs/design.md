@@ -275,3 +275,140 @@ timeout, mobile half/full,320px and200% reflow equivalent (640×480 CSS at2× sc
 plus both live heroes/matrices. The half sheet prioritizes the hero; full view exposes
 freshness/IANA metadata. Native browser zoom shortcuts, backend suite, hosting and
 map rendering were skipped; the map placeholder remains. No provider bodies saved.
+
+## Map
+
+Implemented 2026-10-12: the placeholder is replaced by one MapLibre instance behind
+the vendor-neutral `features/map/contracts.ts` interface. React uses that interface,
+an external selection-store subscription and a fake engine in tests. Engine/CSS/worker
+load dynamically during idle after first paint; a tick-scale skeleton covers loading.
+Three GeoJSON sources and 16 overlay layers update incrementally. Hover does not render
+React or write source data. The layer interface and legend slot leave room for the
+next heatmap/time-control task; neither those controls nor a checkpoint panel is built.
+
+Display geometry uses API `[longitude, latitude]` coordinates. Each cumulative
+checkpoint-owned mile range is divided by API total miles and mapped proportionally
+onto the polyline's great-circle angular chainage. This preserves real bends/endpoints
+despite small geometry/provider distance discrepancies; it does not calculate risk,
+ownership, ranking or ETAs. Golden tests cover clipping, +/-1% provider distance and
+degenerate geometry. Missing/invalid geometry skips route features and warns on the
+card; invalid checkpoint coordinates skip markers and tooltips safely.
+
+Selected traces are 6px with a 10px contrasting casing, API risk segments and extra
+UNKNOWN/No Travel patterns. Other traces are neutral 3px with server-order solid,
+long-dash and dot-dash identity; +/-7px offsets expose shared roads. Exact rendered
+hits precede the forgiving hit box so an offset trace remains selectable. Label chips
+use fractions .35/.50/.65, prioritize the selected route and try three vertical offsets.
+They hide when they collide with another chip, critical symbols, endpoint labels,
+controls, legend, footer or viewport bounds; cards remain the accessible alternative.
+
+Runtime DPR-aware icons use existing tokens: circle/diamond/triangle/square/octagon/
+dashed-ring, sized 12/14/17/19/22/19px. The calm symbol layer collides; High, Severe,
+No Travel and UNKNOWN always allow overlap. Below zoom7 only indices divisible by4
+survive for Low; every other level is retained. Closely spaced critical symbols can
+still overlap geographically at low zoom; zooming and the ordered list expose them.
+
+Verified official sources: [OpenFreeMap quick start](https://openfreemap.org/quick_start/)
+and [OpenFreeMap home/attribution guidance](https://openfreemap.org/).
+The quiet official Positron vector style is `https://tiles.openfreemap.org/styles/positron`;
+its source is `https://tiles.openfreemap.org/planet`, glyphs are
+`https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf`, and sprites are
+`https://tiles.openfreemap.org/sprites/ofm_f384/ofm`. Dynamic tile URLs come from TileJSON.
+Style, glyph, sprite and offline-background switch are public environment settings.
+No account/key is required; no availability SLA is claimed. Basemap configuration,
+transform and attribution handling all live in `basemap.ts`.
+The loaded source attribution is rendered as its original text and official links:
+`OpenFreeMap © OpenMapTiles Data from OpenStreetMap`. Official guidance requires
+OpenMapTiles/OSM credit; the optional OpenFreeMap credit is retained too. Source HTML
+is parsed into text/allowlisted HTTPS links, never injected. API TomTom credit retains
+its unconfirmed flag; Open-Meteo credit retains the modification notice. A persistent,
+expandable 320px-safe strip reserves its measured height above the mobile sheet.
+TomTom non-TomTom-map display remains a user-owned OPEN release gate.
+
+Both themes transform background/water/land/roads/labels into the existing ink palette;
+fills/roads use .65 opacity. POIs, noisy label groups, raster layers and buildings/
+extrusions are removed. Labels retain a 1.5px halo. Theme paint/image updates preserve
+camera, selection and sources; the same idempotent overlay installer handles style
+replacement/retry. The official style sometimes emits a nonfatal `boundary_3` numeric
+filter warning at low zoom; this was observed during manual screenshots.
+WCAG relative luminance measurements below use the worst background/land/water
+swatch in each palette (conservative against the translucent fills), steady state:
+
+| Theme | Labels | Low | Moderate | High | Severe | No Travel | UNKNOWN |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Light | 5.73 | 4.02 | 5.56 | 7.38 | 9.24 | 11.47 | 4.25 |
+| Dark | 7.85 | 11.87 | 9.37 | 7.42 | 6.11 | 4.93 | 6.17 |
+
+Neutral traces at .95 opacity measure 3.78/5.74 light/dark; the inactive hover state
+was raised to .85 opacity for 3.20/4.92. Labels exceed4.5 and steady traces/markers3.
+Fade-in frames are transitional, not a contrast-pass claim.
+
+Keyboard: arrows pan, +/- zoom, Home/R recenter, brackets select checkpoints and
+show the reusable tooltip, Escape dismisses it, Enter activates chips/endpoints.
+Map focus reveals a hint; skip links before/after the region open/focus the mobile
+console. Results has an ordered checkpoint disclosure with mile, ETA/zone, shape/risk,
+weather or unavailable reason; focusing/selecting an item updates the map and map
+selection scrolls/highlights the list. Polite live messages announce selection only.
+Controls have 44px targets; fullscreen is feature-detected and restores focus.
+Desktop padding includes the console; mobile padding follows measured sheet snaps.
+Snap changes update padding without fitting; Recenter waits for the snap transition.
+Manual pan/zoom suspends automatic fits until new analysis/Recenter. Fits use absolute
+padding, maxZoom14 and minimum .005-degree bounds. Reduced motion jumps immediately.
+
+MapLibre6.14.0's installed style specification has no `line-trim-offset`; draw-in uses
+a supported line-gradient reveal, 700ms per trace/70ms stagger inside one900ms window,
+with checkpoint/chip/segment opacity reveals. Selection pulses once. New analysis
+interrupts a pending animation and skips the reveal rather than queueing it. DOM
+motion uses opacity/transform; reduced motion disables all overlay animation.
+No WebGL yields a designed unavailable surface; style/tile errors retain the overlay
+on the offline background with a Retry toast. Cards/list remain usable, but this
+fallback does not satisfy the PDF's full map requirement. Empty state centers the US.
+
+Measured in Windows x64, Intel i7-11800H (16 logical processors), headless Chromium
+156.0.8078.4 with software SwiftShader and precise memory/CDP forced-GC snapshots:
+38,000-vertex first route plus two180-vertex routes prepared in20.7ms/applied in40.5ms
+cold, and9.2ms/16.7ms after the tenth analysis. Preparation is memoized and idle-scheduled;
+GeoJSON tolerance is .35. First900ms draw/camera window recorded eight50–181ms long
+tasks, frame median83.35ms, p95/max200ms. The16.7ms smoothness target **did not pass**;
+this is software-rendered evidence, not a native-GPU result.
+After first→tenth analysis: JS heap23,337,396→29,136,472 bytes (+24.85%); DOM1224→1224;
+listeners307→306; WebGL contexts1→1. Browser tolerances are +30nodes/+30listeners,
+one context and heap<=1.5x baseline. Those bounds passed, but **no heap growth was
+not proved**. Removing retained mutation results prevents keeping old analysis
+payloads; remaining cache/JIT growth is a possibility, not a proven explanation.
+
+Verification: full frontend lint and143 unit tests ran once. Initial strict compile
+errors in test annotations were repaired; subsequent targeted checks passed, finally
+64 affected tests (35 new map tests), changed-file lint, strict TypeScript and production
+build. Four offline Chromium map checks passed, including canvas variance, overlap
+selection, no console errors, theme/style replacement, mobile skip/credits and the
+ten-analysis measurement. The later missing-geometry guard passed the64 affected
+tests and manual screenshots; the full unit suite was not repeated. Tests never
+fetch basemap/provider data. Production debug-hook absence is checked by the build.
+Commands from `frontend/`: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`;
+targeted Windows invocations use quoted Node executable/script paths and `vitest run`.
+Final Node-default gzip: initial108,852 bytes; lazy engine286,023 plus worker144,614
+=430,637 bytes. Existing fonts total70,496 bytes. Runtime npm audit found0 advisories.
+
+Inspected screenshots in ignored `output/playwright/map/`: `empty`,
+`desktop-light-six-shapes`, `desktop-dark-six-shapes`, `route-selection`,
+`checkpoint-tooltip`, `overlapping-routes`, `declutter-low-zoom`, `declutter-high-zoom`,
+`legend-expanded`, `fullscreen`, `mobile-peek`, `mobile-half`, `mobile-full`,
+`mobile-credits`, `skeleton`, `webgl-unavailable`, `offline-render`,
+and `real-santa-monica-la` (all `.png`). Real OpenFreeMap is used for manual synthetic
+screenshots; the automated canvas check uses the offline background.
+Visible fixes included host CSS height, double padding, camera cancellation, chip
+clipping/critical-symbol overlap, shared-route hit targeting and expanded mobile credits.
+
+Exactly two live example-chip analyses at45,000lb/+3h: Chicago–Detroit backend HTTP200,
+31,922ms total; the manual response observer timed out at30s before seeing the body,
+so route count/recommendation/browser wall time and its map screenshot are unverified.
+Santa Monica–LA City Hall returned HTTP200/3routes/RECOMMENDED in6,169ms browser wall
+(6,047ms backend), captured in dark theme. Observer timeout was corrected to40s;
+no application limit changed. Combined real calls: TomTom routing2/geocoding0,
+Open-Meteo4. No response recordings. The two-analysis cap prevents a Chicago retry
+or repeating live screenshots after final visual fixes; both corridors in both themes
+are therefore not verified. Earlier tasks' live results do not fill this evidence gap.
+Backend tests, hosted/native-GPU/mobile-browser verification were skipped. No new
+backend fields are required; the existing proposed human route-label field remains
+optional and unimplemented. Heatmap, slider and checkpoint detail panel remain next-task work.
