@@ -96,7 +96,7 @@ test('sheet pointer drag snaps while cancelled drags leave state unchanged', () 
 });
 test('empty, error and loading states have useful text and recovery', () => {
   const recover = vi.fn(); render(<><EmptyState title="No trips">Choose a trip.</EmptyState><ErrorState title="Unavailable" action="Retry" onRecover={recover} requestId="test-id">Try again.</ErrorState><Skeleton label="Loading data" /></>);
-  expect(screen.getByRole('alert').textContent).toContain('test-id'); fireEvent.click(screen.getByRole('button', { name: 'Retry' })); expect(recover).toHaveBeenCalledOnce(); expect(screen.getByRole('status').getAttribute('aria-label')).toBe('Loading data');
+  expect((screen.getByLabelText('Request ID') as HTMLInputElement).value).toBe('test-id'); fireEvent.click(screen.getByRole('button', { name: 'Retry' })); expect(recover).toHaveBeenCalledOnce(); expect(screen.getByRole('status', { name: 'Loading data' }).getAttribute('aria-label')).toBe('Loading data');
 });
 test('global boundary uses branded recovery without leaking the thrown diagnostic', () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});

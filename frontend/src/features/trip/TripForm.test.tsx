@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { AnalysisStoreProvider } from '../../api/analysis-store';
+import { AnalysisStoreProvider, useAnalysisStore } from '../../api/analysis-store';
 import { TripForm } from './TripForm';
 import { useTripPlanner } from './useTripPlanner';
 import type { useHealth } from '../../api/useHealth';
@@ -12,7 +12,7 @@ import { encodeDraft } from './url';
 beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(FIXED_NOW); localStorage.clear(); history.replaceState(null, '', '/'); });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 const healthy: ReturnType<typeof useHealth> = { status: 'healthy', version: 'test', requestId: undefined, retry: () => {} };
-function Probe({ health = healthy }: { health?: ReturnType<typeof useHealth> }) { const planner = useTripPlanner(health); return <TripForm planner={planner} />; }
+function Probe({ health = healthy }: { health?: ReturnType<typeof useHealth> }) { const planner = useTripPlanner(health); const store = useAnalysisStore(); return <><TripForm planner={planner} /><output aria-label="Analysis snapshot">{store.snapshot?.response.route_count}</output></>; }
 function mount(health = healthy) {
   return render(<StrictMode><QueryClientProvider client={new QueryClient()}><AnalysisStoreProvider><Probe health={health} /></AnalysisStoreProvider></QueryClientProvider></StrictMode>);
 }
@@ -24,7 +24,7 @@ test('examples resolve coordinates without geocoding; swap and Auto send the exa
   fireEvent.change(screen.getByLabelText('Cargo weight', { exact: true }), { target: { value: '30000.0000000000000001' } }); fireEvent.click(screen.getByRole('button', { name: 'Analyze routes' })); await tick();
   expect(fetch).toHaveBeenCalledOnce(); const body = fetch.mock.calls[0]?.[1]?.body as string;
   expect(body).toContain('"load_weight_lb":30000.0000000000000001'); expect(body).not.toContain('checkpoint_interval_miles'); expect(JSON.parse(body).origin.latitude).toBe(42.3314);
-  expect(screen.getByLabelText('Analysis summary').textContent).toContain('3 routes returned'); expect(screen.getByLabelText('Request ID')).toBeTruthy();
+  expect(screen.getByLabelText('Analysis snapshot').textContent).toBe('3');
 });
 test('blocked submit focuses the first invalid input and API details map safely onto inputs', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: 'VALIDATION_ERROR', message: 'RAW_PROVIDER_URL', details: { load_weight_lb: 'RAW' } } }), { status: 400 })));

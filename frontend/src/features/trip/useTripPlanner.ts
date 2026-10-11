@@ -24,6 +24,7 @@ export function useTripPlanner(health: ReturnType<typeof useHealth>, enabled = t
   const [errors, setErrors] = useState<FieldErrors>({}), [error, setError] = useState<ApiError | null>(null), [notice, setNotice] = useState(initial.past ? "This link's departure time has passed. Update it to analyze." : '');
   const [phase, setPhase] = useState<Phase>('idle'), [elapsed, setElapsed] = useState(0), [retryUntil, setRetryUntil] = useState(0), [secondsLeft, setSecondsLeft] = useState(0), [toast, setToast] = useState('');
   const active = useRef<Operation | null>(null), automatic = useRef(false), mounted = useRef(true);
+  const lastOperation = useRef<Operation | null>(null);
   const store = useAnalysisStore();
   const mutation = useMutation({ mutationFn: ({ request, token, signal }: { request: AnalysisRequest; token: string; signal: AbortSignal }) => analyzeTrip(request, signal, token), retry: false });
   const busy = phase !== 'idle';
@@ -33,7 +34,7 @@ export function useTripPlanner(health: ReturnType<typeof useHealth>, enabled = t
     if (first) requestAnimationFrame(() => document.getElementById(`trip-${first}`)?.focus());
   };
   const change = (update: Partial<TripDraft>) => {
-    setDraft(previous => ({ ...previous, ...update })); setErrors({}); setError(null); setNotice(''); store.setSnapshot(null);
+    setDraft(previous => ({ ...previous, ...update })); setErrors({}); setError(null); setNotice('');
   };
   const selectPlace = (field: 'origin' | 'destination', place: PlaceChoice) => {
     change({ [field]: { text: place.label, place } }); setHistory(previous => rememberPlace(previous, place));
@@ -45,7 +46,7 @@ export function useTripPlanner(health: ReturnType<typeof useHealth>, enabled = t
     op.launched = true; setPhase('running'); op.started = Date.now(); setElapsed(0);
     void mutation.mutateAsync({ request: op.request, token: op.token, signal: op.abort.signal }).then(response => {
       if (!mounted.current || active.current !== op) return;
-      store.setSnapshot({ response, request: op.request, wallMs: Date.now() - op.started });
+      store.setSnapshot({ response, request: op.request, wallMs: Date.now() - op.started, weightToken: op.token });
       setHistory(previous => rememberTrip(previous, op.draft));
       active.current = null; setPhase('idle');
     }).catch(failure => {
@@ -69,12 +70,20 @@ export function useTripPlanner(health: ReturnType<typeof useHealth>, enabled = t
     setNow(Date.now()); setErrors(current.errors);
     if (!current.request || !current.weightToken) { focusInvalid(current.errors); return; }
     const op: Operation = { request: current.request, token: current.weightToken, draft, abort: new AbortController(), started: Date.now(), launched: false };
-    active.current = op; setError(null); setNotice(''); store.setSnapshot(null); setElapsed(0);
+    active.current = op; lastOperation.current = op; setError(null); setNotice(''); setElapsed(0);
     if (!auto) updateUrl(draft, true);
     if (health.status === 'healthy') launch(op);
     else { setPhase('waking'); if (health.status === 'unreachable') health.retry(); }
   };
   const cancel = () => { active.current?.abort.abort(); active.current = null; setPhase('idle'); setError(null); mutation.reset(); };
+  const retry = () => {
+    const last = lastOperation.current;
+    if (!last || active.current || Date.now() < retryUntil) return;
+    const op = { ...last, abort: new AbortController(), launched: false, started: Date.now() };
+    active.current = op; lastOperation.current = op; setError(null); setElapsed(0);
+    if (health.status === 'healthy') launch(op);
+    else { setPhase('waking'); if (health.status === 'unreachable') health.retry(); }
+  };
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; queueMicrotask(() => { if (!mounted.current) active.current?.abort.abort(); }); };
@@ -110,6 +119,6 @@ export function useTripPlanner(health: ReturnType<typeof useHealth>, enabled = t
   const swap = () => change({ origin: draft.destination, destination: draft.origin });
   const restore = (trip: RecentTrip) => change({ origin: { text: trip.origin.label, place: trip.origin }, destination: { text: trip.destination.label, place: trip.destination }, weight: trip.weight, spacing: trip.spacing });
   const clear = () => { setHistory(clearHistory()); setToast('History cleared from this device.'); };
-  return { draft, change, selectPlace, swap, restore, history, clear, validation, errors, error, notice, phase, busy, elapsed, secondsLeft, submit, cancel, toast, setToast, snapshot: store.snapshot, now };
+  return { draft, change, selectPlace, swap, restore, history, clear, validation, errors, error, notice, phase, busy, elapsed, secondsLeft, submit, retry, cancel, toast, setToast, snapshot: store.snapshot, now };
 }
 export type TripPlanner = ReturnType<typeof useTripPlanner>;

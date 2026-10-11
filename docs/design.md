@@ -247,3 +247,31 @@ RECOMMENDED in **8,658 ms**: routing1/geocoding0/weather3; no retries or respons
 recordings. Browser tests otherwise intercept synthetic API responses; the optional
 live check requires `ROUTESHIELD_REAL_ANALYSIS=1`. Backend checks, hosting, map and
 full results remain outside this task. The existing backend environment edit is preserved.
+
+## Results experience
+
+Added the dispatch ticket, server-ordered comparison table, radio route list,
+ownership strips, coverage/notices, stale/simulation surfaces and shared recovery.
+Trip/Results tabs preserve inputs and the prior analysis; selection-store exposes
+selectedRouteId, selectedCheckpointIndex and hoveredRouteId to the next map task.
+Formatting is display-only: bounded BigInt fractions/decimals, half-even rounding,
+exact cargo, Intl destination time or explicit UTC. No risk/ranking/ETA calculations.
+Ownership uses checkpoint.owned_miles; synthetic tests detect partition divergence.
+Presentation fallback: Route 1..n from server rank/group order, with the same ID-token
+substitution in otherwise unchanged API prose. Matrix ticks show published comparison
+winners only. Original adaptive spacing is unavailable; notices show requested/effective
+spacing. PROPOSED backend additions: human route labels, per-criterion winner facts,
+and original effective spacing for an exact old/new interval notice. None implemented.
+Verified2026-10-11: frontend lint and111 unit tests passed;33 new unit tests and4 new
+Chromium checks. Initial compiler/build failures in test fixtures were corrected;
+targeted33 tests and strict TypeScript/production build then passed. Initial JS gzip
+103,639 bytes; fonts70,496 bytes; no dependency or backend changes. Browser checks use
+synthetic interception except exactly2 live analyses at45,000lb/+3h: Chicago–Detroit
+HTTP200/3 routes/RECOMMENDED/7,789ms; Santa Monica–LA City Hall HTTP200/3 routes/
+RECOMMENDED/2,658ms; both recommend UI Route1. Combined routing2/geocoding0/weather4.
+Twenty-nine inspected screenshots in ignored output/playwright/results/ cover all
+statuses/criterion variants, themes, selection, notices, stale/simulation, skeleton/
+timeout, mobile half/full,320px and200% reflow equivalent (640×480 CSS at2× scale),
+plus both live heroes/matrices. The half sheet prioritizes the hero; full view exposes
+freshness/IANA metadata. Native browser zoom shortcuts, backend suite, hosting and
+map rendering were skipped; the map placeholder remains. No provider bodies saved.

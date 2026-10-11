@@ -5,6 +5,7 @@ import { useReducedMotion } from '../lib/motion';
 import { Button, IconButton } from './controls';
 import { Icon } from './icons';
 import type { IconName } from './icons';
+import { RequestId } from './RequestId';
 
 export const riskPresentation: Record<RiskLevel, { label: string; icon: IconName; token: string; shape: string }> = {
   LOW: { label: 'Low', icon: 'risk-low', token: 'low', shape: 'circle' },
@@ -80,6 +81,6 @@ export function Skeleton({ label = 'Loading', lines = 3 }: { label?: string; lin
 export function EmptyState({ title, children, icon = 'route', action }: { title: string; children: ReactNode; icon?: IconName; action?: ReactNode }) {
   return <div className="empty-state"><Icon name={icon} width="36" height="36" /><h3>{title}</h3><p>{children}</p>{action}</div>;
 }
-export function ErrorState({ title, children, action, onRecover, requestId }: { title: string; children: ReactNode; action: string; onRecover: () => void; requestId?: string }) {
-  return <div className="error-state" role="alert"><Icon name="warning" /><h3>{title}</h3><p>{children}</p>{requestId && <p className="field-hint">Support ID <span className="mono">{requestId}</span></p>}<Button onClick={onRecover}>{action}</Button></div>;
+export function ErrorState({ title, children, action, onRecover, requestId, disabled = false }: { title: string; children: ReactNode; action: string; onRecover: () => void; requestId?: string; disabled?: boolean }) {
+  return <div className="error-state" role="alert"><Icon name="warning" /><h3>{title}</h3><p>{children}</p>{requestId && <RequestId id={requestId} />}<Button onClick={onRecover} disabled={disabled}>{action}</Button></div>;
 }

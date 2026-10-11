@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { AnalysisRequest, AnalysisResponse } from './types';
 
-export interface AnalysisSnapshot { response: AnalysisResponse; request: AnalysisRequest; wallMs: number }
+export interface AnalysisSnapshot { response: AnalysisResponse; request: AnalysisRequest; wallMs: number; weightToken?: string }
 const Context = createContext<{ snapshot: AnalysisSnapshot | null; setSnapshot: (value: AnalysisSnapshot | null) => void } | null>(null);
 export function AnalysisStoreProvider({ children }: { children: ReactNode }) {
   const [snapshot, setSnapshot] = useState<AnalysisSnapshot | null>(null);

@@ -43,9 +43,11 @@ export function SegmentedControl({ label, value, options, onChange, compact = fa
   };
   return <div ref={group} role="radiogroup" aria-label={label} className={`segmented ${compact ? 'compact' : ''}`}>{options.map((option, index) => <button key={option.value} type="button" role="radio" aria-checked={value === option.value} aria-label={option.label} tabIndex={value === option.value || index === 0 && !options.some(o => o.value === value) ? 0 : -1} onClick={() => onChange(option.value)} onKeyDown={e => key(e, index)}>{option.icon && <Icon name={option.icon} />}{!compact && <span>{option.label}</span>}</button>)}</div>;
 }
-export function Tabs({ label, tabs }: { label: string; tabs: readonly { id: string; label: string; content: ReactNode }[] }) {
+export function Tabs({ label, tabs, activeId, onChange }: { label: string; tabs: readonly { id: string; label: string; content: ReactNode; disabled?: boolean }[]; activeId?: string; onChange?: (id: string) => void }) {
   const id = useId(), list = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0), [indicator, setIndicator] = useState({ left: 0, width: 0 });
+  const [internal, setInternal] = useState(0), [indicator, setIndicator] = useState({ left: 0, width: 0 });
+  const active = activeId === undefined ? internal : Math.max(0, tabs.findIndex(t => t.id === activeId));
+  const setActive = (index: number) => { if (!tabs[index]?.disabled) { setInternal(index); onChange?.(tabs[index]!.id); } };
   useEffect(() => {
     const measure = () => {
       const selected = list.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[active];
@@ -57,8 +59,8 @@ export function Tabs({ label, tabs }: { label: string; tabs: readonly { id: stri
     window.addEventListener('resize', measure);
     return () => { observer?.disconnect(); window.removeEventListener('resize', measure); };
   }, [active]);
-  return <div className="tabs"><div ref={list} role="tablist" aria-label={label} className="tab-list">{tabs.map((tab, index) => <button key={tab.id} id={`${id}-${tab.id}`} type="button" role="tab" aria-selected={active === index} aria-controls={`${id}-panel-${tab.id}`} tabIndex={active === index ? 0 : -1} onClick={() => setActive(index)} onKeyDown={e => {
-    const next = keyboardIndex(e.key, index, tabs.length);
-    if (next !== null) { e.preventDefault(); setActive(next); list.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus(); }
+  return <div className="tabs"><div ref={list} role="tablist" aria-label={label} className="tab-list">{tabs.map((tab, index) => <button key={tab.id} id={`${id}-${tab.id}`} type="button" role="tab" disabled={tab.disabled} aria-selected={active === index} aria-controls={`${id}-panel-${tab.id}`} tabIndex={active === index ? 0 : -1} onClick={() => setActive(index)} onKeyDown={e => {
+    let next = keyboardIndex(e.key, index, tabs.length);
+    if (next !== null) { e.preventDefault(); for (let count = 0; tabs[next]?.disabled && count < tabs.length; count++) next = (next + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'End' ? tabs.length - 1 : 1)) % tabs.length; setActive(next); list.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus(); }
   }}>{tab.label}</button>)}<span className="tab-indicator" style={{ width: indicator.width, transform: `translateX(${indicator.left}px)` }} /></div>{tabs.map((tab, index) => <div key={tab.id} id={`${id}-panel-${tab.id}`} role="tabpanel" aria-labelledby={`${id}-${tab.id}`} tabIndex={0} hidden={active !== index}>{tab.content}</div>)}</div>;
 }

@@ -11,11 +11,8 @@ import { distantEndpoints } from './model';
 import type { Spacing } from './model';
 import type { TripPlanner } from './useTripPlanner';
 import './trip.css';
+import { AnalysisError } from '../../components/AnalysisError';
 
-function RequestId({ id, onCopied }: { id: string; onCopied: (message: string) => void }) {
-  const input = useRef<HTMLInputElement>(null);
-  return <div className="request-chip"><input ref={input} aria-label="Request ID" className="mono" readOnly value={id} onFocus={e => e.currentTarget.select()} /><Button variant="ghost" onClick={async () => { try { await navigator.clipboard.writeText(id); onCopied('Request ID copied.'); } catch { input.current?.focus(); input.current?.select(); onCopied('Request ID selected. Use your copy shortcut.'); } }}>Copy ID</Button></div>;
-}
 function SpacingControl({ value, onChange }: { value: Spacing; onChange: (value: Spacing) => void }) {
   const root = useRef<HTMLDivElement>(null), [indicator, setIndicator] = useState({ left: 0, width: 0 });
   useEffect(() => {
@@ -29,22 +26,9 @@ export function ProgressLine({ planner }: { planner: TripPlanner }) {
 }
 export function TripForm({ planner }: { planner: TripPlanner }) {
   const { draft, change, errors, validation, error } = planner;
-  const summary = useRef<HTMLElement>(null);
   const reduced = useReducedMotion(), [swaps, setSwaps] = useState(0);
-  useEffect(() => {
-    if (!planner.snapshot) return;
-    // Scroll only the form. scrollIntoView also scrolls the sheet's clipped dock.
-    const frame = requestAnimationFrame(() => {
-      const target = summary.current, body = target?.closest('.trip-form-body');
-      if (target && body) body.scrollTop += target.getBoundingClientRect().top - body.getBoundingClientRect().top;
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [planner.snapshot]);
   const dateError = errors.departure || (validation.choice ? validation.errors.departure : undefined);
-  const fields = Object.values(errors), maximum = error?.details.max_distance_miles;
-  const supported = typeof maximum === 'number' && Number.isFinite(maximum) && maximum > 0 ? maximum.toLocaleString('en-US') : null;
-  const demoQuota = error?.code === 'QUOTA_EXCEEDED' && Object.values(error.details).includes('DEMO_QUOTA_REACHED');
-  const message = error?.code === 'TRIP_TOO_LARGE' ? supported ? `This demo supports up to ${supported} road miles. Choose closer endpoints or use an example trip.` : 'This trip exceeds the supported range. Choose closer endpoints or use an example trip.' : demoQuota ? 'Demo weather quota reached; try again after the quota window resets.' : error?.presentation.message;
+  const fields = Object.values(errors);
   const progress = planner.phase === 'waking' ? 'Waking up the backend. Analysis starts when it is ready.' : 'Routing, forecasting and scoring. Long trips can take up to 35 seconds.';
   return <form className="trip-form" noValidate onSubmit={event => { event.preventDefault(); planner.submit(); }}>
     <div className="trip-form-body"><header className="trip-heading"><p className="micro">Weather operations</p><h2>Trip plan</h2><p className="field-hint">Plan the corridor. Assess the conditions.</p></header>
@@ -59,8 +43,7 @@ export function TripForm({ planner }: { planner: TripPlanner }) {
         <section className="trip-section" aria-label="Load"><TickDivider label="03 / Load" /><LoadControl value={draft.weight} onChange={weight => change({ weight })} error={errors.weight || (draft.weight ? validation.errors.weight : undefined)} /></section>
         <section className="trip-section" aria-label="Checkpoint spacing"><TickDivider label="04 / Checkpoint spacing" /><SpacingControl value={draft.spacing} onChange={spacing => change({ spacing })} />{errors.spacing && <p className="field-error">{errors.spacing}</p>}</section>
       </fieldset>
-      {error && <section className="trip-error" aria-label="Analysis error"><div role="status" aria-live="polite"><p className="micro">Request unavailable</p><h3>{error.presentation.title}</h3><p>{message}</p></div>{error.code === 'THROTTLED' && <p>Retry available in <span className="mono" aria-live="off">{planner.secondsLeft}s</span><span className="sr-only" role="status">{planner.secondsLeft === 0 ? 'Retry is available.' : 'Wait for the request limit to reset.'}</span></p>}{error.requestId && <RequestId id={error.requestId} onCopied={planner.setToast} />}<Button disabled={planner.secondsLeft > 0} onClick={() => { if (error.code === 'TRIP_TOO_LARGE') document.querySelector<HTMLButtonElement>('.example-trips button')?.focus(); else if (error.presentation.recovery === 'edit') document.getElementById('trip-origin')?.focus(); else planner.submit(); }}>{error.code === 'TRIP_TOO_LARGE' ? 'Choose an example trip' : error.presentation.action}</Button></section>}
-      {planner.snapshot && <section ref={summary} className="temporary-summary" aria-label="Analysis summary" aria-live="polite"><p className="micro">{import.meta.env.DEV ? 'Temporary summary' : 'Analysis received'}</p><p><span className="metric-number mono">{planner.snapshot.response.route_count}</span>{' '}routes returned</p><p>{planner.snapshot.response.message}</p><RequestId id={planner.snapshot.response.metadata.request_id} onCopied={planner.setToast} /></section>}
+      {error && <section className="trip-error" aria-label="Analysis error"><AnalysisError error={error} retry={planner.retry} secondsLeft={planner.secondsLeft} edit={() => { if (error.code === 'TRIP_TOO_LARGE') document.querySelector<HTMLButtonElement>('.example-trips button')?.focus(); else document.getElementById('trip-origin')?.focus(); }} /></section>}
     </div>
     <footer className={`trip-action-bar ${planner.busy ? 'is-running' : ''}`}><div className="action-ticks" aria-hidden="true"><span /></div>{planner.busy ? <><div className="submit-status"><span className="mono elapsed" aria-live="off">{planner.elapsed}s</span><div><p role="status" aria-live="polite">{progress}</p>{planner.elapsed >= 8 && planner.phase === 'running' && <p className="field-hint">Still working. The weather service can be slow.</p>}</div></div><div className="action-buttons"><Button variant="primary" loading>Analyze routes</Button><Button onClick={planner.cancel}>Cancel</Button></div></> : <Button variant="primary" type="submit" disabled={planner.secondsLeft > 0}><Icon name="route" />Analyze routes</Button>}</footer>
     {planner.toast && <div className="trip-toast"><Toast onDismiss={() => planner.setToast('')}>{planner.toast}</Toast></div>}

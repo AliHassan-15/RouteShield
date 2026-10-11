@@ -1,0 +1,10 @@
+import { expect, test } from 'vitest';
+import { arrival, average, decimal, duration, fixed, fraction, miles, percent, time } from './format';
+import { resultFixture, exact } from '../features/results/fixtures';
+test('BigInt fractions preserve large integers, separators and half-even ties', () => { expect(fixed(exact('900719925474099312345', '100'), 2)).toBe('9,007,199,254,740,993,123.45'); expect(fixed('0.125', 2)).toBe('0.12'); expect(fixed('0.135', 2)).toBe('0.14'); });
+test('exact decimal and exponent formatting never turns small values into NaN', () => { expect(fixed('30000.0000000000000001', 2)).toBe('30,000.00'); expect(fixed('1.25E+3', 1)).toBe('1,250.0'); expect(fixed('-1.25', 1)).toBe('-1.2'); });
+test('cargo summary preserves exact fractional pounds rather than rounding across load cutoffs', () => { expect(decimal('30000.5')).toBe('30,000.5'); expect(decimal('40000.0000000000000001')).toBe('40,000.0000000000000001'); });
+test('malformed fractions, zero denominator, booleans, infinity and hostile strings show n/a', () => { for (const v of [null, true, NaN, Infinity, {}, exact(1, '0'), exact('oops'), 'x', '9'.repeat(501)]) { expect(fixed(v)).toBe('n/a'); expect(fraction(v)).toBeNull(); } });
+test('durations format rounded total minutes with carry and no float ranking input', () => { expect(duration(exact(9660))).toBe('2 h 41 min'); expect(duration(exact(3599))).toBe('1 h 0 min'); expect(duration('-1')).toBe('n/a'); });
+test('miles, percentages and averages have consistent precision and null is incomplete', () => { expect(miles(exact(25001, '10'))).toBe('2,500.1'); expect(percent(exact(13, '23'))).toBe('56.5%'); expect(average(exact(66, '23'))).toBe('2.87'); expect(average(null)).toBe('n/a, weather incomplete'); });
+test('Intl arrival uses destination IANA zone and honors explicit UTC fallback', () => { const cp = resultFixture().routes[0]!.checkpoints.at(-1)!; expect(arrival(cp).local).toBe('13:40 EDT'); expect(arrival({ ...cp, utc_fallback: true }).local).toBe('17:40 UTC'); expect(arrival(undefined).local).toBe('n/a'); expect(time('bad')).toBe('n/a'); expect(time(cp.eta_utc, 'invalid')).toBe('n/a'); });
