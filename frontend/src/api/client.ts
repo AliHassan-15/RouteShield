@@ -9,7 +9,7 @@ function apiBase() {
   if (!base.pathname.endsWith('/')) base.pathname += '/';
   return base;
 }
-export async function apiRequest<T>(endpoint: Endpoint, parse: (body: unknown) => body is T, options: { signal?: AbortSignal; body?: AnalysisRequest; query?: URLSearchParams; timeoutMs?: number } = {}): Promise<T> {
+export async function apiRequest<T>(endpoint: Endpoint, parse: (body: unknown) => body is T, options: { signal?: AbortSignal; body?: AnalysisRequest; weightToken?: string; query?: URLSearchParams; timeoutMs?: number } = {}): Promise<T> {
   const controller = new AbortController();
   const abort = () => controller.abort();
   options.signal?.addEventListener('abort', abort, { once: true });
@@ -18,7 +18,14 @@ export async function apiRequest<T>(endpoint: Endpoint, parse: (body: unknown) =
   try {
     const url = new URL(endpoint, apiBase());
     if (options.query) url.search = options.query.toString();
-    const response = await fetch(url, { signal: controller.signal, method: options.body ? 'POST' : 'GET', headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}) }, ...(options.body ? { body: JSON.stringify(options.body) } : {}) });
+    let serialized = options.body ? JSON.stringify(options.body) : undefined;
+    if (options.body && options.weightToken !== undefined) {
+      // Preserve the validated decimal as a JSON NUMBER token, not a rounded JS Number/string.
+      if (!/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(options.weightToken) || options.weightToken.length > 100) throw new ApiError('INVALID_RESPONSE');
+      const rest = Object.fromEntries(Object.entries(options.body).filter(([key]) => key !== 'load_weight_lb'));
+      serialized = `${JSON.stringify(rest).slice(0, -1)},"load_weight_lb":${options.weightToken}}`;
+    }
+    const response = await fetch(url, { signal: controller.signal, method: options.body ? 'POST' : 'GET', headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}) }, ...(serialized ? { body: serialized } : {}) });
     const rawId = response.headers.get('X-Request-ID');
     const requestId = rawId && /^[a-zA-Z0-9-]{1,80}$/.test(rawId) ? rawId : undefined;
     const retry = Number(response.headers.get('Retry-After'));
@@ -43,10 +50,11 @@ export function isHealth(body: unknown): body is HealthResponse {
   return record(body) && (body.status === 'ok' || body.status === 'ready') && typeof body.version === 'string' && (body.check === 'liveness' || body.check === 'readiness');
 }
 function isAnalysis(body: unknown): body is AnalysisResponse {
-  return record(body) && Array.isArray(body.routes) && typeof body.request_id === 'string' && typeof body.is_simulation === 'boolean' && Array.isArray(body.warnings) && typeof body.recommendation_status === 'string' && record(body.heatmap);
+  return record(body) && Array.isArray(body.routes) && Number.isInteger(body.route_count) && body.route_count === body.routes.length && typeof body.message === 'string' && record(body.metadata) && typeof body.metadata.request_id === 'string' && typeof body.is_simulation === 'boolean' && Array.isArray(body.warnings) && ['RECOMMENDED', 'BEST_FULLY_ASSESSED_AVAILABLE', 'ALL_BLOCKED', 'NO_FULLY_ASSESSED_TRAVELABLE_ROUTE', 'ALL_INCOMPLETE'].includes(String(body.recommendation_status)) && record(body.heatmap);
 }
 function isGeocode(body: unknown): body is GeocodeResponse {
-  return record(body) && Array.isArray(body.candidates) && body.candidates.every(item => record(item) && typeof item.candidate_id === 'string' && typeof item.label === 'string' && typeof item.latitude === 'number' && typeof item.longitude === 'number' && Number.isFinite(item.latitude) && Number.isFinite(item.longitude)) && record(body.attribution);
+  const attribution = (value: unknown) => record(value) && typeof value.text === 'string' && typeof value.provider === 'string' && typeof value.confirmed === 'boolean';
+  return record(body) && Array.isArray(body.candidates) && body.candidates.every(item => record(item) && typeof item.candidate_id === 'string' && typeof item.label === 'string' && item.label.length >= 2 && item.label.length <= 200 && typeof item.latitude === 'number' && typeof item.longitude === 'number' && Number.isFinite(item.latitude) && Number.isFinite(item.longitude) && Math.abs(item.latitude) <= 90 && Math.abs(item.longitude) <= 180 && (item.region === null || typeof item.region === 'string') && (item.country === null || typeof item.country === 'string') && typeof item.provider === 'string' && attribution(item.attribution)) && attribution(body.attribution);
 }
-export function analyzeTrip(body: AnalysisRequest, signal?: AbortSignal) { return apiRequest('route-analysis/', isAnalysis, { body, signal }); }
+export function analyzeTrip(body: AnalysisRequest, signal?: AbortSignal, weightToken?: string) { return apiRequest('route-analysis/', isAnalysis, { body, signal, weightToken }); }
 export function geocode(query: string, signal?: AbortSignal) { return apiRequest('geocode/', isGeocode, { query: new URLSearchParams({ q: query }), signal }); }

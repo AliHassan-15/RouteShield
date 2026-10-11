@@ -225,3 +225,25 @@ existing backend/.env.example edit were preserved. AGENTS.md was not edited;
 its build command remains valid and now includes the artifact guard. The color
 check command above can be added to its Commands section in a later authorized
 documentation task.
+
+## Trip form
+
+The Trip plan now extends the previous health-only shell: `frontend/src/features/trip/`
+owns the form, selected-place comboboxes, browser-zone/DST validation, exact decimal
+cargo tokens, display-only wind copy, spacing, cancellable analysis and local recents.
+Versioned URLs restore valid future links once per history entry; storage retains
+five places/trips and load/spacing preferences, with no persisted departure. The
+typed `api/analysis-store.tsx` holds the backend response for the next results task.
+Mobile submit uses progress peek; success opens half with a visible action bar.
+
+Verified 2026-10-11: full frontend lint/types/78 Vitest tests/build passed once;
+36 new unit tests and four new Chromium checks passed. Initial JS is **96,340 bytes
+gzip** (Node default); fonts remain 70,496 bytes; no dependencies were added.
+Nineteen inspected screenshots are in ignored `output/playwright/trip/`, including
+320px mobile, DST/error/progress states and 200% reflow equivalent (640×480 CSS
+pixels at 2× device scale; native browser zoom shortcuts were not tested).
+One real Chicago–Detroit analysis, 45,000 lb/+3h, returned HTTP200, three routes,
+RECOMMENDED in **8,658 ms**: routing1/geocoding0/weather3; no retries or response
+recordings. Browser tests otherwise intercept synthetic API responses; the optional
+live check requires `ROUTESHIELD_REAL_ANALYSIS=1`. Backend checks, hosting, map and
+full results remain outside this task. The existing backend environment edit is preserved.

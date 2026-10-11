@@ -1,9 +1,10 @@
-.app-shell { height: 100dvh; overflow: hidden; }
+.app-shell { height: 100dvh; overflow: hidden; --advisory-height: 88px; }
 .shell-header { height: 48px; display: flex; align-items: center; gap: 24px; padding: 0 16px; border-bottom: 1px solid var(--hairline); background: var(--surface); position: relative; z-index: var(--z-console); }
 .brand { display: inline-flex; align-items: center; gap: 9px; font-size: 20px; font-weight: 650; letter-spacing: -.04em; color: var(--ink); text-decoration: none; flex-shrink: 0; }
 .brand-light { font-weight: 430; }
 .header-purpose { border-left: 1px solid var(--hairline); padding-left: 24px; }
 .header-service { margin-left: auto; }
+.shell-header .status-badge { color: var(--muted); }
 .header-tools { display: flex; align-items: center; gap: 8px; }
 .shell-main { display: grid; grid-template-columns: 420px minmax(0, 1fr); height: calc(100dvh - 48px); position: relative; }
 .console-desktop { grid-column: 1; grid-row: 1; overflow-y: auto; overscroll-behavior: contain; border-right: 1px solid var(--hairline); padding: 32px; background: var(--surface); z-index: var(--z-console); display: flex; flex-direction: column; gap: 24px; }
@@ -26,8 +27,8 @@
 .attribution-source svg { width: 13px; height: 13px; }
 .skip-link { position: absolute; z-index: 100; left: 16px; top: -60px; padding: 10px; background: var(--accent); color: var(--accent-ink); }
 .skip-link:focus { top: 4px; }
-.sheet-dock { position: absolute; inset: 0 0 78px; overflow: hidden; pointer-events: none; z-index: var(--z-sheet); }
-.sheet-dock .bottom-sheet { bottom: 0; pointer-events: auto; }
+.sheet-dock { position: absolute; inset: 0 0 var(--advisory-height); overflow: clip; pointer-events: none; z-index: var(--z-sheet); }
+.sheet-dock .bottom-sheet { bottom: 0; pointer-events: auto; height: calc(100dvh - 60px - var(--advisory-height)); }
 .fallback-screen { min-height: 100dvh; background: var(--canvas); }
 .fallback-screen > header { height: 64px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid var(--hairline); }
 .fallback-screen > main { margin: clamp(32px, 8vw, 96px); max-width: 540px; }
@@ -42,15 +43,17 @@
   .brand svg { width: 23px; height: 28px; }
   .header-service { position: absolute; top: 62px; left: 24px; z-index: 1; padding: 4px 8px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 4px; }
   .header-tools { margin-left: auto; gap: 0; }
+  .shell-header > .icon-button { position: absolute; top: 54px; right: 12px; background: var(--surface); }
   .shell-main { display: block; }
   .map-workspace { width: 100%; height: 100%; }
   .map-placeholder { top: 76px; left: 24px; }
   .map-workspace::after { inset: 12px 12px 96px; }
-  .map-attribution { left: 0; min-height: 78px; padding: 8px 12px; gap: 4px; }
+  .map-attribution { left: 0; height: var(--advisory-height); padding: 8px 12px; gap: 4px; }
   .map-attribution p { max-width: 70ch; }
   .console-body .empty-state { padding: 12px 0 24px; }
 }
 @media (max-width: 360px) {
-  .brand { font-size: 16px; }
-  .header-tools .segmented button, .header-tools > .icon-button, .header-tools .button { min-width: 40px; width: 40px; }
+  .brand { font-size: 14px; }
+  .brand svg { width: 21px; }
+  .header-tools .segmented button, .header-tools > .icon-button, .header-tools .button { min-width: 44px; width: 44px; }
 }

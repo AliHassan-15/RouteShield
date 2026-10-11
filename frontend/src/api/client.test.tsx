@@ -1,10 +1,12 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, expect, test, vi } from 'vitest';
-import { apiRequest, isHealth } from './client';
+import { apiRequest, isHealth, analyzeTrip, geocode } from './client';
 import { ApiError, errorMessages } from './errors';
 import { createQueryClient } from './query';
 import { useHealth } from './useHealth';
+import { analysisFixture, geocodeFixture, testDraft, FIXED_NOW } from '../features/trip/test-fixtures';
+import { validateDraft } from '../features/trip/model';
 
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 test('every documented API error maps to fixed recovery and correlation metadata', async () => {
@@ -45,4 +47,15 @@ test('a stuck health request is aborted and cannot run beyond the wake window', 
   vi.useFakeTimers(); let aborted = 0;
   vi.stubGlobal('fetch', vi.fn((_url, options: RequestInit) => new Promise((_resolve, reject) => options.signal?.addEventListener('abort', () => { aborted++; reject(new Error('Timeout')); }))));
   mountHealth(); await act(() => vi.advanceTimersByTimeAsync(91_000)); expect(screen.getByLabelText('Health').textContent).toBe('unreachable'); expect(aborted).toBeGreaterThan(0);
+});
+test('analysis accepts the real nested request ID and transports decimal cargo as a number token', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(analysisFixture()))); vi.stubGlobal('fetch', fetch);
+  const request = validateDraft(testDraft(), FIXED_NOW).request!;
+  expect((await analyzeTrip(request, undefined, '30000.0000000000000001')).metadata.request_id).toBe('synthetic-request-1');
+  expect(fetch.mock.calls[0]?.[1]?.body).toContain('"load_weight_lb":30000.0000000000000001');
+});
+test('geocode rejects malformed candidate display data and attribution before rendering', async () => {
+  for (const bad of [{ ...geocodeFixture(), attribution: {} }, { ...geocodeFixture(), candidates: [{ ...geocodeFixture().candidates[0], region: {} }] }, { ...geocodeFixture(), candidates: [{ ...geocodeFixture().candidates[0], latitude: 999 }] }]) {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(bad)))); await expect(geocode('Chicago')).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
+  }
 });

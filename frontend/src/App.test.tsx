@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import App from './App';
+import { AnalysisStoreProvider } from './api/analysis-store';
 
 afterEach(() => {
   cleanup();
@@ -12,7 +13,7 @@ afterEach(() => {
 function renderShell() {
   render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <App />
+      <AnalysisStoreProvider><App /></AnalysisStoreProvider>
     </QueryClientProvider>,
   );
 }
@@ -20,7 +21,7 @@ function renderShell() {
 test('shows loading while health is pending', () => {
   vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
   renderShell();
-  expect(screen.getByLabelText('Checking backend health')).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Trip plan' })).toBeTruthy();
   expect(screen.getByText('Checking API')).toBeTruthy();
 });
 

@@ -41,7 +41,7 @@ export function SegmentedControl({ label, value, options, onChange, compact = fa
     if (option) onChange(option.value);
     group.current?.querySelectorAll<HTMLButtonElement>('button')[next]?.focus();
   };
-  return <div ref={group} role="radiogroup" aria-label={label} className={`segmented ${compact ? 'compact' : ''}`}>{options.map((option, index) => <button key={option.value} type="button" role="radio" aria-checked={value === option.value} aria-label={option.label} tabIndex={value === option.value ? 0 : -1} onClick={() => onChange(option.value)} onKeyDown={e => key(e, index)}>{option.icon && <Icon name={option.icon} />}{!compact && <span>{option.label}</span>}</button>)}</div>;
+  return <div ref={group} role="radiogroup" aria-label={label} className={`segmented ${compact ? 'compact' : ''}`}>{options.map((option, index) => <button key={option.value} type="button" role="radio" aria-checked={value === option.value} aria-label={option.label} tabIndex={value === option.value || index === 0 && !options.some(o => o.value === value) ? 0 : -1} onClick={() => onChange(option.value)} onKeyDown={e => key(e, index)}>{option.icon && <Icon name={option.icon} />}{!compact && <span>{option.label}</span>}</button>)}</div>;
 }
 export function Tabs({ label, tabs }: { label: string; tabs: readonly { id: string; label: string; content: ReactNode }[] }) {
   const id = useId(), list = useRef<HTMLDivElement>(null);

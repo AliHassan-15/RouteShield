@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { createQueryClient } from './api/query';
+import { AnalysisStoreProvider } from './api/analysis-store';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './style.css';
 
@@ -12,7 +13,7 @@ if (!root) throw new Error('Missing application root.');
 createRoot(root).render(
   <StrictMode>
     <ErrorBoundary><QueryClientProvider client={createQueryClient()}>
-      <App />
+      <AnalysisStoreProvider><App /></AnalysisStoreProvider>
     </QueryClientProvider></ErrorBoundary>
   </StrictMode>,
 );
