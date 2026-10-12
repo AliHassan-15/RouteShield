@@ -7,7 +7,7 @@ import type { AnalysisResponse, Position, RiskLevel } from '../../api/types';
 import type { SelectionState } from '../../api/selection-store';
 import type { MapEngine, MapEvent, Padding, Theme } from './contracts';
 import { mapConfig, offlineStyle, transformStyle } from './basemap';
-import { bounds, chipAvoidsPoints, chipFits, markerEncoding, placeChips, pointAt, prepareRoute, routeOffset, validPosition } from './geometry';
+import { bounds, chipAvoidsPoints, chipFits, markerEncoding, outsideViewport, placeChips, pointAt, prepareRoute, routeOffset, validPosition } from './geometry';
 import { LEVELS, routeLabels, serverOrder } from '../results/presentation';
 import { duration } from '../../lib/format';
 import { tooltipContent } from './tooltip';
@@ -27,7 +27,7 @@ export class MapLibreEngine implements MapEngine {
   private analysis: AnalysisResponse | null = null;
   private prepared: ReturnType<typeof prepareRoute>[] = [];
   private cache = new WeakMap<object, ReturnType<typeof prepareRoute>>();
-  private selected: SelectionState = { selectedRouteId: null, selectedCheckpointIndex: null, hoveredRouteId: null };
+  private selected: SelectionState = { selectedRouteId: null, selectedCheckpointIndex: null, hoveredRouteId: null, hoveredCheckpointIndex: null };
   private listeners = new Set<(event: MapEvent) => void>();
   private markers: Marker[] = [];
   private chips: { marker: Marker; id: string; position: Position }[] = [];
@@ -173,12 +173,17 @@ export class MapLibreEngine implements MapEngine {
       if (selection.selectedCheckpointIndex !== null) {
         if (this.map?.getSource('rs-checkpoints')) this.map.setFeatureState({ source: 'rs-checkpoints', id: selection.selectedCheckpointIndex }, { selected: true });
         const cp = this.selectedRoute()?.route.checkpoints.find(c => c.index === selection.selectedCheckpointIndex);
-        if (cp && validPosition(cp.coordinate) && !this.pausedFit) this.map?.easeTo({ center: cp.coordinate, duration: reduce() ? 0 : 400 });
+        if (cp && validPosition(cp.coordinate) && this.host && outsideViewport(this.project(cp.coordinate), this.host.clientWidth, this.host.clientHeight, this.padding)) this.focusPoint(...cp.coordinate);
         this.pulse();
       }
       this.showTooltip(selection.selectedCheckpointIndex);
     }
     this.setHover(selection.hoveredRouteId);
+    this.paintCheckpointHover(selection.hoveredCheckpointIndex);
+  }
+  focusPoint(lng: number, lat: number, options: { duration?: number } = {}) {
+    if (!this.map || !this.host || !validPosition([lng, lat]) || !outsideViewport(this.project([lng, lat]), this.host.clientWidth, this.host.clientHeight, this.padding)) return;
+    this.map.easeTo({ center: [lng, lat], duration: reduce() ? 0 : options.duration ?? 400 });
   }
   private selectedRoute() { return this.prepared.find(p => p.route.route_id === this.selected.selectedRouteId); }
   private applySelection(writeData = true) {
@@ -227,15 +232,19 @@ export class MapLibreEngine implements MapEngine {
   };
   private processMouse(e: MapMouseEvent) {
     const feature = this.hit(e)[0], index = feature?.properties?.index;
-    if (this.hoveredCheckpoint !== null && this.map?.getSource('rs-checkpoints')) this.map.setFeatureState({ source: 'rs-checkpoints', id: this.hoveredCheckpoint }, { hover: false });
-    this.hoveredCheckpoint = index === undefined ? null : Number(index);
-    if (this.hoveredCheckpoint !== null && this.map?.getSource('rs-checkpoints')) this.map.setFeatureState({ source: 'rs-checkpoints', id: this.hoveredCheckpoint }, { hover: true });
-    for (const id of ['rs-calm', 'rs-critical']) if (this.map?.getLayer(id)) this.map.setLayoutProperty(id, 'icon-size', ['case', ['==', ['get', 'index'], this.hoveredCheckpoint ?? -1], 1.15, 1]);
-    this.showTooltip(this.hoveredCheckpoint ?? this.selected.selectedCheckpointIndex);
+    this.emit({ type: 'checkpoint-hover', index: index === undefined ? null : Number(index) });
+    this.paintCheckpointHover(index === undefined ? null : Number(index));
     this.emit({ type: 'hover', id: feature?.properties?.route ? String(feature.properties.route) : null });
     if (this.map) this.map.getCanvas().style.cursor = feature ? 'pointer' : '';
   }
-  private onLeave = () => { this.emit({ type: 'hover', id: null }); this.showTooltip(this.selected.selectedCheckpointIndex); };
+  private paintCheckpointHover(index: number | null) {
+    if (this.hoveredCheckpoint !== null && this.map?.getSource('rs-checkpoints')) this.map.setFeatureState({ source: 'rs-checkpoints', id: this.hoveredCheckpoint }, { hover: false });
+    this.hoveredCheckpoint = index;
+    if (this.hoveredCheckpoint !== null && this.map?.getSource('rs-checkpoints')) this.map.setFeatureState({ source: 'rs-checkpoints', id: this.hoveredCheckpoint }, { hover: true });
+    for (const id of ['rs-calm', 'rs-critical']) if (this.map?.getLayer(id)) this.map.setLayoutProperty(id, 'icon-size', ['case', ['==', ['get', 'index'], this.hoveredCheckpoint ?? -1], 1.15, 1]);
+    this.showTooltip(this.hoveredCheckpoint ?? this.selected.selectedCheckpointIndex);
+  }
+  private onLeave = () => { this.emit({ type: 'hover', id: null }); this.emit({ type: 'checkpoint-hover', index: null }); this.paintCheckpointHover(null); };
   private onKey = (e: KeyboardEvent) => {
     if (e.key === 'Home' || e.key.toLowerCase() === 'r') { e.preventDefault(); this.fitTo(null, true); }
     if (e.key === 'Escape') { e.preventDefault(); this.dismissTooltip(); }

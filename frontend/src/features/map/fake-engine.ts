@@ -11,6 +11,7 @@ export class FakeEngine implements MapEngine {
   setSelection(selection: SelectionState) { this.calls.push({ method: 'selection', value: selection }); }
   setHover(id: string | null) { this.calls.push({ method: 'hover', value: id }); }
   fitTo(id?: string | null, force?: boolean) { this.calls.push({ method: 'fit', value: [id, force] }); }
+  focusPoint(lng: number, lat: number, options?: { duration?: number }) { this.calls.push({ method: 'focus', value: [lng, lat, options] }); }
   setPadding(padding: Padding) { this.calls.push({ method: 'padding', value: padding }); }
   resize() { this.calls.push({ method: 'resize' }); }
   zoom(delta: number) { this.calls.push({ method: 'zoom', value: delta }); }

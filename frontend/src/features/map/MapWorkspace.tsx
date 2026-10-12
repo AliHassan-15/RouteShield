@@ -22,7 +22,7 @@ export function MapWorkspace({ analysis, factory, onSkipMap }: { analysis: Analy
   const [fullscreen, setFullscreen] = useState(false);
   const fullButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    let cancelled = false, unsubscribe = () => {}, unsubscribeEvents = () => {}, resizeTimer = 0, bootstrapFrame = 0, bootstrapIdle = 0;
+    let cancelled = false, unsubscribe = () => {}, unsubscribeEvents = () => {}, resizeTimer = 0, announcementTimer = 0, bootstrapFrame = 0, bootstrapIdle = 0;
     const themeObserver = new MutationObserver(() => engine.current?.setTheme(readTheme()));
     const padding = () => {
       const node = region.current; if (!node || !engine.current) return;
@@ -53,15 +53,18 @@ export function MapWorkspace({ analysis, factory, onSkipMap }: { analysis: Analy
         if (event.type === 'route') store.selectRoute(event.id);
         if (event.type === 'checkpoint') store.selectCheckpoint(event.index);
         if (event.type === 'hover') store.hoverRoute(event.id);
+        if (event.type === 'checkpoint-hover') store.hoverCheckpoint(event.index);
       });
       let previous = store.getState();
       const sync = () => {
         const next = store.getState(); instance.setSelection(next);
+        if (next.selectedRouteId !== previous.selectedRouteId || next.selectedCheckpointIndex !== previous.selectedCheckpointIndex) clearTimeout(announcementTimer);
         if (status.current && latest.current) {
           if (next.selectedRouteId !== previous.selectedRouteId) status.current.textContent = `${routeLabels(latest.current).get(next.selectedRouteId ?? '') ?? 'No route'} selected`;
           else if (next.selectedCheckpointIndex !== previous.selectedCheckpointIndex && next.selectedCheckpointIndex !== null) {
             const cp = latest.current.routes.find(r => r.route_id === next.selectedRouteId)?.checkpoints.find(c => c.index === next.selectedCheckpointIndex);
-            if (cp) status.current.textContent = `Checkpoint at mile ${miles(cp.mile_marker)} selected, ${tooltipContent(cp).risk} risk`;
+            clearTimeout(announcementTimer);
+            if (cp) announcementTimer = window.setTimeout(() => { if (status.current) status.current.textContent = `Checkpoint at mile ${miles(cp.mile_marker)} selected, ${tooltipContent(cp).risk} risk`; }, 400);
           }
         }
         previous = next;
@@ -75,7 +78,7 @@ export function MapWorkspace({ analysis, factory, onSkipMap }: { analysis: Analy
     };
     const boot = () => { void start().catch(() => { if (!cancelled) { setFatal(true); setFailure('style failed to load'); } }); };
     if (factory) boot(); else bootstrapFrame = requestAnimationFrame(() => { if (typeof requestIdleCallback === 'function') bootstrapIdle = requestIdleCallback(boot, { timeout: 400 }); else boot(); });
-    return () => { cancelled = true; cancelAnimationFrame(bootstrapFrame); if (bootstrapIdle && typeof cancelIdleCallback === 'function') cancelIdleCallback(bootstrapIdle); unsubscribe(); unsubscribeEvents(); themeObserver.disconnect(); observer.disconnect(); sheetObserver.disconnect(); document.removeEventListener('fullscreenchange', fullChange); clearTimeout(resizeTimer); engine.current?.destroy(); engine.current = null; };
+    return () => { cancelled = true; cancelAnimationFrame(bootstrapFrame); if (bootstrapIdle && typeof cancelIdleCallback === 'function') cancelIdleCallback(bootstrapIdle); unsubscribe(); unsubscribeEvents(); themeObserver.disconnect(); observer.disconnect(); sheetObserver.disconnect(); document.removeEventListener('fullscreenchange', fullChange); clearTimeout(resizeTimer); clearTimeout(announcementTimer); engine.current?.destroy(); engine.current = null; };
   }, [factory, store]);
   useEffect(() => { updatePadding.current(); engine.current?.setRoutes(analysis); }, [analysis]);
   const toggleLegend = () => { const next = !legend; setLegend(next); try { localStorage.setItem('routeshield-map-legend', String(next)); } catch { /* Optional preference. */ } };

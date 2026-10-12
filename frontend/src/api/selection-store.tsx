@@ -3,9 +3,9 @@ import type { ReactNode } from 'react';
 
 // Map contract: one provider shared by console and map; selection changes clear
 // checkpoint details, hover never changes selection. IDs/indices are API identities.
-export interface SelectionState { selectedRouteId: string | null; selectedCheckpointIndex: number | null; hoveredRouteId: string | null }
+export interface SelectionState { selectedRouteId: string | null; selectedCheckpointIndex: number | null; hoveredRouteId: string | null; hoveredCheckpointIndex: number | null }
 export function createSelectionStore() {
-  let state: SelectionState = { selectedRouteId: null, selectedCheckpointIndex: null, hoveredRouteId: null };
+  let state: SelectionState = { selectedRouteId: null, selectedCheckpointIndex: null, hoveredRouteId: null, hoveredCheckpointIndex: null };
   let selected = { selectedRouteId: state.selectedRouteId, selectedCheckpointIndex: state.selectedCheckpointIndex };
   const listeners = new Set<() => void>();
   const update = (next: SelectionState) => {
@@ -16,9 +16,10 @@ export function createSelectionStore() {
   return {
     getState: () => state, getSelection: () => selected,
     subscribe: (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; },
-    selectRoute: (id: string | null) => update({ ...state, selectedRouteId: id, selectedCheckpointIndex: null }),
+    selectRoute: (id: string | null) => update({ ...state, selectedRouteId: id, selectedCheckpointIndex: null, hoveredCheckpointIndex: null }),
     selectCheckpoint: (index: number | null) => update({ ...state, selectedCheckpointIndex: index }),
     hoverRoute: (id: string | null) => update({ ...state, hoveredRouteId: id }),
+    hoverCheckpoint: (index: number | null) => update({ ...state, hoveredCheckpointIndex: index }),
   };
 }
 export type SelectionStore = ReturnType<typeof createSelectionStore>;
@@ -29,5 +30,5 @@ export function SelectionProvider({ value, children }: { value: ReturnType<typeo
 export function useSelectionStore() { const value = useContext(Context); if (!value) throw new Error('SelectionProvider required.'); return value; }
 export function useSelection() {
   const store = useSelectionStore(), state = useSyncExternalStore(store.subscribe, store.getSelection, store.getSelection);
-  return { ...state, selectRoute: store.selectRoute, selectCheckpoint: store.selectCheckpoint, hoverRoute: store.hoverRoute };
+  return { ...state, selectRoute: store.selectRoute, selectCheckpoint: store.selectCheckpoint, hoverRoute: store.hoverRoute, hoverCheckpoint: store.hoverCheckpoint };
 }

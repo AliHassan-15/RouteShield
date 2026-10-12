@@ -1,0 +1,88 @@
+.checkpoint-inspector, .risk-profile { min-width: 0; }
+.checkpoint-inspector h4, .checkpoint-inspector h5, .risk-profile h4 { margin: 0; line-height: 1.35; }
+.checkpoint-inspector dl, .checkpoint-inspector dd { margin: 0; }
+.checkpoint-inspector header .risk-badge { justify-self: start; }
+.checkpoint-inspector header { display: grid; gap: 7px; border-top: 1px solid var(--hairline); padding-top: 18px; }
+.checkpoint-inspector h4 { font-size: 19px; font-weight: 550; }
+.checkpoint-inspector h5 { font-size: 12px; font-weight: 600; }
+.checkpoint-inspector .micro { line-height: 1.6; }
+.inspector-values { animation: inspector-fade 180ms var(--ease-out); }
+.coordinate-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; font-size: 11px; }
+.coordinate-row small { display: block; color: var(--muted); font-size: 10px; }
+.checkpoint-inspector button, .inspector-dock button { min-height: 44px; min-width: 44px; background: transparent; color: var(--ink); border: 1px solid var(--hairline); padding: 8px; font-size: 11px; }
+.checkpoint-inspector button:hover, .inspector-dock button:hover { background: var(--inset); }
+.checkpoint-times { display: grid; gap: 6px; font-size: 12px; line-height: 1.6; }
+.checkpoint-times dt { margin-top: 10px; }
+.checkpoint-times dd { overflow-wrap: anywhere; }
+.weather-readout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 18px 0; }
+.weather-readout > div { display: flex; flex-direction: column; align-items: start; gap: 6px; }
+.weather-value { font-size: 21px; line-height: 1.3; overflow-wrap: anywhere; }
+.weather-value small { display: block; color: var(--muted); font-size: 10px; }
+.weather-readout .risk-badge { font-size: 10px; padding: 2px 3px; gap: 3px; }
+.weather-readout .risk-badge svg { width: 12px; height: 12px; }
+.weather-readout > div > small { font-size: 10px; line-height: 1.5; color: var(--muted); }
+.checkpoint-unavailable, .checkpoint-evidence { padding: 12px; border: 1px dashed var(--border); margin: 16px 0; font-size: 12px; line-height: 1.65; }
+.checkpoint-unavailable p, .checkpoint-evidence p { margin: 6px 0; }
+.checkpoint-evidence strong { display: block; color: var(--risk-no-travel); }
+.rules-heading { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; border-top: 1px solid var(--hairline); padding-top: 16px; font-size: 11px; }
+.rules-ladder { list-style: none; counter-reset: ladder; padding: 0; margin: 12px 0; }
+.rules-ladder li { counter-increment: ladder; border-top: 1px solid var(--hairline); padding: 10px 0 10px 28px; position: relative; display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 11px; }
+.rules-ladder li::before { content: '0' counter(ladder); position: absolute; left: 0; top: 12px; font-family: var(--font-mono); color: var(--muted); font-size: 9px; }
+.rules-ladder p { width: 100%; line-height: 1.65; }
+.load-applied { border-left: 2px solid var(--border); }
+.checkpoint-reasons { font-size: 12px; line-height: 1.7; }
+.checkpoint-reasons summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
+.checkpoint-reasons ul { padding-left: 18px; }
+.checkpoint-reasons li { margin-bottom: 8px; }
+.checkpoint-inspector footer { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 10px; color: var(--muted); line-height: 1.65; overflow-wrap: anywhere; }
+.checkpoint-inspector footer p + p { margin-top: 7px; }
+.checkpoint-steps { display: flex; gap: 6px; margin-top: 12px; }
+.checkpoint-steps button { flex: 1; }
+.checkpoint-steps [aria-disabled='true'] { opacity: .55; }
+.inspector-dock { flex: none; background: var(--surface); border-top: 1px solid var(--border); padding: 12px 16px max(12px, env(safe-area-inset-bottom)); min-height: 160px; max-height: max(164px, 48%); overflow-y: auto; animation: dock-enter 180ms var(--ease-out); }
+.dock-summary, .dock-controls { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.dock-summary > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 10px; }
+.dock-summary .risk-badge { font-size: 10px; }
+.dock-summary > button { border: 0; font-size: 22px; }
+.weather-readout.is-compact { margin: 6px 0; gap: 6px; }
+.is-compact .micro { font-size: 8px; }
+.is-compact .weather-value { font-size: 11px; }
+.is-compact .weather-value small { display: inline; font-size: 9px; }
+.dock-controls .checkpoint-steps { flex: 1; margin: 0; }
+.dock-details { margin-top: 10px; }
+.profile-title { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.profile-title h4 { font-size: 14px; font-weight: 550; }
+.profile-title > span { font-size: 11px; }
+.risk-profile .segmented { width: 100%; }
+.risk-profile .segmented button { min-height: 44px; flex: 1; }
+.profile-summary, .profile-key { font-size: 11px; color: var(--muted); line-height: 1.65; margin: 12px 0; }
+.profile-plot { position: relative; padding-bottom: 76px; }
+.profile-plot > svg, .profile-interaction > svg { display: block; width: 100%; height: auto; }
+.profile-band { position: absolute; left: 10%; right: 3.333%; top: 12px; pointer-events: none; }
+.profile-band .mini-strip { margin: 0; height: 8px; }
+.profile-grid, .profile-ticks, .profile-etas { color: var(--muted); fill: currentColor; font-family: var(--font-mono); font-size: 9px; }
+.profile-grid path { stroke: var(--hairline); stroke-dasharray: 2 3; }
+.profile-ticks path { stroke: var(--border); }
+.profile-trace { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.profile-reveal .profile-trace { stroke-dasharray: 1; animation: trace-enter 480ms var(--ease-out) both; }
+.profile-reveal .profile-band { animation: inspector-fade 250ms var(--ease-out); }
+.profile-special text { fill: var(--ink); font-family: var(--font-mono); font-size: 8px; }
+.profile-interaction { position: absolute; inset: 0 0 76px; cursor: crosshair; }
+.profile-interaction:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.profile-crosshair { transition: transform 90ms var(--ease-out); }
+.profile-crosshair path { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 2 3; }
+.profile-selected { fill: var(--accent); animation: inspector-fade 220ms var(--ease-out); }
+.profile-selected path { transform-box: fill-box; transform-origin: center; animation: selection-pulse 220ms var(--ease-out); }
+.profile-readout { position: absolute; top: calc(100% + 8px); left: 0; right: 0; min-height: 64px; border-top: 1px solid var(--hairline); display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; padding-top: 8px; font-size: 10px; pointer-events: none; }
+.profile-readout .risk-badge { font-size: 10px; }
+.profile-weather-empty { position: absolute; left: 12%; right: 5%; top: 29%; padding: 8px; background: var(--surface); text-align: center; font-size: 12px; }
+.profile-weather-empty p { font-size: 10px; line-height: 1.6; margin-top: 6px; }
+.profile-zero { position: absolute; top: 38%; left: 22%; font-size: 11px; color: var(--muted); }
+.profile-empty { border: 1px dashed var(--border); padding: 18px; font-size: 12px; line-height: 1.6; margin-top: 16px; }
+@keyframes dock-enter { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes inspector-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes trace-enter { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes selection-pulse { 50% { transform: scale(1.3); opacity: .6; } }
+@media (max-width: 360px) { .weather-value { font-size: 18px; } .inspector-dock { padding-inline: 10px; } .dock-summary > div { max-width: 225px; } }
+@media (max-width: 760px) and (max-height: 600px) { .sheet-dock .bottom-sheet[data-snap='full'] { height: calc(100dvh - 140px - var(--advisory-height)); } }
+@media (prefers-reduced-motion: reduce) { .profile-crosshair { transition: none; } .profile-reveal .profile-trace, .profile-reveal .profile-band, .profile-selected, .profile-selected path, .inspector-values, .inspector-dock { animation: none; } }

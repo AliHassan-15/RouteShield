@@ -412,3 +412,112 @@ are therefore not verified. Earlier tasks' live results do not fill this evidenc
 Backend tests, hosted/native-GPU/mobile-browser verification were skipped. No new
 backend fields are required; the existing proposed human route-label field remains
 optional and unimplemented. Heatmap, slider and checkpoint detail panel remain next-task work.
+
+## Checkpoint inspector and risk profile
+
+Implemented 2026-10-12 in `frontend/src/features/checkpoints/`: the inspector,
+compact dock, SVG profile, reason templates, display geometry and typed synthetic
+fixtures. Results adds session-remembered Compare/Profile/Checkpoints navigation
+with a transform-only indicator and heading focus. Compare keeps the existing
+recommendation/matrix/cards/details; Checkpoints exposes the ordered list. Profile
+loads its chart and full inspector together in a lazy module. No dependency added.
+Blocked/incomplete routes remain inspectable and explicitly labeled; map selection
+does not force a sub-view switch. Responsive console remounts retain valid route
+and checkpoint selection; genuinely new analyses reset to the server recommendation.
+
+Selection includes hoveredCheckpointIndex. Hover updates only the chart interaction
+subscriber and imperative map paint, leaving the React selection snapshot stable.
+The map emits checkpoint hover and receives external hover through feature-state;
+no hover source writes or provider requests occur. Leaving Profile clears its hover.
+`focusPoint(lng,lat,options)` uses existing padded viewport bounds: visible points
+do not move the camera; offscreen selections pan without changing zoom. Reduced
+motion jumps. The real engine and fake implement the same interface. Keyboard
+selection is announced once after400ms through the existing map live region.
+
+The console dock sits outside the results scroller, reserves at least160px so the
+half-sheet controls remain visible, and has previous/next, close and Details actions.
+Expanded details scroll inside the dock. Profile always exposes the full inspector
+under its chart. At short mobile/reflow heights, the full sheet reserves140px for
+the map rather than232px, keeping the content scrollable. Controls retain44px targets
+and the dock remains above the persistent advisory/safe area.
+
+Inspector values come directly from Checkpoint/RiskResult/Weather/Trip/Metadata:
+mile/total, four-place lat/lon with clipboard fallback, checkpoint-local ETA or
+explicit UTC fallback plus UTC instant, actual forecast row timestamp, wind/rain/
+snow units and individual hazard badges, optional display-only gust, cargo and the
+four-step hazard/load-adjusted/final/load-evidence ladder. Every reason is rendered
+by one template module; its completeness test reads both the generated API union
+and the domain ReasonCode enum (eight codes). Templates restate measured values,
+band level and threshold/operator supplied by the API; there is no threshold table,
+classification or ranking in presentation code. Future codes remain visible as text.
+All seven availability codes have distinct driver-facing explanations. Missing
+values are n/a, UNKNOWN has no ordinal, known blocking evidence remains prominent,
+and the API known risk floor is shown as “At least <level>”.
+
+The profile reuses checkpoint-owned miles for its band; final risk shapes appear
+above a neutral weather trace whose point shapes/colors use that hazard's API level.
+Missing samples break the path; zero is retained. A zero precipitation message
+requires every sample to be present and zero. Nice numeric axes add headroom with
+no hazard threshold lines. Four ETA axis labels interpolate supplied checkpoint
+UTC instants for display only and use supplied checkpoint zones/explicit UTC; they
+never produce forecast sampling ETAs, weather rows or recommendations. Load markers
+use explicit API escalation reason codes and changed wind layers. UNKNOWN/No Travel
+markers remain visible. In dense plots (<24px/checkpoint), Low uses the map's same
+index-divisible-by-four thinning rule; all other levels survive.
+
+The chart is one slider control: Left/Right move hover by one, PageUp/PageDown by
+five, Home/End reach endpoints, Enter/Space selects, Escape clears hover. Pointer
+snaps to the nearest supplied mile; crosshair motion uses transform only. Global
+brackets and dock steps clamp at endpoints; button/global-console edges give a
+short reduced-motion-safe response. Selection updates map/list/dock/inspector and
+the chart marker. A hidden series table and visible summary provide text equivalents.
+Maximum known level and category totals are supplied aggregates; UNKNOWN mileage
+uses the separate `summary.unknown_miles` field, not an assumed dictionary key.
+Trace draw-in runs once per route opening using stroke-dashoffset; band/value fades
+and selection pulses are bounded. Reduced motion removes all these effects.
+
+Presentation fallbacks: Route1..n use the existing server-order labels; no new human
+route-label field is invented. Forecast age is explicitly the conservative age at
+the analysis snapshot from cache ages and fetched_at/generated_at, not a claimed
+live feed. No new backend fields are required; the earlier human-label proposal
+remains optional. Synthetic state fixtures are UI evidence, not provider/forecast-
+lookup evidence; optional hazard boundary metadata is omitted from their excerpts.
+
+Verification: the full frontend suite ran once:181 tests/12 files passed. Initial
+full lint found three formatting issues and strict TypeScript found two invalid
+Testing Library options; these were repaired. Subsequent changed-file lint passed,
+96 affected map/Results/checkpoint tests passed, then the live-exposed UNKNOWN
+aggregate regression passed in the final36-test checkpoint file (36 new unit tests).
+Two offline Chromium checks passed, including no console errors/extra analysis,
+keyboard/map/list/dock sync, preserved route/checkpoint after mobile remount, theme
+and route switching, nonblank SVG, offscreen focus without zoom loss and visible
+half-sheet controls. Final strict TypeScript/production build passed. Node default
+gzip measured initial JS110,342 bytes (<200,000); lazy chart/inspector JS6,316 bytes;
+lazy map/worker430,752 bytes. Existing fonts remain70,496 bytes. Production debug
+hook absence passed. The map's raw chunk-size warning remains; no new performance
+or memory claim replaces the earlier Map measurement.
+
+Thirty inspected PNGs in ignored `output/playwright/checkpoints/`: profile light/
+dark wind/rain/snow (six); inspector-high and inspector-load-no-travel (each with
+a rules/footer capture); inspector-unknown-block/unblocked; unavailable-out_of_horizon,
+missing_hour,missing_field,past_time,provider_failure,quota_exceeded,demo_quota_reached
+(each prefixed `unavailable-`); dock-desktop/expanded/mobile-half; crosshair-hover;
+chart-keyboard-focus; subnavigation-blocked; profile-320px; browser-narrow;
+profile-reflow-200-percent; real-santa-monica-profile/inspector. Manual and automated
+screenshots used the offline basemap under this task's localhost-only network scope.
+The640×480 capture is a200% reflow equivalent with scrolling, not verified native
+browser zoom. Visible fixes included default heading/definition margins, tall-
+element capture clipping, dock controls, stale hover and responsive selection reset.
+
+Exactly one live Santa Monica Pier→LA City Hall example-chip analysis at45,000lb/
+about+3h returned HTTP200,3 routes,RECOMMENDED in5,325ms browser wall (4,047ms backend):
+TomTom routing1/geocoding0, Open-Meteo1. No real response recording. An earlier40s
+observer timeout sent zero analyses because port8000 returned404 for health; the
+verified application was run on8001 with a process-only public frontend API URL.
+No repository environment/provider setting changed and no unrelated server stopped.
+The saved live Profile exposed “Unknown n/a mi”; the separate-aggregate correction
+was verified synthetically after capture. Its screenshot predates that correction;
+the one-analysis cap prevents a further live replay. Backend tests, fresh dependency
+audit (no dependency/network allowance), hosted/native-GPU/other-browser/native-zoom
+checks were skipped. Heatmap/forecast slider remain next-task work. User-owned
+release gates remain OPEN; no elapsed working time was supplied or estimated.

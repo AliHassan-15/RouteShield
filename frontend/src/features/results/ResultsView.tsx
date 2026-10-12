@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { AnalysisSnapshot } from '../../api/analysis-store';
 import type { AnalysisResponse, Route } from '../../api/types';
-import { Button } from '../../components/controls';
+import { Button, SegmentedControl, Select } from '../../components/controls';
+import { useSelection } from '../../api/selection-store';
+import { CheckpointList } from '../map/CheckpointList';
+import { useCheckpointKeys } from '../checkpoints/selection';
 import { Icon } from '../../components/icons';
 import { RequestId } from '../../components/RequestId';
 import { Skeleton } from '../../components/surfaces';
@@ -14,6 +17,9 @@ import { Coverage, WarningsTray } from './Warnings';
 import { CRITERIA, eligibleRecommended, labelText, routeLabels, serverOrder } from './presentation';
 
 export const ADVISORY = 'Weather-based planning aid. Forecasts and truck restrictions may be incomplete; verify conditions and road restrictions before travel.';
+const ProfileView = lazy(() => import('../checkpoints/CheckpointViews'));
+export type ResultsSubView = 'compare' | 'profile' | 'checkpoints';
+export function readResultsSubView(): ResultsSubView { try { const value = sessionStorage.getItem('routeshield-results-view'); return value === 'profile' || value === 'checkpoints' ? value : 'compare'; } catch { return 'compare'; } }
 function CountMetric({ value, format }: { value: unknown; format: (v: unknown) => string }) {
   const reduced = useReducedMotion(), [progress, setProgress] = useState(reduced ? 1 : 0), target = displayNumber(value);
   useEffect(() => {
@@ -36,8 +42,12 @@ function NoFullyAssessed({ response, labels }: StatusProps) { return <div classN
 function AllIncomplete(props: StatusProps) { return <div className="result-banner"><h3>{props.response.message}</h3><p>{labelText(props.response.explanation, props.labels)}</p><Coverage response={props.response} /></div>; }
 const STATUS = { RECOMMENDED: Recommended, BEST_FULLY_ASSESSED_AVAILABLE: BestAvailable, ALL_BLOCKED: AllBlocked, NO_FULLY_ASSESSED_TRAVELABLE_ROUTE: NoFullyAssessed, ALL_INCOMPLETE: AllIncomplete };
 export function ResultsSkeleton() { return <div className="results-skeleton" aria-label="Results loading"><Skeleton label="Preparing recommendation" lines={5} /><div className="skeleton-matrix"><Skeleton label="Preparing comparison" lines={5} /></div><Skeleton label="Preparing routes" lines={3} /></div>; }
-export function ResultsView({ snapshot, rerun, disabled, changed }: { snapshot: AnalysisSnapshot; rerun: () => void; disabled: boolean; changed: boolean }) {
+export function ResultsView({ snapshot, rerun, disabled, changed, view: controlledView, onViewChange }: { snapshot: AnalysisSnapshot; rerun: () => void; disabled: boolean; changed: boolean; view?: ResultsSubView; onViewChange?: (view: ResultsSubView) => void }) {
   const response = snapshot.response, labels = routeLabels(response), routes = serverOrder(response.routes), Component = STATUS[response.recommendation_status];
+  const selection = useSelection(), route = routes.find(r => r.route_id === selection.selectedRouteId) ?? routes[0], [internalView, setInternalView] = useState(readResultsSubView), view = controlledView ?? internalView, viewHeading = useRef<HTMLHeadingElement>(null);
+  useCheckpointKeys(route);
+  useEffect(() => { if (route && selection.selectedRouteId !== route.route_id) selection.selectRoute(route.route_id); }, [route, selection.selectedRouteId, selection.selectRoute]);
+  const changeView = (next: string) => { const choice = next as ResultsSubView; setInternalView(choice); onViewChange?.(choice); try { sessionStorage.setItem('routeshield-results-view', choice); } catch { /* Optional session preference. */ } requestAnimationFrame(() => viewHeading.current?.focus({ preventScroll: true })); };
   const [now, setNow] = useState(Date.now()), [entered, setEntered] = useState(false);
   useEffect(() => { const timer = setTimeout(() => setEntered(true), 650); return () => clearTimeout(timer); }, []);
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(timer); }, []);
@@ -51,7 +61,10 @@ export function ResultsView({ snapshot, rerun, disabled, changed }: { snapshot: 
     {changed && <div className="result-banner"><p>Inputs changed since this analysis</p><Button onClick={rerun} disabled={disabled}>Re-run</Button></div>}
     {stale && <div className="result-banner stale-banner"><p>Results are older than 15 minutes. Re-run the analysis for a current recommendation.</p><Button onClick={rerun} disabled={disabled}>Re-run</Button></div>}
     <p className="freshness mono">Analyzed at {time(response.generated_at, response.trip.departure_timezone)} · {ages.length || fetched.length ? `forecast fetched ${fixed(age, 0, 1n, 60n)} min ago` : 'forecast fetch age unavailable'}</p>
-    <Component response={response} labels={labels} /><ComparisonMatrix response={response} routes={routes} labels={labels} /><RouteCards response={response} routes={routes} labels={labels} /><WarningsTray response={response} />
+    <div className="results-subnav"><SegmentedControl label="Results view" value={view} options={[{ value: 'compare', label: 'Compare' }, { value: 'profile', label: 'Profile' }, { value: 'checkpoints', label: 'Checkpoints' }]} onChange={changeView} /><span className="results-view-indicator" style={{ transform: `translateX(${['compare', 'profile', 'checkpoints'].indexOf(view) * 100}%)` }} /></div>
+    <h3 className="results-view-heading" ref={viewHeading} tabIndex={-1}>{view === 'compare' ? 'Route comparison' : view === 'profile' ? 'Risk profile' : 'Ordered checkpoints'}</h3>
+    {view === 'compare' ? <><Component response={response} labels={labels} /><ComparisonMatrix response={response} routes={routes} labels={labels} /><RouteCards response={response} routes={routes} labels={labels} /></> : <><Select label="Inspected route" value={route?.route_id ?? ''} onChange={e => selection.selectRoute(e.target.value)}>{routes.map(r => <option key={r.route_id} value={r.route_id}>{labels.get(r.route_id)} · {r.travel_status === 'BLOCKED' ? 'Blocked' : r.travel_status === 'INCOMPLETE' ? 'Incomplete' : 'Assessed'}</option>)}</Select>{view === 'profile' ? <Suspense fallback={<Skeleton label="Preparing checkpoint profile" />}><ProfileView response={response} /></Suspense> : route && <CheckpointList route={route} />}</>}
+    <WarningsTray response={response} />
     <footer className="results-footer"><p>{ADVISORY}</p><ul>{response.attributions.map((a, i) => <li key={`${a.provider}-${i}`}><span className="micro">{a.provider}{!a.confirmed && ' · Unconfirmed attribution'}</span><p>{a.text}</p></li>)}</ul><RequestId id={response.metadata.request_id} /><p className="mono">Server computation {fixed(response.metadata.total_ms, 0)} ms</p><p>No live traffic. Durations are static estimates.</p></footer>
   </div>;
 }

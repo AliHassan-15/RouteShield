@@ -10,6 +10,12 @@
 .results-heading h2 { font-size: 22px; font-weight: 500; margin-top: 4px; }
 .results-heading h2:focus { outline-offset: 5px; }
 .results-body { display: grid; gap: 24px; min-width: 0; }
+.results-subnav { position: relative; }
+.results-subnav .segmented { display: grid; grid-template-columns: repeat(3, 1fr); }
+.results-subnav button { min-height: 44px; padding: 8px 4px; font-size: 11px; }
+.results-view-indicator { position: absolute; bottom: 0; left: 0; height: 2px; width: 33.333%; background: var(--accent); transition: transform 180ms var(--ease-out); pointer-events: none; }
+.results-view-heading { font-size: 17px; font-weight: 550; }
+@media (prefers-reduced-motion: reduce) { .results-view-indicator { transition: none; } }
 .trip-summary { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); padding: 12px 0; }
 .trip-summary > p { font-weight: 550; line-height: 1.5; }
 .trip-summary > div { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; margin: 6px 0 2px; }

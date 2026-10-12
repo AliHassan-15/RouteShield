@@ -49,6 +49,7 @@ export const markerEncoding = (level: RiskLevel) => ({ ...riskPresentation[level
 export const visibleLow = (index: number, zoom: number) => zoom >= 7 || index % 4 === 0;
 // Keep both neutral traces outside the selected 10 px casing on shared roads.
 export const routeOffset = (index: number, selected: number) => index === selected ? 0 : [0, 1, 2].filter(i => i !== selected).indexOf(index) === 0 ? -7 : 7;
+export const outsideViewport = (p: { x: number; y: number }, width: number, height: number, padding: Padding) => p.x < padding.left || p.x > width - padding.right || p.y < padding.top || p.y > height - padding.bottom;
 export function cameraPadding(width: number, height: number, consoleWidth: number, sheetHeight = 0, footerHeight = 88): Padding {
   return { left: width <= 760 ? 24 : consoleWidth + 24, right: width <= 760 ? 72 : 40, top: width <= 760 ? 72 : 24, bottom: Math.max(24, Math.min(height - 100, footerHeight + sheetHeight + 24)) };
 }

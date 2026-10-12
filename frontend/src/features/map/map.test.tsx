@@ -44,7 +44,7 @@ it('StrictMode initializes one engine; controls, map events, theme and cleanup s
   await waitFor(() => expect(fake.calls.some(c => c.method === 'routes')).toBe(true));
   fireEvent.click(screen.getByRole('button', { name: 'Zoom in' })); fireEvent.click(screen.getByRole('button', { name: 'Recenter routes' }));
   act(() => fake.emit({ type: 'route', id: analysis.routes[1]!.route_id })); expect(store.getState().selectedRouteId).toBe(analysis.routes[1]!.route_id);
-  act(() => fake.emit({ type: 'checkpoint', index: 1 })); expect(store.getState().selectedCheckpointIndex).toBe(1); expect(screen.getByRole('status').textContent).toContain('Checkpoint at mile');
+  act(() => fake.emit({ type: 'checkpoint', index: 1 })); expect(store.getState().selectedCheckpointIndex).toBe(1); await waitFor(() => expect(screen.getByRole('status').textContent).toContain('Checkpoint at mile'));
   act(() => { document.documentElement.dataset.theme = 'dark'; }); await waitFor(() => expect(fake.calls.some(c => c.method === 'theme')).toBe(true));
   expect(fake.calls.some(c => c.method === 'zoom')).toBe(true); expect(fake.calls.some(c => c.method === 'fit')).toBe(true);
   tree.unmount(); expect(fake.calls.filter(c => c.method === 'destroy')).toHaveLength(1);
