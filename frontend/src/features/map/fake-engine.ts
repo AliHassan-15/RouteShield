@@ -1,5 +1,6 @@
 import type { AnalysisResponse, Position } from '../../api/types';
 import type { SelectionState } from '../../api/selection-store';
+import type { HeatState } from '../../api/selection-store';
 import type { MapEngine, MapEvent, Padding, Theme } from './contracts';
 // A test-only engine: no WebGL or vendor imports in React component tests.
 export class FakeEngine implements MapEngine {
@@ -9,6 +10,7 @@ export class FakeEngine implements MapEngine {
   setTheme(theme: Theme) { this.calls.push({ method: 'theme', value: theme }); }
   setRoutes(analysis: AnalysisResponse | null) { this.calls.push({ method: 'routes', value: analysis?.analysis_id }); }
   setSelection(selection: SelectionState) { this.calls.push({ method: 'selection', value: selection }); }
+  setHeat(state: HeatState) { this.calls.push({ method: 'heat', value: state }); }
   setHover(id: string | null) { this.calls.push({ method: 'hover', value: id }); }
   fitTo(id?: string | null, force?: boolean) { this.calls.push({ method: 'fit', value: [id, force] }); }
   focusPoint(lng: number, lat: number, options?: { duration?: number }) { this.calls.push({ method: 'focus', value: [lng, lat, options] }); }

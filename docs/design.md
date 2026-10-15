@@ -521,3 +521,134 @@ the one-analysis cap prevents a further live replay. Backend tests, fresh depend
 audit (no dependency/network allowance), hosted/native-GPU/other-browser/native-zoom
 checks were skipped. Heatmap/forecast slider remain next-task work. User-owned
 release gates remain OPEN; no elapsed working time was supplied or estimated.
+
+
+## Heatmap and forecast slider
+
+Implemented presentation of the existing D10 payload (2026-10-16). The decoder
+validates the 49 frames, 0/1..5/9 level alphabet, intensity0..100, dominance0..4,
+block/floor masks, coordinate ranges, mappings and nullable server truck positions.
+The analysis snapshot retains the cached decode; slider state has a separate
+external-store subscription and never changes the route-selection snapshot.
+Worst-case200 points/49 frames/three routes with filters allocate **85,275 bytes**
+in typed arrays (coordinates3,200; frame arrays78,400; trucks/masks3,675), excluding
+the original response and JS object headers. Measured final hardware decode **3.20ms**;
+this is below the8ms idle-scheduling threshold, so decoding stays synchronous.
+
+Five independent heat layers draw Low→No Travel with fixed token hues and alpha
+only. Weights use the server intensity/100 in its supplied category; no threshold,
+classification or intensity formula exists in the frontend. Radius interpolates
+linearly at zoom3/6/10/15 through28/48/64/84px. Opacity caps are.18 for Low and.48
+for other levels. UNKNOWN has hatched gray points, Unavailable dashed hollow rings,
+and known-block marks survive either. Exact sample shapes carry dominant W/R/S/L
+glyphs and keyboard/hover details. Routes retain risk colors, thinner outlines and
+contrasting casings above the field; checkpoint halos remain above routes.
+
+One180ms rAF crossfade blends separate category weights and retargets from the
+current display without queueing; writes faster than16ms are skipped. Reduced
+motion selects the frame immediately. A400ms first field reveal follows the900ms
+route reveal and is canceled by replacement. Sources/layers are reused through
+hour/filter/selection and reinstalled through the existing theme/style path.
+Explicit playback is1hour/1000ms at1x, with0.5/1/2/4x and Loop off initially.
+Playback stops at the payload's last usable hour; Loop wraps only usable hours.
+Manual pointer capture pauses; keyboard steps1/6h, Home/End and P are supported.
+The track still permits unavailable hours and hatches them. UTC and local absolute
+time preserve departure minutes and DST; arrival/snap uses supplied checkpoint ETA.
+The arrival marker preserves the fractional ETA hour; only the jump action rounds
+to a frame, with its exact ETA still visible.
+
+Presentation-only associations: truck coordinates/miles come directly from the
+server's **lat,lon,mile** tuples (point coordinates are **lon,lat**). Null after
+arrival hides the marker and labels Arrived. During a glide only screen presentation
+interpolates returned positions; it does not derive progress or ETAs. For the
+current-cell readout, nearest great-circle sample is chosen within route mapping
+candidates, or within the full point pool if mapping is absent. This is a sample
+association, not forecast interpolation or off-road coverage. Hazard filters use
+the supplied hazard codes with the existing combined intensity because the API
+has no per-hazard intensity arrays; no new intensity is invented. Optional backend
+proposal: provide per-hazard display intensities and an explicit truck→sample index
+if exact attribution is desired. Neither is needed for this implementation.
+
+Chromium156, Windows,16 logical processors, **Intel UHD Graphics / ANGLE D3D11**:
+Vite dev/E2E mode with an offline basemap and preserveDrawingBuffer enabled:
+feature-state through-render/idle median8.70ms/p9510.00ms (synchronous median.20ms);
+preallocated GeoJSON setData median303.90ms/p95334.00ms (synchronous median.20ms).
+The installed MapLibre6.14 style specification explicitly permits feature-state
+in heatmap-weight; real browser drawing produced no expression errors. The faster
+feature-state path is used. A worst-case full pointer scrub plus4x playback trace
+measured final frame median4.20ms, p958.40ms, maximum21.00ms,1,423 frames; zero long
+tasks>50ms and **zero browser request events, excluding none**. Trace artifacts
+are ignored under output/playwright/heatmap. This is a measured local target pass,
+not a guarantee on all hardware. Earlier repeats had p9512.60ms and16.70ms;
+variability and the borderline earlier result are retained here explicitly. The single requested hardware attempt succeeded;
+earlier functional checks also used software SwiftShader.
+
+
+Retention evidence: ten consecutive worst-case analyses and **200 full playback
+cycles** used one WebGL context. Between-step waits were accelerated while actual
+rAF/rendering remained active and the4x setting/ordinary timer stayed enabled;
+this is **not a ten-minute wall-clock soak**. Measured final loop window156,470ms.
+After GC, DOM nodes1,427→1,435; listeners316→319; JS used heap22,948,360→26,912,708
+bytes (+17.3%). These pass the recorded bounded-growth assertions, not proof of
+zero retained allocation. The stress-run path benchmark also favored feature state
+(11.00ms median vs304.60ms setData median); primary trace numbers above came from
+an otherwise isolated offline-basemap measurement. The clean browser scrub test
+also verified zero unrelated route-console React Profiler commits.
+
+Verification: **224 frontend tests/13 files passed**, including **42 new heatmap
+unit cases**. Full lint, strict type check and production build each ran once and
+passed. After screenshot review, the corrected calm fixture, exact ETA marker, strict filter flag, readout badge/placement and manual helper
+received scoped lint/type checks and the42-case heatmap rerun; the final CSS reflow, sample touch targets, opacity-only readout/legend motion
+and label-priority changes received focused Vite asset rebuilds and bundle check.
+Three new browser tests passed across clean scoped runs: zero-request keyboard/
+pointer weights and exact h0 hash; calm/stormy canvas, theme/style preservation;
+and ten replacements/200-cycle retention. Early runs exposed inadequate transition
+waits, dev HMR measurement contamination and a rerun with the wrong basemap mode;
+the corrected clean offline reruns passed without filtering request events.
+Final Node gzip: initial JS**114,748 bytes** (<200,000), lazy heat controls**3,131**,
+lazy checkpoint views6,462, lazy map/worker433,867. Heat-control CSS2.34KB gzip;
+fonts remain70,496 bytes. Production E2E hook/guide exclusion passed; Vite's large
+lazy-map chunk warning remains. No dependency or environment setting was added.
+
+**33 PNGs inspected**, ignored under `output/playwright/heatmap/`: stormy-light/
+dark-0/12/24/48 (8); calm-light/dark-24 (2); heat-on/off; samples-visible;
+filter-combined/wind/rain/snow; route-closeup; truck-hour-4/16 and truck-arrived;
+unavailable-hours-caption; legend-expanded; mobile-320-peek/half/full; slider-focus;
+zoom-reflow-200; partial-availability; filter-omitted; heatmap-malformed;
+real-santa-hour-0/24. Synthetic captures use the actual OpenFreeMap basemap.
+Visual revisions: healthy-status badge no longer covers mobile time labels;
+Options stays in the playback row; map padding/controls/legend reserve measured
+control height; short reflow viewports scroll rather than hiding controls beneath
+the sheet; route chips sit above the truck; readouts sit above the marker and include risk
+shapes; sample buttons retain44px targets around12px dots; actual keyboard modality proves the
+slider focus ring. Calm arrival evidence now agrees with its all-Low forecast.
+Sparse high-zoom fields reflect supplied samples; density is disclosed rather than
+inventing intermediate weather. Native Ctrl+zoom did not change Chromium's scale;
+720×500 with vertical scrolling verifies reflow equivalence, **not native200% zoom**.
+
+Exactly **one** live Santa Monica Pier→Los Angeles City Hall chip analysis at
+45,000lb/about+3h returned HTTP200,3 routes,RECOMMENDED in**5,255ms** browser wall,
+4,687ms service time: TomTom routing1/geocoding0, Open-Meteo1. The numeric send guard
+is1; only numeric metrics and screenshots were saved, no real response recording.
+Both heat hours rendered, but detailed basemap tiles had not appeared in the live
+captures; live basemap completion remains unverified and the cap prevents a replay.
+The real captures predate the final readout badge/placement, exact ETA-marker
+placement and route-chip stacking adjustments. Synthetic
+screenshots verify the loaded basemap and final stacking separately.
+
+Backend tests, fresh dependency audit, hosted verification, other browsers and
+native200% zoom were skipped/unverified within this frontend-only/network scope.
+The200 cycles were accelerated, not a real-time ten-minute soak. No proposed
+backend change was applied; existing user-owned release gates remain OPEN. The
+pre-existing backend/.env.example edit is unrelated and excluded from this commit.
+No elapsed working time was supplied or estimated.
+
+Added frontend/src/features/heatmap/{decoder.ts,presentation.ts,overlay.ts,
+HeatmapControls.tsx,heatmap.css,fixtures.ts,heatmap.test.tsx}, e2e/heatmap.spec.ts
+and scripts/capture-heatmap.mjs. Integrated the analysis/selection stores, real/fake
+MapEngine, workspace, App and inspector; extended the existing build-budget helper.
+All backend, contract, decision and AGENTS files remain outside this change.
+
+Synthetic fixture durations are20/21/22h with matching checkpoint ETAs and progress,
+so intermediate truck hours can be inspected. They are explicit UI test data, not
+real driving-time estimates or provider measurements.

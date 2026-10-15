@@ -1,11 +1,14 @@
 import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { AnalysisRequest, AnalysisResponse } from './types';
+import { decodeAnalysis } from '../features/heatmap/decoder';
+import type { HeatDecode } from '../features/heatmap/decoder';
 
-export interface AnalysisSnapshot { response: AnalysisResponse; request: AnalysisRequest; wallMs: number; weightToken?: string }
+export interface AnalysisSnapshot { response: AnalysisResponse; request: AnalysisRequest; wallMs: number; weightToken?: string; heat?: HeatDecode }
 const Context = createContext<{ snapshot: AnalysisSnapshot | null; setSnapshot: (value: AnalysisSnapshot | null) => void } | null>(null);
 export function AnalysisStoreProvider({ children }: { children: ReactNode }) {
-  const [snapshot, setSnapshot] = useState<AnalysisSnapshot | null>(null);
+  const [snapshot, updateSnapshot] = useState<AnalysisSnapshot | null>(null);
+  const setSnapshot = (value: AnalysisSnapshot | null) => updateSnapshot(value ? { ...value, heat: decodeAnalysis(value.response) } : null);
   return <Context.Provider value={{ snapshot, setSnapshot }}>{children}</Context.Provider>;
 }
 export function useAnalysisStore() {

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import type { AnalysisResponse, Checkpoint, Route } from '../../api/types';
-import { useSelection } from '../../api/selection-store';
+import { useSelectionStore, useSelection } from '../../api/selection-store';
 import { RiskBadge } from '../../components/surfaces';
 import { arrival, decimal, fixed, miles, time, displayNumber } from '../../lib/format';
 import { ADVISORY } from '../results/ResultsView';
 import { routeLabels } from '../results/presentation';
+import { decodeAnalysis } from '../heatmap/decoder';
+import { jumpHour } from '../heatmap/presentation';
 import { UNAVAILABLE, loadEscalated, reasonText } from './reasons';
 import { CheckpointSteps, orderedCheckpoints } from './selection';
 
@@ -29,7 +31,8 @@ export function Inspector({ response, route, checkpoint }: { response: AnalysisR
     <footer><p className="mono">Forecast age at analysis: {Number.isFinite(age) ? `${fixed(age, 0, 1n, 60n)} min` : 'unavailable'}</p><p className="mono">Fetched {cp.weather.fetched_at} · {cp.weather.provider} / {cp.weather.model}</p><p>{ADVISORY}</p></footer></div><CheckpointSteps route={route} /></section>;
 }
 export function InspectorDock({ response }: { response: AnalysisResponse }) {
+  const heatStore = useSelectionStore(), decoded = decodeAnalysis(response);
   const selection = useSelection(), route = response.routes.find(r => r.route_id === selection.selectedRouteId), cp = route?.checkpoints.find(c => c.index === selection.selectedCheckpointIndex), [details, setDetails] = useState(false);
   if (!route || !cp) return null;
-  return <aside className={`inspector-dock ${details ? 'is-expanded' : ''}`} aria-label="Selected checkpoint dock"><div className="dock-summary"><div><p className="mono">Mile {miles(cp.mile_marker)} of {miles(route.summary.total_miles)}</p><RiskBadge level={cp.risk.final_risk} /></div><button type="button" aria-label="Close checkpoint inspector" onClick={() => selection.selectCheckpoint(null)}>×</button></div><WeatherReadout checkpoint={cp} compact /><div className="dock-controls"><CheckpointSteps route={route} /><button type="button" aria-expanded={details} aria-controls="dock-details" onClick={() => setDetails(v => !v)}>Details {details ? '−' : '+'}</button></div>{details && <div id="dock-details" className="dock-details"><Inspector response={response} route={route} checkpoint={cp} /></div>}</aside>;
+  return <aside className={`inspector-dock ${details ? 'is-expanded' : ''}`} aria-label="Selected checkpoint dock"><div className="dock-summary"><div><p className="mono">Mile {miles(cp.mile_marker)} of {miles(route.summary.total_miles)}</p><RiskBadge level={cp.risk.final_risk} /></div><button type="button" aria-label="Close checkpoint inspector" onClick={() => selection.selectCheckpoint(null)}>×</button></div><WeatherReadout checkpoint={cp} compact />{decoded.kind === 'ready' && <button type="button" className="heat-jump" title={`Exact arrival ${cp.eta_utc}; snaps to nearest forecast hour`} onClick={() => heatStore.setHour(jumpHour(cp, decoded.data), true)}>Jump to arrival at mile {miles(cp.mile_marker)} <small>{cp.eta_utc} · nearest hour</small></button>}<div className="dock-controls"><CheckpointSteps route={route} /><button type="button" aria-expanded={details} aria-controls="dock-details" onClick={() => setDetails(v => !v)}>Details {details ? '−' : '+'}</button></div>{details && <div id="dock-details" className="dock-details"><Inspector response={response} route={route} checkpoint={cp} /></div>}</aside>;
 }

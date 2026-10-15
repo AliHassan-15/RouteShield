@@ -5,6 +5,8 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { AnalysisResponse, Position, RiskLevel } from '../../api/types';
 import type { SelectionState } from '../../api/selection-store';
+import type { HeatState } from '../../api/selection-store';
+import { HeatOverlay } from '../heatmap/overlay';
 import type { MapEngine, MapEvent, Padding, Theme } from './contracts';
 import { mapConfig, offlineStyle, transformStyle } from './basemap';
 import { bounds, chipAvoidsPoints, chipFits, markerEncoding, outsideViewport, placeChips, pointAt, prepareRoute, routeOffset, validPosition } from './geometry';
@@ -49,12 +51,14 @@ export class MapLibreEngine implements MapEngine {
   private prepareMs = 0;
   private drawStartedAt = 0;
   private dataWrites = 0;
+  private heat?: HeatOverlay;
+  private heatState?: HeatState;
   private onMove = () => {
     if (this.moveFrame) return;
     this.moveFrame = requestAnimationFrame(() => { this.moveFrame = 0; this.updateChips(); this.positionTooltip(); });
   };
   private onManual = () => { this.pausedFit = true; };
-  private onStyle = () => { this.installOverlay(); this.updateData(); this.applySelection(); this.updateCredits(); };
+  private onStyle = () => { this.installOverlay(); this.updateData(); this.applySelection(); this.heat?.install(); this.updateCredits(); };
   private creditSignature = '';
   private onSource = () => this.updateCredits();
   private onZoom = () => this.declutter();
@@ -72,6 +76,7 @@ export class MapLibreEngine implements MapEngine {
       this.map = new GLMap({ container, style: offlineStyle(theme), center: [-95, 39], zoom: 3, maxZoom: 18, attributionControl: false, canvasContextAttributes: { preserveDrawingBuffer: import.meta.env.VITE_E2E === 'true' } });
     } catch { this.emit({ type: 'failure', reason: 'no WebGL' }); throw new Error('no WebGL'); }
     const m = this.map;
+    this.heat = new HeatOverlay(m, () => this.emit({ type: 'failure', reason: 'heat overlay unavailable' }));
     m.getCanvas().setAttribute('aria-label', 'Route map. Arrow keys pan; plus/minus zoom; Home or R recenter; brackets select checkpoints; Escape closes tooltip.');
     m.getCanvas().tabIndex = 0;
     m.on('style.load', this.onStyle); m.on('sourcedata', this.onSource); m.on('move', this.onMove); m.on('zoomend', this.onZoom);
@@ -84,7 +89,7 @@ export class MapLibreEngine implements MapEngine {
     if (!mapConfig.offline) void this.loadBase();
     if (import.meta.env.VITE_E2E === 'true') {
       // Compiled away unless explicitly enabled. No payload, keys or upstream data.
-      Object.assign(window, { __routeShieldMap: { inspect: () => this.inspect(), project: (p: Position) => this.project(p), select: (id: string) => this.emit({ type: 'route', id }), replaceStyle: () => this.map?.setStyle(offlineStyle(this.theme)) } });
+      Object.assign(window, { __routeShieldMap: { inspect: () => this.inspect(), project: (p: Position) => this.project(p), select: (id: string) => this.emit({ type: 'route', id }), replaceStyle: () => this.map?.setStyle(offlineStyle(this.theme)) }, __routeShieldHeat: { inspect: () => this.heat?.inspect(), benchmark: () => this.heat?.benchmark() } });
     }
   }
   private async loadBase() {
@@ -103,7 +108,7 @@ export class MapLibreEngine implements MapEngine {
     // selection. Reinstall/update overlay images via the same idempotent function.
     const style = this.base ? transformStyle(this.base, theme) : offlineStyle(theme);
     for (const layer of style.layers) if (m.getLayer(layer.id) && layer.paint) for (const [key, value] of Object.entries(layer.paint)) m.setPaintProperty(layer.id, key as PaintName, value as PaintValue);
-    this.installOverlay(); this.applySelection(false); this.showTooltip(this.tooltipIndex);
+    this.installOverlay(); this.applySelection(false); this.heat?.install(); this.showTooltip(this.tooltipIndex);
   }
   private colors() {
     const css = getComputedStyle(document.documentElement);
@@ -168,6 +173,7 @@ export class MapLibreEngine implements MapEngine {
     const routeChanged = selection.selectedRouteId !== this.selected.selectedRouteId, cpChanged = selection.selectedCheckpointIndex !== this.selected.selectedCheckpointIndex;
     this.selected = { ...selection };
     if (routeChanged) { this.applySelection(); this.fitTo(selection.selectedRouteId); }
+    if (routeChanged && this.heatState) this.heat?.set(this.heatState, selection.selectedRouteId);
     if (cpChanged || routeChanged) {
       if (this.map?.getSource('rs-checkpoints')) this.map.removeFeatureState({ source: 'rs-checkpoints' });
       if (selection.selectedCheckpointIndex !== null) {
@@ -181,6 +187,12 @@ export class MapLibreEngine implements MapEngine {
     this.setHover(selection.hoveredRouteId);
     this.paintCheckpointHover(selection.hoveredCheckpointIndex);
   }
+  setHeat(state: HeatState) {
+    const changed = state.heatEnabled !== this.heatState?.heatEnabled;
+    this.heatState = state;
+    try { this.heat?.set(state, this.selected.selectedRouteId); } catch { this.emit({ type: 'failure', reason: 'heat overlay unavailable' }); }
+    if (changed) { this.applySelection(false); this.setHover(this.selected.hoveredRouteId); }
+  }
   focusPoint(lng: number, lat: number, options: { duration?: number } = {}) {
     if (!this.map || !this.host || !validPosition([lng, lat]) || !outsideViewport(this.project([lng, lat]), this.host.clientWidth, this.host.clientHeight, this.padding)) return;
     this.map.easeTo({ center: [lng, lat], duration: reduce() ? 0 : options.duration ?? 400 });
@@ -193,10 +205,11 @@ export class MapLibreEngine implements MapEngine {
     const checkpoints: Feature<Geometry>[] = selected?.valid ? selected.route.checkpoints.filter(cp => validPosition(cp.coordinate)).map(cp => { const info = markerEncoding(cp.risk.final_risk); return { type: 'Feature', id: cp.index, properties: { index: cp.index, fraction: (Number(cp.mile_marker.numerator) / Number(cp.mile_marker.denominator)) / (Number(selected.route.summary.total_miles.numerator) / Number(selected.route.summary.total_miles.denominator)), level: cp.risk.final_risk, collision: info.collision, sort: -info.priority * 100000 + cp.index }, geometry: { type: 'Point', coordinates: cp.coordinate } }; }) : [];
     if (writeData) { (m.getSource('rs-segments') as GeoJSONSource).setData(collection(segments)); (m.getSource('rs-checkpoints') as GeoJSONSource).setData(collection(checkpoints)); this.dataWrites += 2; }
     for (let i = 0; i < 3; i++) {
-      m.setPaintProperty(`rs-casing-${i}`, 'line-color', c.halo); m.setPaintProperty(`rs-casing-${i}`, 'line-width', order === i ? 10 : 0);
+      m.setPaintProperty(`rs-casing-${i}`, 'line-color', c.halo); m.setPaintProperty(`rs-casing-${i}`, 'line-width', order === i ? this.heatState?.heatEnabled ? 8 : 10 : 0);
       m.setPaintProperty(`rs-route-${i}`, 'line-color', c.neutral); m.setPaintProperty(`rs-route-${i}`, 'line-width', i === order ? 6 : 3); m.setPaintProperty(`rs-route-${i}`, 'line-offset', routeOffset(i, order));
       m.setPaintProperty(`rs-route-${i}`, 'line-dasharray', i === order ? [1, 0] : dashes[i]!);
     }
+    for (const level of LEVELS) m.setPaintProperty(`rs-risk-${level}`, 'line-width', this.heatState?.heatEnabled ? 4 : 6);
     if (order >= 0) { m.moveLayer(`rs-casing-${order}`, 'rs-risk-LOW'); m.moveLayer(`rs-route-${order}`, 'rs-risk-LOW'); }
     this.declutter(); this.updateChips(); this.rebuildEndpoints();
     if (this.selected.selectedCheckpointIndex !== null) m.setFeatureState({ source: 'rs-checkpoints', id: this.selected.selectedCheckpointIndex }, { selected: true });
@@ -207,7 +220,7 @@ export class MapLibreEngine implements MapEngine {
   }
   setHover(id: string | null) {
     const m = this.map; if (!m?.getSource('rs-routes')) return;
-    for (let i = 0; i < 3; i++) { const route = this.prepared[i]?.route; m.setPaintProperty(`rs-route-${i}`, 'line-width', route?.route_id === this.selected.selectedRouteId ? 6 : route?.route_id === id ? 5 : 3); m.setPaintProperty(`rs-route-${i}`, 'line-opacity', !id || route?.route_id === id || route?.route_id === this.selected.selectedRouteId ? .95 : .85); }
+    for (let i = 0; i < 3; i++) { const route = this.prepared[i]?.route, selected = route?.route_id === this.selected.selectedRouteId; m.setPaintProperty(`rs-route-${i}`, 'line-width', selected ? this.heatState?.heatEnabled ? 4 : 6 : route?.route_id === id ? 4 : this.heatState?.heatEnabled ? 2 : 3); m.setPaintProperty(`rs-route-${i}`, 'line-opacity', this.heatState?.heatEnabled && !selected ? .6 : !id || route?.route_id === id || selected ? .95 : .85); }
   }
   private pulse() {
     const node = this.host?.querySelector('.map-selection-pulse'); if (node) node.remove();
@@ -246,6 +259,7 @@ export class MapLibreEngine implements MapEngine {
   }
   private onLeave = () => { this.emit({ type: 'hover', id: null }); this.emit({ type: 'checkpoint-hover', index: null }); this.paintCheckpointHover(null); };
   private onKey = (e: KeyboardEvent) => {
+    if (e.key.toLowerCase() === 'h') { e.preventDefault(); this.emit({ type: 'heat-toggle' }); }
     if (e.key === 'Home' || e.key.toLowerCase() === 'r') { e.preventDefault(); this.fitTo(null, true); }
     if (e.key === 'Escape') { e.preventDefault(); this.dismissTooltip(); }
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '+', '-', '='].includes(e.key)) this.pausedFit = true;
@@ -353,8 +367,9 @@ export class MapLibreEngine implements MapEngine {
     this.disposed = true; this.abort.abort(); cancelAnimationFrame(this.animation); cancelAnimationFrame(this.moveFrame); cancelAnimationFrame(this.mouseFrame); clearTimeout(this.prepareTimer); if (this.idle !== undefined) cancelIdleCallback(this.idle);
     const m = this.map;
     if (m) { m.off('style.load', this.onStyle); m.off('sourcedata', this.onSource); m.off('move', this.onMove); m.off('zoomend', this.onZoom); m.off('dragstart', this.onManual); m.off('wheel', this.onManual); m.off('error', this.onError); m.off('click', this.onClick); m.off('mousemove', this.onMouse); m.off('mouseout', this.onLeave); m.getCanvas().removeEventListener('keydown', this.onKey); }
-    this.markers.forEach(marker => marker.remove()); this.endpoints.forEach(marker => marker.remove()); this.tooltip?.remove(); this.host?.querySelector('.map-selection-pulse')?.remove(); this.map?.remove(); this.listeners.clear();
+    this.heat?.destroy(); this.markers.forEach(marker => marker.remove()); this.endpoints.forEach(marker => marker.remove()); this.tooltip?.remove(); this.host?.querySelector('.map-selection-pulse')?.remove(); this.map?.remove(); this.listeners.clear();
     if (import.meta.env.VITE_E2E === 'true') Reflect.deleteProperty(window, '__routeShieldMap');
+    if (import.meta.env.VITE_E2E === 'true') Reflect.deleteProperty(window, '__routeShieldHeat');
   }
 }
 export const createEngine = () => new MapLibreEngine();
