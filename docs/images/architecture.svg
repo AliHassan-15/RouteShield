@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="660" viewBox="0 0 960 660" role="img" aria-labelledby="title description">
+  <title id="title">RouteShield architecture</title>
+  <desc id="description">A driver uses the React and TypeScript client. The client displays MapLibre and OpenFreeMap maps and exchanges one analysis payload with the Django REST API. The API orchestrates the pure Python domain and isolated provider adapters. The domain calculates risk, checkpoints, ranking and 49 forecast frames. Adapters handle TomTom truck routing and geocoding, Open-Meteo weather, or explicitly selected deterministic weather presets. Forecast interaction uses the returned payload.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="960" height="660" rx="16" fill="#f8fafc"/>
+  <g fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)">
+    <path d="M 174 108 H 230"/>
+    <path d="M 490 108 H 600"/>
+    <path d="M 320 156 V 252"/>
+    <path d="M 410 252 V 156"/>
+    <path d="M 300 344 V 386 H 230 V 428" marker-start="url(#arrow)"/>
+    <path d="M 420 344 V 386 H 720 V 428" marker-start="url(#arrow)"/>
+  </g>
+  <g font-family="system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" text-anchor="middle">
+    <g stroke="#cbd5e1" stroke-width="1.5" fill="#ffffff">
+      <rect x="30" y="62" width="144" height="92" rx="12"/>
+      <rect x="600" y="62" width="320" height="92" rx="12"/>
+      <rect x="30" y="428" width="400" height="154" rx="12"/>
+      <rect x="520" y="428" width="400" height="154" rx="12"/>
+    </g>
+    <rect x="230" y="60" width="260" height="96" rx="12" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+    <rect x="230" y="252" width="260" height="92" rx="12" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+    <g fill="#0f172a" font-size="20" font-weight="600">
+      <text x="102" y="115">Driver</text>
+      <text x="360" y="99">React client</text>
+      <text x="760" y="99">MapLibre + OpenFreeMap</text>
+      <text x="360" y="291">Django / DRF API</text>
+      <text x="230" y="467">Pure Python domain</text>
+      <text x="720" y="467">Provider adapters</text>
+    </g>
+    <g fill="#334155" font-size="17">
+      <text x="360" y="128">Strict TypeScript</text>
+      <text x="760" y="128">Basemap and map presentation</text>
+      <text x="360" y="321">Validation and orchestration</text>
+      <text x="230" y="500">Risk and load rules / checkpoints</text>
+      <text x="230" y="529">Aggregation / route ranking</text>
+      <text x="230" y="558">49 forecast frames / truck positions</text>
+      <text x="720" y="500">TomTom truck routing / geocoding</text>
+      <text x="720" y="529">Open-Meteo hourly weather</text>
+      <text x="720" y="558">Explicit deterministic weather presets</text>
+    </g>
+    <g fill="#475569" font-size="15">
+      <text x="265" y="205">Trip request</text>
+      <text x="515" y="205">One analysis payload</text>
+      <text x="480" y="625">Forecast scrub, play and filters use the returned payload.</text>
+    </g>
+  </g>
+</svg>

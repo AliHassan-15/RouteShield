@@ -60,19 +60,7 @@ Keep the terminal open and press **Ctrl+C** to stop both servers.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    Driver --> React[React / strict TypeScript]
-    React -->|one analysis payload| API[Django / DRF API]
-    API --> Domain[Pure Python domain]
-    API --> Adapters[Provider adapters]
-    Adapters --> TomTom[TomTom truck routing / geocoding]
-    Adapters --> Weather[Open-Meteo hourly weather]
-    Adapters --> Scenario[Explicit deterministic weather presets]
-    React --> Basemap[MapLibre / OpenFreeMap]
-    Domain --> Results[Risk / checkpoints / ranking / 49 frames]
-    Results --> API
-```
+![RouteShield architecture: driver and React client, Django API, pure Python risk domain, and isolated routing and weather adapters.](docs/images/architecture.svg)
 
 `backend/domain` has no Django/HTTP imports. Adapters own provider validation,
 units/timeouts; `backend/apps/routing` validates, orchestrates and serializes.
