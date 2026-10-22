@@ -15,7 +15,8 @@ from config.environment import (
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_environment_file(BASE_DIR / ".env")
+if os.environ.get("APP_ENV") != "production":
+    load_environment_file(BASE_DIR / ".env")
 globals().update(runtime_settings(os.environ))
 APP_VERSION = os.environ.get("APP_VERSION", "0.1.0")
 

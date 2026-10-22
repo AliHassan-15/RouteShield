@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import App from './App';
 import { AnalysisStoreProvider } from './api/analysis-store';
@@ -25,6 +25,17 @@ test('shows loading while health is pending', () => {
   renderShell();
   expect(screen.getByRole('heading', { name: 'Trip plan' })).toBeTruthy();
   expect(screen.getByText('Checking API')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Warm up' })).toBeTruthy();
+});
+
+test('explicit header warmup reuses the health request without submitting an analysis', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'ok', version: '0.1.0', check: 'liveness' })));
+  vi.stubGlobal('fetch', fetch); renderShell(); await screen.findByText('API healthy · 0.1.0');
+  fireEvent.click(screen.getByRole('button', { name: 'Backend status' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Warm up' }));
+  await act(async () => {});
+  expect(fetch.mock.calls.length).toBe(2);
+  expect(fetch.mock.calls.every(([url]) => new URL(String(url)).pathname.endsWith('/health/'))).toBe(true);
 });
 
 test('shows the backend version when healthy', async () => {

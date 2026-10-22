@@ -36,6 +36,18 @@ import { FIXED_NOW } from '../trip/test-fixtures';
 
 beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(FIXED_NOW); localStorage.clear(); sessionStorage.clear(); history.replaceState(null, '', '/'); });
 
+test('arrival focus is deferred and does not steal a newer user focus', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new globalThis.Response(JSON.stringify(resultFixture()))));
+  const frames: FrameRequestCallback[] = [];
+  vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { frames.push(callback); return frames.length; });
+  vi.stubGlobal('cancelAnimationFrame', vi.fn());
+  mountConsole(); fireEvent.click(screen.getByRole('button', { name: 'Chicago, IL to Detroit, MI' })); fireEvent.click(screen.getByRole('button', { name: 'Analyze routes' }));
+  await act(() => vi.advanceTimersByTimeAsync(100));
+  const edit = screen.getByRole('button', { name: 'Edit trip' }); edit.focus();
+  for (let i = 0; i < 3; i++) { const batch = frames.splice(0); act(() => batch.forEach(fn => fn(performance.now()))); }
+  expect(document.activeElement).toBe(edit);
+});
+
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 type Response = ReturnType<typeof resultFixture>;
@@ -104,7 +116,7 @@ function ConsoleProbe() { const planner = useTripPlanner({ status: 'healthy', ve
 
 function mountConsole() { return render(<QueryClientProvider client={new QueryClient()}><AnalysisStoreProvider><ConsoleProbe /></AnalysisStoreProvider></QueryClientProvider>); }
 
-test('tabs auto-select results, focus heading, default to API winner and preserve edited form plus analysis', async () => { vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new globalThis.Response(JSON.stringify(resultFixture())))); mountConsole(); expect((screen.getByRole('tab', { name: 'Results' }) as HTMLButtonElement).disabled).toBe(true); fireEvent.click(screen.getByRole('button', { name: 'Chicago, IL to Detroit, MI' })); fireEvent.click(screen.getByRole('button', { name: 'Analyze routes' })); await act(() => vi.advanceTimersByTimeAsync(100)); expect(screen.getByRole('tab', { name: 'Results' }).getAttribute('aria-selected')).toBe('true'); await act(() => vi.advanceTimersByTimeAsync(30)); expect(document.activeElement?.id).toBe('results-heading'); expect(within(screen.getByRole('radiogroup', { name: 'Select a route' })).getAllByRole('radio')[0]?.getAttribute('aria-checked')).toBe('true'); fireEvent.click(screen.getByRole('button', { name: 'Edit trip' })); fireEvent.change(screen.getByLabelText('Cargo weight', { exact: true }), { target: { value: '25000' } }); fireEvent.click(screen.getByRole('tab', { name: 'Results' })); expect(screen.getByText('Inputs changed since this analysis')).toBeTruthy(); expect(screen.getByLabelText('Recommendation')).toBeTruthy(); });
+test('tabs auto-select results, focus heading, default to API winner and preserve edited form plus analysis', async () => { vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new globalThis.Response(JSON.stringify(resultFixture())))); mountConsole(); expect((screen.getByRole('tab', { name: 'Results' }) as HTMLButtonElement).disabled).toBe(true); fireEvent.click(screen.getByRole('button', { name: 'Chicago, IL to Detroit, MI' })); fireEvent.click(screen.getByRole('button', { name: 'Analyze routes' })); await act(() => vi.advanceTimersByTimeAsync(100)); expect(screen.getByRole('tab', { name: 'Results' }).getAttribute('aria-selected')).toBe('true'); await act(() => vi.advanceTimersByTimeAsync(50)); expect(document.activeElement?.id).toBe('results-heading'); expect(within(screen.getByRole('radiogroup', { name: 'Select a route' })).getAllByRole('radio')[0]?.getAttribute('aria-checked')).toBe('true'); fireEvent.click(screen.getByRole('button', { name: 'Edit trip' })); fireEvent.change(screen.getByLabelText('Cargo weight', { exact: true }), { target: { value: '25000' } }); fireEvent.click(screen.getByRole('tab', { name: 'Results' })); expect(screen.getByText('Inputs changed since this analysis')).toBeTruthy(); expect(screen.getByLabelText('Recommendation')).toBeTruthy(); });
 
 test('retry uses identical failed inputs rather than any edited value', async () => { const fetch = vi.fn().mockResolvedValue(new globalThis.Response(JSON.stringify({ error: { code: 'PROVIDER_TIMEOUT', message: '', details: {} } }), { status: 504 })); vi.stubGlobal('fetch', fetch); mountConsole(); fireEvent.click(screen.getByRole('button', { name: 'Chicago, IL to Detroit, MI' })); fireEvent.click(screen.getByRole('button', { name: 'Analyze routes' })); await act(() => vi.advanceTimersByTimeAsync(100)); fireEvent.click(screen.getByRole('button', { name: 'Retry' })); await act(() => vi.advanceTimersByTimeAsync(100)); expect(fetch.mock.calls[1]?.[1].body).toBe(fetch.mock.calls[0]?.[1].body); });
 

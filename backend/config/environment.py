@@ -1,6 +1,7 @@
 """Small environment parsers without an extra configuration dependency."""
 
 import os
+import re
 from collections.abc import Mapping
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -80,6 +81,7 @@ def runtime_settings(values: Mapping[str, str]) -> dict[str, object]:
             ("SECRET_KEY", secret),
             ("ALLOWED_HOSTS", hosts_raw),
             ("CORS_ALLOWED_ORIGINS", cors_raw),
+            ("TOMTOM_API_KEY", values.get("TOMTOM_API_KEY", "")),
         ):
             if not value.strip():
                 raise ImproperlyConfigured(f"{key} is required for production.")
@@ -91,13 +93,17 @@ def runtime_settings(values: Mapping[str, str]) -> dict[str, object]:
         cors_raw = cors_raw or "http://localhost:5173,http://127.0.0.1:5173"
     hosts = [entry.strip() for entry in hosts_raw.split(",") if entry.strip()]
     origins = [entry.strip() for entry in cors_raw.split(",") if entry.strip()]
-    if strict and any("*" in host for host in hosts):
+    if strict and any(
+        host != "[::1]" and not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?", host)
+        for host in hosts
+    ):
         raise ImproperlyConfigured("Production ALLOWED_HOSTS must list explicit hosts.")
     for origin in origins:
         parsed = urlsplit(origin)
+        local = parsed.hostname in {"localhost", "127.0.0.1", "::1"}
         if (
             not parsed.hostname
-            or parsed.scheme not in ({"https"} if strict else {"http", "https"})
+            or parsed.scheme not in ({"https"} if strict and not local else {"http", "https"})
             or parsed.path
             or parsed.query
             or parsed.fragment
@@ -116,7 +122,15 @@ def runtime_settings(values: Mapping[str, str]) -> dict[str, object]:
         "CORS_ALLOWED_ORIGINS": origins,
         "SECURE_SSL_REDIRECT": strict,
         "SESSION_COOKIE_SECURE": strict,
+        "SESSION_COOKIE_HTTPONLY": True,
+        "SESSION_COOKIE_SAMESITE": "Lax",
         "CSRF_COOKIE_SECURE": strict,
+        "CSRF_COOKIE_HTTPONLY": True,
+        "CSRF_COOKIE_SAMESITE": "Lax",
+        "CSRF_TRUSTED_ORIGINS": origins,
+        "SECURE_CONTENT_TYPE_NOSNIFF": True,
+        "SECURE_REFERRER_POLICY": "no-referrer",
+        "X_FRAME_OPTIONS": "DENY",
         "SECURE_HSTS_SECONDS": 3600 if strict else 0,
         "SECURE_HSTS_INCLUDE_SUBDOMAINS": False,
         "SECURE_HSTS_PRELOAD": False,

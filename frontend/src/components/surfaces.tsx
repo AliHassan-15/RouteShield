@@ -48,7 +48,7 @@ export function Tooltip({ label, children }: { label: string; children: ReactEle
 export function floatingPosition(anchor: DOMRect, width: number, height: number, viewport: { width: number; height: number }) {
   return { left: Math.max(8, Math.min(anchor.left, viewport.width - width - 8)), top: anchor.bottom + 8 + height > viewport.height ? Math.max(8, anchor.top - height - 8) : anchor.bottom + 8 };
 }
-export function Popover({ label, icon = 'info', children }: { label: string; icon?: IconName; children: ReactNode }) {
+export function Popover({ label, icon = 'info', trigger: content, children }: { label: string; icon?: IconName; trigger?: ReactNode; children: ReactNode }) {
   const native = typeof HTMLElement !== 'undefined' && 'showPopover' in HTMLElement.prototype;
   const id = useId(), panel = useRef<HTMLDivElement>(null), trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false), [position, setPosition] = useState<CSSProperties>({});
@@ -68,7 +68,7 @@ export function Popover({ label, icon = 'info', children }: { label: string; ico
     window.addEventListener('resize', place);
     return () => { document.removeEventListener('keydown', dismiss); document.removeEventListener('pointerdown', outside); window.removeEventListener('resize', place); };
   }, [open]);
-  return <><button ref={trigger} type="button" className="button button-ghost icon-button" aria-label={label} aria-haspopup="dialog" aria-expanded={open} aria-controls={id} onClick={() => { if (open) close(); else setOpen(true); }}><Icon name={icon} /></button><div ref={panel} id={id} role="dialog" aria-label={label} tabIndex={-1} popover={native ? 'auto' : undefined} className={`popover ${open ? 'is-open' : ''}`} hidden={!open} style={position} onToggle={e => { if (e.newState === 'closed') setOpen(false); }}><div className="popover-heading"><strong>{label}</strong><IconButton icon="close" label={`Close ${label}`} onClick={close} /></div>{children}</div></>;
+  return <><button ref={trigger} type="button" className={`button button-ghost ${content ? '' : 'icon-button'}`} aria-label={label} aria-haspopup="dialog" aria-expanded={open} aria-controls={id} onClick={() => { if (open) close(); else setOpen(true); }}>{content ?? <Icon name={icon} />}</button><div ref={panel} id={id} role="dialog" aria-label={label} tabIndex={-1} popover={native ? 'auto' : undefined} className={`popover ${open ? 'is-open' : ''}`} hidden={!open} style={position} onToggle={e => { if (e.newState === 'closed') setOpen(false); }}><div className="popover-heading"><strong>{label}</strong><IconButton icon="close" label={`Close ${label}`} onClick={close} /></div>{children}</div></>;
 }
 export function Toast({ children, onDismiss, tone = 'neutral' }: { children: ReactNode; onDismiss: () => void; tone?: 'neutral' | 'error' }) {
   const [closing, setClosing] = useState(false), reduced = useReducedMotion();

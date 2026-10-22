@@ -19,10 +19,13 @@ def production_values() -> dict[str, str]:
         "SECRET_KEY": PUBLIC_TEST_VALUE,
         "ALLOWED_HOSTS": "api.example.test",
         "CORS_ALLOWED_ORIGINS": "https://app.example.test",
+        "TOMTOM_API_KEY": "synthetic-provider-credential",
     }
 
 
-@pytest.mark.parametrize("missing", ["SECRET_KEY", "ALLOWED_HOSTS", "CORS_ALLOWED_ORIGINS"])
+@pytest.mark.parametrize(
+    "missing", ["SECRET_KEY", "ALLOWED_HOSTS", "CORS_ALLOWED_ORIGINS", "TOMTOM_API_KEY"]
+)
 def test_missing_production_configuration(missing: str) -> None:
     """Production cannot silently fall back to development configuration."""
     values = production_values()
@@ -55,6 +58,17 @@ def test_production_flags() -> None:
     assert settings["DEBUG"] is False
     assert settings["SECURE_SSL_REDIRECT"] is True
     assert settings["CSRF_COOKIE_SECURE"] is True
+
+
+def test_production_defaults_and_explicit_local_cors() -> None:
+    values = production_values()
+    del values["DEBUG"]
+    values["CORS_ALLOWED_ORIGINS"] += ",http://localhost:5173,http://127.0.0.1:5173"
+    settings = runtime_settings(values)
+    assert settings["DEBUG"] is False
+    assert settings["SECURE_HSTS_SECONDS"] == 3600
+    assert settings["SECURE_PROXY_SSL_HEADER"] is None
+    assert settings["SESSION_COOKIE_HTTPONLY"] is True
 
 
 def test_actual_startup_fails_without_secret() -> None:

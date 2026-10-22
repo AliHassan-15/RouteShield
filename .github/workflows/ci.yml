@@ -15,6 +15,9 @@
     "foundation": {
       "runs-on": "ubuntu-latest",
       "timeout-minutes": 15,
+      "env": {
+        "VITE_API_BASE_URL": "https://api.example.test/api/v1/"
+      },
       "defaults": {
         "run": {
           "working-directory": "Projects New/RouteShield"
@@ -52,6 +55,10 @@
         {
           "name": "Lint and formatting",
           "run": "python \"./dev.py\" lint"
+        },
+        {
+          "name": "Smoke tooling quality (offline)",
+          "run": "\"./backend/.venv/bin/python\" -m ruff check --config \"./backend/pyproject.toml\" \"./scripts/smoke/hosted_smoke.py\"\n\"./backend/.venv/bin/python\" -m ruff format --check --config \"./backend/pyproject.toml\" \"./scripts/smoke/hosted_smoke.py\"\n\"./backend/.venv/bin/python\" -m mypy --strict \"./scripts/smoke/hosted_smoke.py\""
         },
         {
           "name": "Strict type checks",

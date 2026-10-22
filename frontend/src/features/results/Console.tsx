@@ -28,9 +28,17 @@ export function Console({ planner, tab, setTab }: { planner: TripPlanner; tab: s
   useLayoutEffect(() => {
     if (tab !== 'results' || !focusPending.current) return;
     focusPending.current = false;
-    heading.current?.focus({ preventScroll: true });
-    const scroll = heading.current?.closest('.results-scroll');
-    if (scroll) scroll.scrollTop = 0;
+    // Focusing during the commit forces a full style/layout pass while map layers
+    // and results are being installed. Let their first paint finish first.
+    const previous = document.activeElement;
+    let frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => {
+      // Never steal focus from input made during these two frames.
+      if (document.activeElement !== previous && document.activeElement !== document.body) return;
+      heading.current?.focus({ preventScroll: true });
+      const scroll = heading.current?.closest('.results-scroll');
+      if (scroll) scroll.scrollTop = 0;
+    }); });
+    return () => cancelAnimationFrame(frame);
   }, [tab, planner.snapshot]);
   const snapshot = planner.snapshot;
   const changed = !!snapshot && (!planner.validation.request || JSON.stringify({ ...planner.validation.request, load_weight_lb: planner.validation.weightToken }) !== JSON.stringify({ ...snapshot.request, load_weight_lb: snapshot.weightToken ?? String(snapshot.request.load_weight_lb) }));
