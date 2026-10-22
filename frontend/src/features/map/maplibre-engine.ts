@@ -13,13 +13,16 @@ import { bounds, chipAvoidsPoints, chipFits, markerEncoding, outsideViewport, pl
 import { LEVELS, routeLabels, serverOrder } from '../results/presentation';
 import { duration } from '../../lib/format';
 import { tooltipContent } from './tooltip';
+import { MOTION, motionOff } from '../../lib/motion';
+import { ARRIVAL, arrivalFor, arrivalFrame } from '../../lib/arrival';
+import type { Arrival } from '../../lib/arrival';
 
 type PaintName = Parameters<GLMap['setPaintProperty']>[1];
 type PaintValue = Parameters<GLMap['setPaintProperty']>[2];
 setWorkerUrl(workerUrl);
 const collection = (features: Feature<Geometry>[]): FeatureCollection => ({ type: 'FeatureCollection', features });
 const empty = collection([]);
-const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduce = motionOff;
 const dashes = [[1, 0], [5, 2], [1, 2, 5, 2]];
 export class MapLibreEngine implements MapEngine {
   private map?: GLMap;
@@ -38,6 +41,11 @@ export class MapLibreEngine implements MapEngine {
   private hoveredCheckpoint: number | null = null;
   private abort = new AbortController();
   private animation = 0;
+  private arrival?: Arrival;
+  private stopArrival = () => {};
+  private cameraDuration = 0;
+  private idleCount = 0;
+  private lastIdleAt = 0;
   private moveFrame = 0;
   private mouseFrame = 0;
   private lastMouse?: MapMouseEvent;
@@ -61,6 +69,7 @@ export class MapLibreEngine implements MapEngine {
   private onStyle = () => { this.installOverlay(); this.updateData(); this.applySelection(); this.heat?.install(); this.updateCredits(); };
   private creditSignature = '';
   private onSource = () => this.updateCredits();
+  private onIdle = () => { this.idleCount++; this.lastIdleAt = performance.now(); };
   private onZoom = () => this.declutter();
   private onError = () => {
     if (this.styleFailed || this.disposed || mapConfig.offline) return;
@@ -79,7 +88,7 @@ export class MapLibreEngine implements MapEngine {
     this.heat = new HeatOverlay(m, () => this.emit({ type: 'failure', reason: 'heat overlay unavailable' }));
     m.getCanvas().setAttribute('aria-label', 'Route map. Arrow keys pan; plus/minus zoom; Home or R recenter; brackets select checkpoints; Escape closes tooltip.');
     m.getCanvas().tabIndex = 0;
-    m.on('style.load', this.onStyle); m.on('sourcedata', this.onSource); m.on('move', this.onMove); m.on('zoomend', this.onZoom);
+    m.on('idle', this.onIdle); m.on('style.load', this.onStyle); m.on('sourcedata', this.onSource); m.on('move', this.onMove); m.on('zoomend', this.onZoom);
     m.on('dragstart', this.onManual); m.on('wheel', this.onManual); m.on('error', this.onError);
     m.on('click', this.onClick); m.on('mousemove', this.onMouse); m.on('mouseout', this.onLeave);
     m.getCanvas().addEventListener('keydown', this.onKey);
@@ -150,6 +159,9 @@ export class MapLibreEngine implements MapEngine {
   }
   setRoutes(analysis: AnalysisResponse | null) {
     if (this.analysis === analysis) return;
+    this.stopArrival(); this.arrival = analysis ? arrivalFor(analysis) : undefined;
+    this.stopArrival = this.arrival?.subscribe(() => this.drawIn(true)) ?? (() => {});
+    this.heat?.setArrival(this.arrival);
     this.analysis = analysis; this.pausedFit = false;
     const interrupted = this.animation !== 0;
     cancelAnimationFrame(this.animation); this.animation = 0; clearTimeout(this.prepareTimer);
@@ -195,7 +207,7 @@ export class MapLibreEngine implements MapEngine {
   }
   focusPoint(lng: number, lat: number, options: { duration?: number } = {}) {
     if (!this.map || !this.host || !validPosition([lng, lat]) || !outsideViewport(this.project([lng, lat]), this.host.clientWidth, this.host.clientHeight, this.padding)) return;
-    this.map.easeTo({ center: [lng, lat], duration: reduce() ? 0 : options.duration ?? 400 });
+    this.map.easeTo({ center: [lng, lat], duration: reduce() ? 0 : options.duration ?? 300 });
   }
   private selectedRoute() { return this.prepared.find(p => p.route.route_id === this.selected.selectedRouteId); }
   private applySelection(writeData = true) {
@@ -261,7 +273,7 @@ export class MapLibreEngine implements MapEngine {
   private onKey = (e: KeyboardEvent) => {
     if (e.key.toLowerCase() === 'h') { e.preventDefault(); this.emit({ type: 'heat-toggle' }); }
     if (e.key === 'Home' || e.key.toLowerCase() === 'r') { e.preventDefault(); this.fitTo(null, true); }
-    if (e.key === 'Escape') { e.preventDefault(); this.dismissTooltip(); }
+    if (e.key === 'Escape') { e.preventDefault(); this.dismissTooltip(); if (document.fullscreenElement?.contains(this.host ?? null)) void document.exitFullscreen(); }
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '+', '-', '='].includes(e.key)) this.pausedFit = true;
     if (e.key === '[' || e.key === ']') {
       e.preventDefault(); const checkpoints = this.selectedRoute()?.route.checkpoints ?? [], current = checkpoints.findIndex(cp => cp.index === this.selected.selectedCheckpointIndex);
@@ -317,35 +329,37 @@ export class MapLibreEngine implements MapEngine {
   }
   private drawIn(skip = false) {
     const m = this.map; if (!m?.getLayer('rs-route-0')) return;
-    cancelAnimationFrame(this.animation);
-    if (reduce() || skip) {
-      for (let i = 0; i < 3; i++) { m.setPaintProperty(`rs-route-${i}`, 'line-gradient', undefined); m.setPaintProperty(`rs-casing-${i}`, 'line-opacity', 1); }
-      for (const level of LEVELS) m.setPaintProperty(`rs-risk-${level}`, 'line-opacity', 1);
-      m.setPaintProperty('rs-pattern', 'line-opacity', 1); m.setPaintProperty('rs-calm', 'icon-opacity', 1); m.setPaintProperty('rs-critical', 'icon-opacity', 1); this.chips.forEach(c => { c.marker.getElement().style.opacity = '1'; }); return;
-    }
-    for (let i = 0; i < 3; i++) m.setPaintProperty(`rs-casing-${i}`, 'line-opacity', 0);
-    for (const level of LEVELS) m.setPaintProperty(`rs-risk-${level}`, 'line-opacity', 0);
-    m.setPaintProperty('rs-pattern', 'line-opacity', 0); m.setPaintProperty('rs-calm', 'icon-opacity', 0); m.setPaintProperty('rs-critical', 'icon-opacity', 0);
-    const start = performance.now(), color = this.colors().neutral;
-    if (import.meta.env.VITE_E2E === 'true') this.drawStartedAt = start;
-    const step = (now: number) => {
+    cancelAnimationFrame(this.animation); this.animation = 0;
+    if (skip || reduce()) this.arrival?.finish();
+    const color = this.colors().neutral; let lastWrite = -Infinity;
+    const step = (now = performance.now()) => {
       if (this.disposed || !m.getLayer('rs-route-0')) return;
-      for (let i = 0; i < 3; i++) { const progress = Math.max(.000001, Math.min(1, (now - start - i * 70) / 700)); m.setPaintProperty(`rs-route-${i}`, 'line-gradient', ['step', ['line-progress'], color, progress, 'transparent']); }
-      const reveal = Math.min(1, Math.max(0, (now - start - 600) / 240));
-      for (const level of LEVELS) m.setPaintProperty(`rs-risk-${level}`, 'line-opacity', reveal);
-      const progress = Math.max(0, Math.min(1, (now - start) / 700));
-      m.setPaintProperty('rs-pattern', 'line-opacity', reveal);
-      for (let i = 0; i < 3; i++) m.setPaintProperty(`rs-casing-${i}`, 'line-opacity', reveal);
-      for (const id of ['rs-calm', 'rs-critical']) m.setPaintProperty(id, 'icon-opacity', ['case', ['<=', ['get', 'fraction'], progress], 1, 0]);
-      this.chips.forEach(c => { c.marker.getElement().style.opacity = String(reveal); });
-      if (now - start < 900) this.animation = requestAnimationFrame(step); else { this.animation = 0; for (let i = 0; i < 3; i++) m.setPaintProperty(`rs-route-${i}`, 'line-gradient', undefined); }
-    }; this.animation = requestAnimationFrame(step);
+      const elapsed = reduce() ? ARRIVAL.end : this.arrival?.elapsed() ?? ARRIVAL.end;
+      // Do not invalidate 20+ paint properties at a 240 Hz display's rAF rate.
+      if (elapsed < ARRIVAL.end && now - lastWrite < 1000 / 60) { this.animation = requestAnimationFrame(step); return; }
+      lastWrite = now; const frame = arrivalFrame(elapsed);
+      if (import.meta.env.VITE_E2E === 'true') this.drawStartedAt = this.arrival?.started ?? performance.now();
+      for (let i = 0; i < 3; i++) {
+        const progress = frame.routes[i]!;
+        m.setPaintProperty(`rs-route-${i}`, 'line-gradient', progress === 1 ? undefined : ['step', ['line-progress'], color, Math.max(.000001, progress), 'transparent']);
+        m.setPaintProperty(`rs-casing-${i}`, 'line-opacity', frame.checkpoints);
+      }
+      const checkpoints = frame.checkpoints;
+      for (const level of LEVELS) m.setPaintProperty(`rs-risk-${level}`, 'line-opacity', checkpoints);
+      m.setPaintProperty('rs-pattern', 'line-opacity', checkpoints);
+      for (const id of ['rs-calm', 'rs-critical']) m.setPaintProperty(id, 'icon-opacity', checkpoints);
+      const chips = frame.chips;
+      this.chips.forEach(c => { c.marker.setOpacity(chips, chips); });
+      this.heat?.revealAt(elapsed);
+      this.animation = elapsed < ARRIVAL.end ? requestAnimationFrame(step) : 0;
+    }; step();
   }
   fitTo(id: string | null = null, force = false) {
     if (this.pausedFit && !force) return; if (force) this.pausedFit = false;
     const points = this.prepared.filter(p => p.valid && (!id || p.route.route_id === id)).flatMap(p => p.line.points), box = bounds(points);
     // v6 otherwise adds fit padding to the map's existing padding a second time.
-    if (box) this.map?.fitBounds(box, { padding: this.padding, absolutePadding: true, linear: true, maxZoom: 14, duration: reduce() ? 0 : 900, easing: t => 1 - (1 - t) ** 3 });
+    this.cameraDuration = reduce() ? 0 : MOTION.camera;
+    if (box) this.map?.fitBounds(box, { padding: this.padding, absolutePadding: true, linear: true, maxZoom: 14, duration: this.cameraDuration, easing: t => 1 - (1 - t) ** 3 });
   }
   setPadding(padding: Padding) {
     this.padding = padding;
@@ -362,11 +376,11 @@ export class MapLibreEngine implements MapEngine {
     const html = Object.keys(m.getStyle().sources).flatMap(id => { const source = m.getSource(id); return source && 'attribution' in source && typeof source.attribution === 'string' ? [source.attribution] : []; });
     const signature = JSON.stringify(html); if (html.length && signature !== this.creditSignature) { this.creditSignature = signature; this.emit({ type: 'attribution', html }); }
   }
-  private inspect() { const m = this.map; return { drawStartedAt: this.drawStartedAt, basemapReady: !!m?.loaded() && (mapConfig.offline || !!this.base) && !this.styleFailed, selectedRouteId: this.selected.selectedRouteId, selectedCheckpointIndex: this.selected.selectedCheckpointIndex, layers: m?.getStyle().layers.filter(l => l.id.startsWith('rs-')).length ?? 0, sources: Object.keys(m?.getStyle().sources ?? {}).filter(id => id.startsWith('rs-')).length, rendered: m?.queryRenderedFeatures().filter(f => f.layer.id.startsWith('rs-')).length ?? 0, vertices: this.prepared.map(p => p.line.points.length), applyMs: this.applyMs, prepareMs: this.prepareMs, dataWrites: this.dataWrites, zoom: m?.getZoom(), center: m?.getCenter().toArray(), padding: m?.getPadding() }; }
+  private inspect() { const m = this.map; return { analysisId: this.analysis?.analysis_id, drawStartedAt: this.drawStartedAt, arrivalElapsed: this.arrival?.elapsed(), arrivalDone: this.arrival?.done(), cameraDuration: this.cameraDuration, idleCount: this.idleCount, lastIdleAt: this.lastIdleAt, tilesLoaded: !!m?.areTilesLoaded(), basemapReady: !!m?.loaded() && !!m?.areTilesLoaded() && (mapConfig.offline || !!this.base) && !this.styleFailed, selectedRouteId: this.selected.selectedRouteId, selectedCheckpointIndex: this.selected.selectedCheckpointIndex, layers: m?.getStyle().layers.filter(l => l.id.startsWith('rs-')).length ?? 0, sources: Object.keys(m?.getStyle().sources ?? {}).filter(id => id.startsWith('rs-')).length, rendered: m?.queryRenderedFeatures().filter(f => f.layer.id.startsWith('rs-')).length ?? 0, vertices: this.prepared.map(p => p.line.points.length), applyMs: this.applyMs, prepareMs: this.prepareMs, dataWrites: this.dataWrites, zoom: m?.getZoom(), center: m?.getCenter().toArray(), padding: m?.getPadding() }; }
   destroy() {
-    this.disposed = true; this.abort.abort(); cancelAnimationFrame(this.animation); cancelAnimationFrame(this.moveFrame); cancelAnimationFrame(this.mouseFrame); clearTimeout(this.prepareTimer); if (this.idle !== undefined) cancelIdleCallback(this.idle);
+    this.disposed = true; this.stopArrival(); this.abort.abort(); cancelAnimationFrame(this.animation); cancelAnimationFrame(this.moveFrame); cancelAnimationFrame(this.mouseFrame); clearTimeout(this.prepareTimer); if (this.idle !== undefined) cancelIdleCallback(this.idle);
     const m = this.map;
-    if (m) { m.off('style.load', this.onStyle); m.off('sourcedata', this.onSource); m.off('move', this.onMove); m.off('zoomend', this.onZoom); m.off('dragstart', this.onManual); m.off('wheel', this.onManual); m.off('error', this.onError); m.off('click', this.onClick); m.off('mousemove', this.onMouse); m.off('mouseout', this.onLeave); m.getCanvas().removeEventListener('keydown', this.onKey); }
+    if (m) { m.off('idle', this.onIdle); m.off('style.load', this.onStyle); m.off('sourcedata', this.onSource); m.off('move', this.onMove); m.off('zoomend', this.onZoom); m.off('dragstart', this.onManual); m.off('wheel', this.onManual); m.off('error', this.onError); m.off('click', this.onClick); m.off('mousemove', this.onMouse); m.off('mouseout', this.onLeave); m.getCanvas().removeEventListener('keydown', this.onKey); }
     this.heat?.destroy(); this.markers.forEach(marker => marker.remove()); this.endpoints.forEach(marker => marker.remove()); this.tooltip?.remove(); this.host?.querySelector('.map-selection-pulse')?.remove(); this.map?.remove(); this.listeners.clear();
     if (import.meta.env.VITE_E2E === 'true') Reflect.deleteProperty(window, '__routeShieldMap');
     if (import.meta.env.VITE_E2E === 'true') Reflect.deleteProperty(window, '__routeShieldHeat');

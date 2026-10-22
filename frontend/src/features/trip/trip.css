@@ -104,8 +104,7 @@
 .trip-action-bar > .button { width: 100%; }
 .action-ticks { position: absolute; top: 0; left: 24px; right: 24px; height: 5px; overflow: hidden; background: repeating-linear-gradient(90deg, var(--hairline) 0 1px, transparent 1px 8px); }
 .action-ticks span { display: none; position: absolute; height: 5px; width: 25%; border-top: 2px solid var(--accent); }
-.is-running .action-ticks span { display: block; animation: tick-scan 1.6s ease-in-out infinite; }
-@keyframes tick-scan { from { transform: translateX(-100%); opacity: .4; } to { transform: translateX(500%); opacity: .8; } }
+.is-running .action-ticks span { display: block; opacity: .65; }
 .submit-status { display: flex; gap: 12px; align-items: start; font-size: var(--text-small); }
 .submit-status .field-hint { margin-top: 6px; font-size: var(--text-micro); }
 .elapsed { min-width: 4ch; white-space: nowrap; }
@@ -140,3 +139,5 @@
   .trip-form-body { padding: 16px 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .action-ticks span { animation: none; transform: none; } }
+
+.request-chip input { min-height: 44px; }

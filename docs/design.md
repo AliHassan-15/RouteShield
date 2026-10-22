@@ -652,3 +652,175 @@ All backend, contract, decision and AGENTS files remain outside this change.
 Synthetic fixture durations are20/21/22h with matching checkpoint ETAs and progress,
 so intermediate truck hours can be inspected. They are explicit UI test data, not
 real driving-time estimates or provider measurements.
+
+## Motion, accessibility and performance audit
+
+Measurements dated **2026-10-17 (Asia/Karachi)**; final documentation/browser verification completed **2026-10-22**. Frontend presentation only; no dependency,
+backend, provider, risk, ranking, policy or limit changes. This section supersedes
+older entrance timings above; earlier measurements remain historical evidence.
+
+Motion inventory (source search: CSS animation/transition/keyframes, Web Animations,
+rAF, map paint transitions, camera duration and scroll calls). `out` means
+cubic-bezier(.2,.7,.25,1); `spring` uses the existing linear() token with its
+cubic-bezier fallback. CSS reduced motion disables animations/transitions globally;
+JS uses the same `motionOff()` guard. No animated interactive layout dimensions,
+position offsets, margins or shadows were found. Fixed left/top positions are
+placement, not animated properties. The two busy scans formerly looped; both now
+settle after one entrance. Only explicit forecast Loop and skeleton shimmer repeat.
+
+| Location / effect | Trigger | Duration / easing | Animated properties | Reduced motion |
+|---|---|---|---|---|
+| styles/motion.css: button, segmented/chip/heat press | Press/hover |120ms/out|transform, opacity|static|
+| Button progress | Busy begins |200ms/out, once|transform, opacity|static|
+| Tab indicator | Trip/Results |200ms/out|transform|instant|
+| Sheet | Open/snap; drag follows pointer |240ms/spring; drag0|transform|instant|
+| Toast | Enter/dismiss |200ms/out each|transform, opacity|instant; cleanup0|
+| Skeleton | Loading |1800ms/ease-in-out, only CSS loop|transform|static, pseudo hidden|
+| Header / console / legacy console children | Mount |200/480/240ms out; child delays0/60/100/140|opacity; console translate|static|
+| View Transition root | Theme, supported browser |200ms/out|old/new snapshot opacity; group morph disabled|direct update|
+| Tab panel / result sub-view / loading/error container | State/view change |200ms/out|opacity|instant|
+| trip.css: sections, helper copy | Mount / load-rule display changes |200ms/out|opacity|static|
+| Swap / floating label / input underline | Swap, resolve/focus |200/120/120ms out|transform|instant|
+| Place dropdown / option highlight | Search open/close, active option |120ms/out|transform+opacity / opacity|instant; close cleanup0|
+| Weight thumb / threshold tick / spacing indicator | Drag, weight/spacing change |120/out,200/spring,200/out|transform|instant|
+| results.css: hero / risk strip | Fresh analysis |300ms/out|translate+opacity / scaleX|final state|
+| Matrix rows / route cards | Fresh analysis |240ms/out; offsets below|transform, opacity|final state|
+| Matrix/card selection outlines | Selection |200ms/out|pseudo opacity; focus outline never animated|instant|
+| Stale banner / expanded warnings | Stale/expand |200/160ms out|transform, opacity|static|
+| ResultsView CountMetric | Once per response identity |480ms, linear clock|fixed-width text only|final text; no count loop|
+| map.css: initial tick field / tooltip | Map mount / checkpoint inspect |480/120ms ease-out|transform, opacity|static|
+| Map checkpoint ring | Newly selected checkpoint |480ms ease-out, once|scale, opacity|not created/hidden|
+| Map route draw / risk/checkpoint reveal / chips | Shared arrival |700ms per route,70ms stagger;160/200ms linear paint|line gradient/opacity, symbol opacity, Marker opacity API|final state|
+| Existing map camera | Fit / focus / zoom |600ms cubic-out /300ms default /200ms default|existing camera only|duration0|
+| Map line width / risk opacity | Selection/reveal |120/160ms map paint; global default0|paint properties|explicit0 on reduced setup|
+| checkpoints.css: values / dock | Selection/open |180ms/out|opacity / transform+opacity|static|
+| Profile trace / band / selection / crosshair | First reveal, select/hover |480/250/220/90ms out|stroke-dashoffset / opacity / scale+opacity / transform|instant|
+| Checkpoint edge feedback | Bracket/step at an endpoint |160ms Web Animations|translateX|not created|
+| heatmap.css: controls / hour / expanded legend | Analysis/hour/expand |200/120/120ms ease-out|transform+opacity / opacity / transform+opacity|static|
+| Heat thumb feedback | Press/focus |120ms/out|opacity|instant|
+| HeatOverlay frame / truck glide | Hour/filter changes |180ms linear, one retargetable rAF|separate weights; returned-coordinate presentation glide|instant|
+| HeatOverlay first reveal | Shared arrival |300ms linear paint|heatmap opacity|final state|
+| Renderer mouse/move/padding bootstrap rAF | Actual pointer/camera/resize/load |one scheduled frame; idle boot <=400ms|placement/coalescing, not a repeating animation|still schedules necessary I/O/render work|
+| Focus and list scroll calls | Explicit keyboard selection/navigation |instant/auto; no smooth scroll requested|none|same|
+
+`lib/arrival.ts` owns the named ARRIVAL timeline and MOTION token durations.
+Nominal offsets: hero0-300ms; count0-480; matrix rows120/160/200/240 (280 when
+No Travel adds a fifth row), each240ms; cards320/360/400, each240ms; routes100-800,
+170-870,240-940; checkpoint/risk reveal940-1100; heat1100-1400; chips1440-1640;
+end1800ms. The one-time staggered route draw is the documented >600ms exception.
+Every element remains interactive; root pointer/key capture ends the timeline,
+including all map/heat phases, before handling the interaction. Replacing an
+unfinished analysis finishes both, with no queued entrance. Weak response identity
+retains count progress across rerender, selection, tab, theme and sub-view remounts.
+The fake clock and FakeEngine consume the same arrivalFrame function as MapLibre.
+Actual compositor sampling times are retained in visual-audit.json; nominal
+choreography is not a claim that a cold renderer meets the frame budget.
+
+Fixes: separate650ms/950ms timers removed; count no longer restarts; camera fit
+900->600ms; map arrival paint invalidation capped at60 updates/sec. MapLibre's
+Marker.setOpacity replaces direct style opacity, which its own renderer overwrote
+and exposed chips early. The vendor marker opacity transition is also disabled
+for route chips: it otherwise eases from visible to hidden before the scheduled
+reveal. The final compositor series confirms the corrected order, and the scoped
+browser test asserts that no second CSS transition is applied. Heat styles now load before imperative marker DOM to
+prevent an unstyled-card shift. Credit rows/slot, legend trigger and sub-view body
+reserve space; the legend expands in its own scroll area. Sheet snaps keep type
+metrics and height stable. Mobile full results reveal a500px console; at narrow,
+tall viewports the page scrolls vertically instead of reducing mandatory form
+fields to a few pixels. Short200% reflow retains its existing350px console.
+Existing fixed-width metrics, opacity state/view fades, dock/tooltip/selection
+motions and reduced-motion rules were retained. Copy ID visibly confirms Copied.
+
+Layout evidence: the browser records both ordinary CLS and every raw shift,
+including recent-input entries. Final normal-motion CLS and raw totals are **0 for all ten measured flows**. Earlier failures were real: arrival0.014315, sub-view0.056622,
+legend0.039327 and sheet0.034989 raw. These drove the fixes, not exclusions from
+the observer. The two scoped browser tests cover first load, arrival, Trip/Results,
+Compare/Profile/Checkpoints, route and checkpoint selection, dock open/close,
+legend, theme and320px sheet snaps; each asserts <=.01 even including recent input.
+
+Reduced-motion selectors: .recommendation-ticket, .route-option,
+.comparison-matrix tr, .tab-indicator, .results-view-indicator, .heat-control,
+.heat-time, .heat-thumb, .button, .trip-section, .bottom-sheet, .inspector-dock,
+.profile-trace, .profile-crosshair, .profile-selected, .map-selection-pulse and
+.skeleton::after. Computed animation and transition durations were0s where present;
+zero camera duration, settled metrics/heat, visible selection/focus and no playback
+autostart passed. An explicit play/pause remains functional with instant frames.
+One deterministic switch, VITE_MOTION_DISABLED=true, requires DEV and VITE_E2E=true;
+it disables both CSS and JS motion. Unit tests exercise that switch and fake-clock
+choreography. The same two browser tests were also run with the switch enabled.
+Animation assertions await completion or use a fake clock; timed waits are for
+measurement/capture windows, not racing assertions. Production verify-build rejects
+MOTION_TEST_ONLY, VITE_MOTION_DISABLED and all Map/Heat/Console/Audit hook names.
+
+Keyboard flow covers skip, origin/swap/destination, example selection, native date
+and time subfields, cargo input/slider, spacing and submit, then results views,
+route cards, matrix, map brackets, chart, inspector, heat hour/play, legend and
+fullscreen. Escape previously got consumed by the map and trapped fullscreen;
+it now exits and restores the control's focus. Route and checkpoint announcements
+are polite/debounced400ms; hour announcements remain quiet during play/drag/key
+repeat. Closed comboboxes no longer reference an absent list. Home, skip, credit
+and request-ID targets were raised to44px. Custom DOM checks cover names, roles,
+duplicate IDs, label/reference associations and44px targets (no accessibility
+checker dependency was installed). Stable-state text contrast is measured from
+computed foreground/background colors, skipping tiny tick-bar backgrounds that
+sit outside their labels; it is not an antialiasing or screen-reader certification.
+Final sweep: light minimum4.6804:1, dark5.9391:1; no name, role, duplicate-ID,
+label/reference or touch-target findings. Risk strips have labeled legends,
+profile uses shape markers, and heat/truck use shapes/text plus UNKNOWN hatching.
+Native browser200% zoom remains unverified;720x500 is the documented reflow
+equivalent. Theme startup's existing blocking script and fallback unit checks
+remain; compositor theme frames show map continuity and the same selected route,
+camera, hour12, wind filter and server truck position.
+
+Performance evidence (Chromium156.0.8078.4; Windows;16 logical processors; real
+OpenFreeMap; Vite DEV/E2E with preserveDrawingBuffer): **ANGLE (Intel, Intel(R) UHD
+Graphics (0x00009A60) Direct3D11 vs_5_0 ps_5_0, D3D11)**, hardware rendering.
+Worst fixture: three synthetic routes,200 pooled points,49 frames. Initial arrival
+median8.4/p9533.2/max245.9ms;2 long tasks, max242ms,TBT272ms. One optimization pass
+bounded repeated map paint writes; its remeasurement was median16.7/p95108.4/
+max258.1ms;6 long tasks,max235ms,TBT410ms. Scrub plus full4x playback then measured
+median4.2/p9516.6/max54.2ms,zero long tasks/TBT and zero request events. Reduced
+arrival measured median8.3/p9541.7/max192ms;1 long task,max176ms,TBT126ms. The first
+reduced comparison had a stale-snapshot race and was discarded; the helper now
+waits for the exact new analysis identity. Traces include actual renderer work,
+not only an rAF claim. Arrival smoothness/long-task targets remain MISSED; later
+visual fixes receive one final verification trace without another optimization.
+Final-source verification after the subsequent visual fixes (no second optimization):
+arrival median8.4/p9537.6/max183.4ms,3 long tasks,max169ms,TBT207ms,CLS0;
+scrub/full4x median4.2/p9512.5/max58.3ms,zero long tasks/TBT/requests,
+CLS.0024165/raw.0045549; reduced arrival median4.3/p9550.1/max195.9ms,
+1 long task,max169ms,TBT119ms,CLS0/raw.0000757. Decode1.5ms/85275 typed-array
+bytes. These are the final reported numbers; arrival p95 and long tasks remain
+above target. This trace precedes the final mobile CSS specificity and vendor
+chip-transition corrections; their scoped browser/CLS checks were repeated,
+with no additional performance optimization or claim. These measurements do not
+establish production or hosted performance.
+
+Final full frontend checks: lint, strict type check,245 tests/14 files and production
+build passed. Added21 focused unit cases and two browser tests. An early focused
+run failed before collection because the sandbox temporary directory disappeared;
+using project-local TEMP/TMP fixed it. Browser localhost access required running
+the owned server/runner outside the network sandbox, still with a hostname guard.
+Initial browser assertions exposed the documented layout/keyboard defects; final
+scoped runs passed. One additional project type check ran during initial integration;
+the requested full lint/test/build and dedicated end-stage type check each ran once.
+Build also invokes its existing tsc check. Final screenshot review exposed a mobile overflow specificity conflict and the vendor chip-transition flash. These CSS-only fixes passed the two scoped browser tests (final run20.9s),21 focused unit cases, scoped ESLint and a Vite-only asset rebuild plus production guard. A repeated focused run initially failed before collection when its deleted project TEMP directory fell back to protected Windows temp; recreating the project TEMP directory restored the passing run. The final browser width assertion permits the native vertical scrollbar gutter (305 content pixels in a320px viewport). Capture-helper updates received scoped ESLint checks. No backend suite, installs, dependency
+audit, Linux/hosted check, other browser or assistive-technology session ran.
+
+Production bytes (Node gzip level6): initial JS **115407** (106514 index +8893
+shared presentation); lazy map engine289424, worker144614, checkpoint6467,
+heat controls3130. CSS: initial12647, lazy map10468, checkpoint2004; fonts30092+
+40404=70496 raw. Largest JS chunks: map, worker, initial index. Initial JS passes
+200000-byte target. Profile and heat controls already remain lazy; moving heat CSS
+into initial CSS is the intentional layout-stability tradeoff. No new dependency
+or speculative library split was added. Vite still warns about the large lazy
+map chunk; the warning is not suppressed.
+
+Artifacts: output/playwright/motion-audit/ contains compositor frame series,
+focus/320px/reflow/reduced/error screenshots, the Playwright WebM, raw Chromium
+trace, CLS/DOM/performance numeric reports and a persistent one-send live guard.
+Synthetic data stays visibly synthetic in capture content; no real response is
+saved or committed. All screenshots are inspected before commit. The single
+Santa Monica Pier -> Los Angeles City Hall live analysis uses45000lb/+3h; the
+capture gate requires MapLibre idle after arrival plus loaded tiles, in each theme.
+Live evidence from the2026-10-17 measurement session: **HTTP200,3 routes,RECOMMENDED,3540ms browser wall /2984ms service**; TomTom routing1, geocoding0, Open-Meteo1. Both light/dark hour0 captures passed post-arrival idle and loaded-tiles checks. The persistent guard records exactly one send; no live retry occurred. Final evidence contains33 synthetic PNGs plus two real PNGs, all visually inspected in the final contact sheets on2026-10-22. The refreshed Playwright video is output/playwright/motion-audit/arrival-audit.webm, **25.32s**,1440x1000/25fps/VP9 (duration read from the installed Playwright FFmpeg metadata). Compositor samples nearest0/150/300/600/1000/1800ms were desktop13.31/146.49/284.00/600.68/979.77/1792.26ms and mobile-0.92/149.08/303.22/603.26/994.89/1794.93ms; negative0 denotes the last pre-arrival frame. Theme samples were-6.35/51.96/77.00/206.22/356.18ms. Frame selection uses compositor timestamps rather than serial screenshot sleeps.

@@ -1,11 +1,14 @@
 import { Marker } from 'maplibre-gl';
+import { motionOff } from '../../lib/motion';
+import { ARRIVAL, phase } from '../../lib/arrival';
+import type { Arrival } from '../../lib/arrival';
 import type { Map as GLMap, GeoJSONSource, ExpressionSpecification } from 'maplibre-gl';
 import type { FeatureCollection, Point } from 'geojson';
 import type { HeatState } from '../../api/selection-store';
 import type { DecodedHeatmap } from './decoder';
 import { DOMINANT, fadeWeights, LEVEL_NAMES, levelsAt, truckReadout, weightHash, weightsAt } from './presentation';
 
-const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduced = motionOff;
 const tokens = ['unknown', 'low', 'moderate', 'high', 'severe', 'no-travel'];
 type UpdatePath = 'feature-state' | 'setData';
 /** One source, five categorical GPU layers, one cancellable transition loop. */
@@ -17,7 +20,7 @@ export class HeatOverlay {
   private from = new Float32Array(0);
   private target = new Float32Array(0);
   private frame = 0;
-  private revealTimer = 0;
+  private arrival?: Arrival;
   private reveal = 1;
   private started = 0;
   private lastWrite = -Infinity;
@@ -61,13 +64,12 @@ export class HeatOverlay {
     const fresh = data !== this.data, previous = this.state, changed = fresh || previous?.heatHour !== state.heatHour || previous?.heatFilter !== state.heatFilter;
     this.state = state;
     if (fresh) {
-      clearTimeout(this.revealTimer); cancelAnimationFrame(this.frame); this.frame = 0; this.position = undefined; this.data = data; this.samples.forEach(s => s.remove()); this.samples = [];
+      cancelAnimationFrame(this.frame); this.frame = 0; this.position = undefined; this.data = data; this.samples.forEach(s => s.remove()); this.samples = [];
       this.source.features = data ? data.payload.points.map((coordinates, id) => ({ type: 'Feature', id, geometry: { type: 'Point', coordinates: [...coordinates] }, properties: { level: 1, blocked: 0, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0 } })) : [];
       this.current = new Float32Array((data?.payload.point_count ?? 0) * 5);
       if (data) this.install();
       (this.map.getSource('rs-heat') as GeoJSONSource | undefined)?.setData(this.source);
-      this.reveal = reduced() ? 1 : 0;
-      if (!reduced()) this.revealTimer = window.setTimeout(() => { this.reveal = 1; for (let k = 1; k <= 5; k++) { if (!this.map.getLayer(`rs-heat-${k}`)) continue; this.map.setPaintProperty(`rs-heat-${k}`, 'heatmap-opacity-transition', { duration: 400 }); this.map.setPaintProperty(`rs-heat-${k}`, 'heatmap-opacity', k === 1 ? .18 : .48); } }, 950);
+      this.revealAt(this.arrival?.elapsed() ?? ARRIVAL.end);
     }
     if (!data) { this.visibility(); if (this.truckNode) this.truckNode.hidden = true; return; }
     if (changed) {
@@ -83,6 +85,8 @@ export class HeatOverlay {
     this.updateSamples(); this.visibility();
     if (changed && !fresh && !reduced()) this.animate();
   }
+  setArrival(arrival?: Arrival) { this.arrival = arrival; this.revealAt(arrival?.elapsed() ?? ARRIVAL.end); }
+  revealAt(elapsed: number) { this.reveal = reduced() ? 1 : phase(elapsed, ARRIVAL.heat, ARRIVAL.heatDuration); for (let k = 1; k <= 5; k++) if (this.map.getLayer(`rs-heat-${k}`)) { this.map.setPaintProperty(`rs-heat-${k}`, 'heatmap-opacity-transition', { duration: 0 }); this.map.setPaintProperty(`rs-heat-${k}`, 'heatmap-opacity', this.reveal * (k === 1 ? .18 : .48)); } }
   private visibility() {
     const visible = !!this.data && !!this.state?.heatEnabled;
     for (const layer of this.map.getStyle().layers.filter(l => l.id.startsWith('rs-heat-'))) this.map.setLayoutProperty(layer.id, 'visibility', visible ? 'visible' : 'none');
@@ -158,5 +162,5 @@ export class HeatOverlay {
     this.path = results['feature-state']!.medianMs <= results.setData!.medianMs ? 'feature-state' : 'setData';
     for (let k = 1; k <= 5; k++) this.map.setPaintProperty(`rs-heat-${k}`, 'heatmap-weight', this.expression(k)); this.write(this.current); return results;
   }
-  destroy() { cancelAnimationFrame(this.frame); clearTimeout(this.revealTimer); this.samples.forEach(s => s.remove()); this.truck?.remove(); }
+  destroy() { cancelAnimationFrame(this.frame); this.samples.forEach(s => s.remove()); this.truck?.remove(); }
 }

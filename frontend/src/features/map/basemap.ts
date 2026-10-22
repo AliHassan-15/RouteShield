@@ -11,9 +11,9 @@ export const inkPalette = {
   light: { background: '#f6f3eb', land: '#eeece3', water: '#dedfd7', road: '#bdc4bf', label: '#425660', halo: '#fffdf7' },
   dark: { background: '#101c25', land: '#172730', water: '#22353f', road: '#354d57', label: '#c4cdcb', halo: '#101c25' },
 };
-export const offlineStyle = (theme: Theme): StyleSpecification => ({ version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': inkPalette[theme].background } }] });
+export const offlineStyle = (theme: Theme): StyleSpecification => ({ version: 8, transition: { duration: 0, delay: 0 }, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': inkPalette[theme].background } }] });
 export function transformStyle(style: StyleSpecification, theme: Theme): StyleSpecification {
-  const result = structuredClone(style), p = inkPalette[theme];
+  const result = structuredClone(style); result.transition = { duration: 0, delay: 0 }; const p = inkPalette[theme];
   result.glyphs = mapConfig.glyphs; result.sprite = mapConfig.sprite;
   result.layers = result.layers.filter(l => l.type !== 'fill-extrusion' && l.type !== 'raster' && !/building|airport|shield|poi|housenumber|highway-name|water.*label|label_other|label_village/.test(l.id)).map(layer => {
     if (layer.type === 'background') layer.paint = { 'background-color': p.background };

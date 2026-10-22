@@ -9,7 +9,7 @@ let jsGzipBytes = 0, lazyMapGzipBytes = 0, checkpointGzipBytes = 0, heatmapGzipB
 for (const name of files) {
   const bytes = await readFile(resolve(root, 'assets', name));
   if (/\.(js|css)$/.test(name) && /STYLE_GUIDE_ONLY|palette-reference|Example action activated|Every mile, assessed/.test(bytes.toString())) throw new Error(`Development specimen leaked: ${name}`);
-  if (/\.(m?js)$/.test(name)) { if (/maplibre|worker/.test(name)) lazyMapGzipBytes += gzipSync(bytes).length; else if (/HeatmapControls/.test(name)) heatmapGzipBytes += gzipSync(bytes).length; else if (/CheckpointViews/.test(name)) checkpointGzipBytes += gzipSync(bytes).length; else jsGzipBytes += gzipSync(bytes).length; if (/__routeShield(?:Map|Heat|Console)/.test(bytes.toString())) throw new Error('E2E map hook leaked into production'); }
+  if (/\.(m?js)$/.test(name)) { if (/maplibre|worker/.test(name)) lazyMapGzipBytes += gzipSync(bytes).length; else if (/HeatmapControls/.test(name)) heatmapGzipBytes += gzipSync(bytes).length; else if (/CheckpointViews/.test(name)) checkpointGzipBytes += gzipSync(bytes).length; else jsGzipBytes += gzipSync(bytes).length; if (/MOTION_TEST_ONLY|VITE_MOTION_DISABLED|__routeShield(?:Map|Heat|Console|Audit)/.test(bytes.toString())) throw new Error('Test-only motion switch or debug hook leaked into production'); }
   if (name.endsWith('.woff2')) { fontBytes += bytes.length; fonts++; }
 }
 if (jsGzipBytes > 200_000) throw new Error('JavaScript exceeds 200 KB gzip');

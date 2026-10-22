@@ -2,13 +2,17 @@ import type { AnalysisResponse, Position } from '../../api/types';
 import type { SelectionState } from '../../api/selection-store';
 import type { HeatState } from '../../api/selection-store';
 import type { MapEngine, MapEvent, Padding, Theme } from './contracts';
+import { arrivalFor, arrivalFrame } from '../../lib/arrival';
+import type { Arrival } from '../../lib/arrival';
 // A test-only engine: no WebGL or vendor imports in React component tests.
 export class FakeEngine implements MapEngine {
   calls: { method: string; value?: unknown }[] = [];
   private events = new Set<(event: MapEvent) => void>();
+  private arrival?: Arrival;
   async init(_host: HTMLElement, theme: Theme) { this.calls.push({ method: 'init', value: theme }); this.emit({ type: 'ready' }); }
   setTheme(theme: Theme) { this.calls.push({ method: 'theme', value: theme }); }
-  setRoutes(analysis: AnalysisResponse | null) { this.calls.push({ method: 'routes', value: analysis?.analysis_id }); }
+  setRoutes(analysis: AnalysisResponse | null) { this.arrival = analysis ? arrivalFor(analysis) : undefined; this.calls.push({ method: 'routes', value: analysis?.analysis_id }); }
+  inspectArrival() { return arrivalFrame(this.arrival?.elapsed() ?? 1800); }
   setSelection(selection: SelectionState) { this.calls.push({ method: 'selection', value: selection }); }
   setHeat(state: HeatState) { this.calls.push({ method: 'heat', value: state }); }
   setHover(id: string | null) { this.calls.push({ method: 'hover', value: id }); }

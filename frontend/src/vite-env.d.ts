@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_MAP_SPRITE_URL?: string;
   readonly VITE_MAP_OFFLINE?: string;
   readonly VITE_E2E?: string;
+  readonly VITE_MOTION_DISABLED?: string;
 }
 
 interface ImportMeta {

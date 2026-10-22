@@ -11,6 +11,7 @@ import { ADVISORY } from '../results/ResultsView';
 import { tooltipContent } from './tooltip';
 import { miles } from '../../lib/format';
 import './map.css';
+import '../heatmap/heatmap.css';
 
 let modulePromise: Promise<typeof import('./maplibre-engine')> | undefined;
 const load = () => modulePromise ??= import('./maplibre-engine');
@@ -76,12 +77,10 @@ export function MapWorkspace({ analysis, factory, onSkipMap, onRerun }: { analys
         const next = store.getState(); instance.setSelection(next);
         if (next.selectedRouteId !== previous.selectedRouteId || next.selectedCheckpointIndex !== previous.selectedCheckpointIndex) clearTimeout(announcementTimer);
         if (status.current && latest.current) {
-          if (next.selectedRouteId !== previous.selectedRouteId) status.current.textContent = `${routeLabels(latest.current).get(next.selectedRouteId ?? '') ?? 'No route'} selected`;
-          else if (next.selectedCheckpointIndex !== previous.selectedCheckpointIndex && next.selectedCheckpointIndex !== null) {
-            const cp = latest.current.routes.find(r => r.route_id === next.selectedRouteId)?.checkpoints.find(c => c.index === next.selectedCheckpointIndex);
-            clearTimeout(announcementTimer);
-            if (cp) announcementTimer = window.setTimeout(() => { if (status.current) status.current.textContent = `Checkpoint at mile ${miles(cp.mile_marker)} selected, ${tooltipContent(cp).risk} risk`; }, 400);
-          }
+          const routeChanged = next.selectedRouteId !== previous.selectedRouteId;
+          const cp = latest.current.routes.find(r => r.route_id === next.selectedRouteId)?.checkpoints.find(c => c.index === next.selectedCheckpointIndex);
+          const text = routeChanged ? `${routeLabels(latest.current).get(next.selectedRouteId ?? '') ?? 'No route'} selected` : cp ? `Checkpoint at mile ${miles(cp.mile_marker)} selected, ${tooltipContent(cp).risk} risk` : '';
+          if ((routeChanged || next.selectedCheckpointIndex !== previous.selectedCheckpointIndex) && text) announcementTimer = window.setTimeout(() => { if (status.current) status.current.textContent = text; }, 400);
         }
         previous = next;
       };
@@ -99,7 +98,7 @@ export function MapWorkspace({ analysis, factory, onSkipMap, onRerun }: { analys
     if (factory) boot(); else bootstrapFrame = requestAnimationFrame(() => { if (typeof requestIdleCallback === 'function') bootstrapIdle = requestIdleCallback(boot, { timeout: 400 }); else boot(); });
     return () => { cancelled = true; cancelAnimationFrame(bootstrapFrame); if (bootstrapIdle && typeof cancelIdleCallback === 'function') cancelIdleCallback(bootstrapIdle); unsubscribe(); unsubscribeHeat(); unsubscribeEvents(); themeObserver.disconnect(); heatObserver.disconnect(); observer.disconnect(); sheetObserver.disconnect(); document.removeEventListener('fullscreenchange', fullChange); clearTimeout(resizeTimer); clearTimeout(announcementTimer); engine.current?.destroy(); engine.current = null; };
   }, [factory, store]);
-  useEffect(() => { store.setHeatData(analysis ? decodeAnalysis(analysis) : null); updatePadding.current(); engine.current?.setRoutes(analysis); }, [analysis, store]);
+  useEffect(() => { engine.current?.setRoutes(analysis); store.setHeatData(analysis ? decodeAnalysis(analysis) : null); updatePadding.current(); }, [analysis, store]);
   const toggleLegend = () => { const next = !legend; setLegend(next); try { localStorage.setItem('routeshield-map-legend', String(next)); } catch { /* Optional preference. */ } };
   const toggleFull = async () => { if (document.fullscreenElement) await document.exitFullscreen(); else await region.current?.requestFullscreen(); };
   const recenter = async () => {
@@ -120,7 +119,7 @@ export function MapWorkspace({ analysis, factory, onSkipMap, onRerun }: { analys
     </>}
     {analysis && <Suspense fallback={null}><HeatControls response={analysis} rerun={onRerun} /></Suspense>}
     {analysis?.is_simulation && <div className="map-simulation">SIMULATION · {analysis.simulation_scenario}</div>}
-    <footer className="map-credit-strip"><div>{attribution.html.length ? attribution.html.map((html, i) => <span key={i}>{creditParts(html).map((part, j) => part.href ? <a key={j} href={part.href} target="_blank" rel="noreferrer">{part.text}</a> : <span key={j}>{part.text}</span>)}</span>) : <span>{mapConfig.offline ? 'Offline basemap' : ready && !failure ? 'OpenFreeMap · basemap loading' : 'Basemap unavailable'}</span>}</div>{attribution.providers.length > 0 && <details><summary>Provider credits · {attribution.providers.length}</summary><ul>{attribution.providers.map((a, i) => <li key={i}>{a.provider}{!a.confirmed && ' · Unconfirmed attribution'}: {a.text}</li>)}</ul></details>}<p>{ADVISORY}</p></footer>
+    <footer className="map-credit-strip"><div>{attribution.html.length ? attribution.html.map((html, i) => <span key={i}>{creditParts(html).map((part, j) => part.href ? <a key={j} href={part.href} target="_blank" rel="noreferrer">{part.text}</a> : <span key={j}>{part.text}</span>)}</span>) : <span>{mapConfig.offline ? 'Offline basemap' : ready && !failure ? 'OpenFreeMap · basemap loading' : 'Basemap unavailable'}</span>}</div><div className="map-provider-credit-slot">{attribution.providers.length > 0 && <details><summary>Provider credits · {attribution.providers.length}</summary><ul>{attribution.providers.map((a, i) => <li key={i}>{a.provider}{!a.confirmed && ' · Unconfirmed attribution'}: {a.text}</li>)}</ul></details>}</div><p>{ADVISORY}</p></footer>
     <span ref={status} className="sr-only" role="status" aria-live="polite" />
   </section><a className="skip-link map-skip-after" href="#console" onClick={e => { if (onSkipMap) { e.preventDefault(); onSkipMap(); } }}>Skip map to route results</a></>;
 }

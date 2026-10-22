@@ -8,7 +8,7 @@
 .map-skeleton, .map-unavailable, .map-empty { position: absolute; top: 64px; left: 468px; max-width: 330px; background: var(--surface); padding: 16px 24px; border-left: 2px solid var(--border); }
 .map-empty { pointer-events: none; }
 .map-empty h2 { font-size: 20px; font-weight: 450; }
-.map-tick-shimmer { display: block; width: 240px; height: 36px; background: repeating-linear-gradient(90deg, var(--hairline) 0 1px, transparent 1px 24px); animation: chart-shimmer 800ms ease-out both; }
+.map-tick-shimmer { display: block; width: 240px; height: 36px; background: repeating-linear-gradient(90deg, var(--hairline) 0 1px, transparent 1px 24px); animation: chart-shimmer 480ms ease-out both; }
 .map-controls { position: absolute; right: 16px; top: 24px; display: grid; background: var(--surface); border: 1px solid var(--hairline); }
 .map-controls button { width: 44px; height: 44px; border: 0; border-bottom: 1px solid var(--hairline); background: transparent; color: var(--ink); font-size: 22px; cursor: pointer; }
 .map-controls button:hover { background: var(--inset); }
@@ -22,14 +22,16 @@
 .map-credit-strip > div { display: flex; flex-wrap: wrap; gap: 4px; }
 .map-credit-strip a { color: var(--ink); text-decoration: underline; }
 .map-credit-strip details { margin-top: 3px; }
-.map-credit-strip summary { cursor: pointer; min-height: 24px; }
+.map-credit-strip summary { cursor: pointer; min-height: 44px; }
 .map-credit-strip ul { padding-left: 16px; max-height: 170px; overflow: auto; }
 .map-credit-strip p { margin: 4px 0 0; }
 .map-route-chip { max-width: 210px; padding: 9px 12px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 11px; min-height: 44px; box-shadow: 0 1px 3px rgb(0 0 0 / 12%); white-space: nowrap; }
+/* The renderer owns both opacity and camera position; vendor easing flashes labels early. */
+.map-route-chip.maplibregl-marker { transition: none; }
 .map-route-chip::before { content: attr(data-rank); margin-right: 8px; font-size: 9px; }
 .map-route-chip.is-selected { outline: 2px solid var(--accent); outline-offset: 2px; }
 .map-route-chip[hidden] { display: none; }
-.map-endpoint { border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); padding: 4px 8px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; min-height: 30px; }
+.map-endpoint { border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); padding: 4px 8px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; min-height: 44px; }
 .map-checkpoint-tooltip { position: absolute; z-index: 3; width: 270px; padding: 10px 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--border); pointer-events: none; font-family: var(--font-mono); font-size: 10px; animation: map-tooltip-enter 120ms ease-out both; }
 .map-checkpoint-tooltip p { margin: 2px 0; }
 .map-checkpoint-tooltip p:nth-child(2) { font-family: var(--font-sans); font-size: 13px; font-weight: 650; }
@@ -51,7 +53,7 @@
 @keyframes chart-shimmer { from { opacity: .2; transform: scaleX(.8); } to { opacity: 1; transform: scaleX(1); } }
 @keyframes map-tooltip-enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 760px) {
-  .sheet-dock .bottom-sheet[data-snap='full'] { height: calc(100dvh - 232px - var(--advisory-height)); }
+  .sheet-dock .bottom-sheet[data-snap] { height: calc(100dvh - 232px - var(--advisory-height)); }
   .map-credit-strip { left: 0; min-height: 88px; padding: 8px 10px; }
   .map-credit-strip p { font-size: 9px; }
   .map-empty, .map-skeleton, .map-unavailable { top: 72px; left: 24px; max-width: calc(100% - 100px); padding: 12px; }
@@ -72,3 +74,16 @@
 .map-tooltip-shape[data-level='HIGH'] { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .map-tooltip-shape[data-level='NO_TRAVEL'] { clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); }
 .map-tooltip-shape[data-level='UNKNOWN'] { background: transparent; border: 2px dashed currentColor; border-radius: 50%; }
+
+/* Expanding a key/credit scrolls within its reserved area, never moves its trigger. */
+.map-legend { top: 218px; bottom: auto; max-height: calc(100% - 360px); overflow: auto; }
+.map-credit-strip { height: 160px; overflow-y: auto; }
+@media (max-width: 760px) { .map-credit-strip { height: 160px; min-height: 160px; } }
+
+.map-provider-credit-slot { height: 50px; display: flow-root !important; }
+.map-legend { scrollbar-gutter: stable; }
+.map-legend > button > span { width: 16px; text-align: center; flex: none; }
+
+.map-credit-strip a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+
+.map-credit-strip > div:first-child { min-height: 44px; }

@@ -1,4 +1,4 @@
-.app-shell { height: 100dvh; overflow: hidden; --advisory-height: 88px; }
+.app-shell { height: 100dvh; overflow: hidden; --advisory-height: 160px; }
 .shell-header { height: 48px; display: flex; align-items: center; gap: 24px; padding: 0 16px; border-bottom: 1px solid var(--hairline); background: var(--surface); position: relative; z-index: var(--z-console); }
 .brand { display: inline-flex; align-items: center; gap: 9px; font-size: 20px; font-weight: 650; letter-spacing: -.04em; color: var(--ink); text-decoration: none; flex-shrink: 0; }
 .brand-light { font-weight: 430; }
@@ -38,6 +38,7 @@
 .guide-loading { padding: 40px; max-width: 420px; }
 @media (max-width: 1100px) { .header-purpose { display: none; } }
 @media (max-width: 760px) {
+  .app-shell { --advisory-height: 160px; }
   .shell-header { padding: 0 12px; gap: 8px; flex-wrap: nowrap; }
   .brand { font-size: 18px; gap: 6px; }
   .brand svg { width: 23px; height: 28px; }
@@ -57,3 +58,5 @@
   .brand svg { width: 21px; }
   .header-tools .segmented button, .header-tools > .icon-button, .header-tools .button { min-width: 44px; width: 44px; }
 }
+
+.brand, .skip-link { min-height: 44px; display: inline-flex; align-items: center; }

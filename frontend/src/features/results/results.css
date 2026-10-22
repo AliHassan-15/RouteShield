@@ -21,7 +21,7 @@
 .trip-summary > div { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; margin: 6px 0 2px; }
 .trip-summary > div > span { overflow-wrap: anywhere; max-width: 100%; }
 .freshness { color: var(--muted); font-size: 10px; line-height: 1.7; margin-top: -12px; }
-.recommendation-ticket { border: 1px solid var(--hairline); border-left: 3px solid var(--accent); padding: 16px 14px; position: relative; animation: result-reveal 320ms var(--ease-out) both; }
+.recommendation-ticket { border: 1px solid var(--hairline); border-left: 3px solid var(--accent); padding: 16px 14px; position: relative; animation: result-reveal 300ms var(--ease-out) both; }
 .recommendation-ticket::after { content: ''; position: absolute; right: -1px; top: -1px; width: 8px; height: 8px; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); }
 .ticket-status { display: flex; gap: 8px; align-items: center; line-height: 1.5; }
 .ticket-status svg { width: 16px; height: 16px; flex-shrink: 0; }
@@ -35,7 +35,7 @@
 .arrival-tile strong { font-size: 18px; font-weight: 450; }
 .arrival-tile small { font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
 .risk-distance { margin-top: 18px; }
-.distance-bar { height: 12px; display: flex; overflow: hidden; animation: bar-grow 420ms var(--ease-out) both; transform-origin: left; }
+.distance-bar { height: 12px; display: flex; overflow: hidden; animation: bar-grow 300ms var(--ease-out) both; transform-origin: left; }
 .distance-segment { flex-basis: 0; background: currentColor; display: block; min-width: 0; }
 .distance-segment.risk-no-travel, .distance-segment.risk-unknown { background: repeating-linear-gradient(135deg, currentColor 0 2px, transparent 2px 4px); border: 1px solid currentColor; }
 .distance-segment.risk-unknown { background: repeating-linear-gradient(45deg, currentColor 0 1px, transparent 1px 4px); }
@@ -133,13 +133,14 @@
 .analysis-console .error-state > svg { color: var(--muted); }
 .stale-banner { animation: result-reveal 200ms var(--ease-out) both; }
 .results-body.has-entered .recommendation-ticket, .results-body.has-entered .distance-bar, .results-body.has-entered .comparison-matrix tr, .results-body.has-entered .route-option { animation: none; }
-.comparison-matrix tbody tr { animation: result-reveal 240ms var(--ease-out) both; }
-.comparison-matrix tbody tr:nth-child(2) { animation-delay: 40ms; }
-.comparison-matrix tbody tr:nth-child(3) { animation-delay: 80ms; }
-.comparison-matrix tbody tr:nth-child(4) { animation-delay: 120ms; }
-.route-option { animation: result-reveal 240ms var(--ease-out) both; }
-.route-option:nth-child(2) { animation-delay: 80ms; }
-.route-option:nth-child(3) { animation-delay: 160ms; }
+.comparison-matrix tbody tr { animation: result-reveal 240ms var(--ease-out) both; animation-delay: calc(120ms + var(--arrival-offset, 0ms)); }
+.comparison-matrix tbody tr:nth-child(2) { animation-delay: calc(160ms + var(--arrival-offset, 0ms)); }
+.comparison-matrix tbody tr:nth-child(3) { animation-delay: calc(200ms + var(--arrival-offset, 0ms)); }
+.comparison-matrix tbody tr:nth-child(4) { animation-delay: calc(240ms + var(--arrival-offset, 0ms)); }
+.comparison-matrix tbody tr:nth-child(5) { animation-delay: calc(280ms + var(--arrival-offset, 0ms)); }
+.route-option { animation: result-reveal 240ms var(--ease-out) both; animation-delay: calc(320ms + var(--arrival-offset, 0ms)); }
+.route-option:nth-child(2) { animation-delay: calc(360ms + var(--arrival-offset, 0ms)); }
+.route-option:nth-child(3) { animation-delay: calc(400ms + var(--arrival-offset, 0ms)); }
 .warnings-tray[open] .notice-list { animation: result-reveal 160ms var(--ease-out); }
 @keyframes result-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
@@ -151,16 +152,12 @@
   .comparison-matrix .matrix-value { font-size: 8px; }
   .ticket-metrics .count-metric { font-size: 13px; }
 }
-.bottom-sheet[data-snap='half'] .results-heading { margin-bottom: 4px; }
-.bottom-sheet[data-snap='half'] .results-heading .micro { display: none; }
-.bottom-sheet[data-snap='half'] .results-heading h2 { font-size: 16px; }
-.bottom-sheet[data-snap='half'] .results-body { gap: 12px; }
-.bottom-sheet[data-snap='half'] .trip-summary { padding: 6px 0; font-size: 12px; }
-.bottom-sheet[data-snap='half'] .freshness { margin: 0; font-size: 9px; }
-.bottom-sheet[data-snap='half'] .results-scroll { padding-top: 6px; }
-.bottom-sheet[data-snap='half'] .freshness, .bottom-sheet[data-snap='half'] .trip-summary > .field-hint { display: none; }
-.bottom-sheet[data-snap='half'] .ticket-status { font-size: 8px; letter-spacing: .02em; }
-.bottom-sheet[data-snap='half'] .recommendation-ticket > h3 { font-size: 24px; margin: 6px 0 12px; }
 @media (prefers-reduced-motion: reduce) {
   .results-body *, .comparison-matrix tr, .route-option { animation: none !important; transition: none !important; }
 }
+
+.results-subview { display: grid; gap: 24px; min-width: 0; min-height: max(900px, 100dvh); align-content: start; }
+.recommendation-ticket, .distance-bar { animation-delay: var(--arrival-offset, 0ms); }
+.console-state { min-height: 420px; }
+.results-subview > .field { min-width: 0; }
+@media (max-width: 760px) { .results-subview { gap: 12px; } }

@@ -1,6 +1,6 @@
 .button { transition: transform var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out); }
 .button:active:not(:disabled), .segmented button:active { transform: translateY(1px); }
-.button-progress { animation: busy 1.2s ease-in-out infinite alternate; }
+.button-progress { animation: busy var(--duration-normal) var(--ease-out) both; }
 .tab-indicator { transition: transform var(--duration-normal) var(--ease-out); }
 .bottom-sheet { transition: transform var(--duration-long) var(--ease-spring); }
 .bottom-sheet.dragging { transition: none; }
@@ -25,3 +25,11 @@
   .skeleton::after { display: none; }
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 }
+
+/* Remounts crossfade in a reserved scroll viewport; input remains enabled. */
+[role='tabpanel']:not([hidden]), .results-subview, .console-state { animation: fade var(--duration-normal) var(--ease-out); }
+.segmented button, .map-route-chip, .map-endpoint, .heat-control button, .request-chip button { transition: transform var(--duration-fast) var(--ease-out); }
+.map-route-chip:active, .map-endpoint:active, .heat-control button:active { transform: translateY(1px); }
+::view-transition-group(root) { animation: none; }
+
+::view-transition { pointer-events: none; }

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { motionOff } from '../../lib/motion';
 import type { Route } from '../../api/types';
 import { useSelection, useSelectionStore } from '../../api/selection-store';
 import { displayNumber } from '../../lib/format';
@@ -8,7 +9,7 @@ export function stepIndex(route: Route, index: number | null, delta: number) {
   const points = orderedCheckpoints(route), at = points.findIndex(cp => cp.index === index);
   return points[Math.max(0, Math.min(points.length - 1, at < 0 ? 0 : at + delta))]?.index ?? null;
 }
-function edgeFeedback(node: HTMLElement | null, delta: number) { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) node?.animate?.([{ transform: 'translateX(0)' }, { transform: `translateX(${delta * 3}px)` }, { transform: 'translateX(0)' }], { duration: 160 }); }
+function edgeFeedback(node: HTMLElement | null, delta: number) { if (!motionOff()) node?.animate?.([{ transform: 'translateX(0)' }, { transform: `translateX(${delta * 3}px)` }, { transform: 'translateX(0)' }], { duration: 160 }); }
 export function useCheckpointKeys(route: Route | undefined) {
   const store = useSelectionStore(), latest = useRef(route); latest.current = route;
   useEffect(() => {
